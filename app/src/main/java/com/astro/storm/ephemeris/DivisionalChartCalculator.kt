@@ -26,10 +26,10 @@ import com.astro.storm.util.AstrologicalUtils.normalizeLongitude
  *
  * The formulas used are based on Parashari principles from BPHS (Brihat Parasara Hora Shastra)
  */
-object DivisionalChartCalculator {
+private const val DEGREES_IN_SIGN = 30.0
+private const val DEGREES_IN_CIRCLE = 360.0
 
-    private const val DEGREES_IN_SIGN = 30.0
-    private const val DEGREES_IN_CIRCLE = 360.0
+object DivisionalChartCalculator {
 
     // ===================== D2 - HORA =====================
     /**

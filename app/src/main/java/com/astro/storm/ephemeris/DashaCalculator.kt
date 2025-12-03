@@ -80,13 +80,9 @@ object DashaCalculator {
      */
     private const val TOTAL_CYCLE_YEARS = 120.0
 
-    /**
-     * Nakshatra span in degrees
-     */
-    private const val NAKSHATRA_SPAN = 360.0 / 27.0
-
-    /**
-     * Mahadasha period
+private const val NAKSHATRA_SPAN = 360.0 / 27.0
+/**
+ * Mahadasha period
      */
     data class Mahadasha(
         val planet: Planet,

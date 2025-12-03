@@ -110,30 +110,29 @@ class ChartRepository(private val chartDao: ChartDao) {
                     array.getDouble(i)
                 }
             }
+            return VedicChart(
+                birthData = BirthData(
+                    name = name,
+                    dateTime = LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                    latitude = latitude,
+                    longitude = longitude,
+                    timezone = timezone,
+                    location = location
+                ),
+                julianDay = julianDay,
+                ayanamsa = ayanamsa,
+                ayanamsaName = ayanamsaName,
+                ascendant = ascendant,
+                midheaven = midheaven,
+                planetPositions = planetPositions,
+                houseCusps = houseCusps,
+                houseSystem = HouseSystem.valueOf(houseSystem),
+                calculationTime = createdAt
+            )
         } catch (e: Exception) {
             android.util.Log.e("ChartRepository", "Failed to parse chart entity", e)
             throw IllegalStateException("Failed to parse chart data from database", e)
         }
-
-        return VedicChart(
-            birthData = BirthData(
-                name = name,
-                dateTime = LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                latitude = latitude,
-                longitude = longitude,
-                timezone = timezone,
-                location = location
-            ),
-            julianDay = julianDay,
-            ayanamsa = ayanamsa,
-            ayanamsaName = ayanamsaName,
-            ascendant = ascendant,
-            midheaven = midheaven,
-            planetPositions = planetPositions,
-            houseCusps = houseCusps,
-            houseSystem = HouseSystem.valueOf(houseSystem),
-            calculationTime = createdAt
-        )
     }
 
     private fun ChartEntity.toSavedChart(): SavedChart {
