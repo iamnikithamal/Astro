@@ -51,6 +51,42 @@ class VarshaphalaCalculator(context: Context) {
         private const val TRINE_ORB = 8.0
         private const val SQUARE_ORB = 7.0
         private const val SEXTILE_ORB = 6.0
+
+        fun getHouseMeaning(house: Int): String {
+            return when (house) {
+                1 -> "Self/Personality"
+                2 -> "Wealth/Family"
+                3 -> "Siblings/Communication"
+                4 -> "Home/Mother"
+                5 -> "Children/Creativity"
+                6 -> "Health/Service"
+                7 -> "Partnership/Marriage"
+                8 -> "Transformation/Longevity"
+                9 -> "Fortune/Spirituality"
+                10 -> "Career/Status"
+                11 -> "Gains/Friends"
+                12 -> "Losses/Spirituality"
+                else -> "General"
+            }
+        }
+
+        fun getHouseKeywords(house: Int): List<String> {
+            return when (house) {
+                1 -> listOf("Self", "Body", "Personality", "Appearance")
+                2 -> listOf("Wealth", "Family", "Speech", "Food")
+                3 -> listOf("Siblings", "Courage", "Short Travels", "Communication")
+                4 -> listOf("Mother", "Home", "Property", "Happiness")
+                5 -> listOf("Children", "Intelligence", "Romance", "Speculation")
+                6 -> listOf("Enemies", "Disease", "Service", "Debts")
+                7 -> listOf("Spouse", "Partnership", "Business", "Public")
+                8 -> listOf("Death", "Inheritance", "Occult", "Transformation")
+                9 -> listOf("Father", "Guru", "Religion", "Fortune")
+                10 -> listOf("Career", "Fame", "Authority", "Government")
+                11 -> listOf("Gains", "Friends", "Elder Sibling", "Desires")
+                12 -> listOf("Losses", "Foreign", "Liberation", "Expenses")
+                else -> listOf()
+            }
+        }
     }
 
     init {
@@ -481,7 +517,7 @@ class VarshaphalaCalculator(context: Context) {
 
         // The strongest among these is the Year Lord
         val candidates = listOf(dayLords[dayOfWeek], ascendantLord, munthaLord)
-        return candidates.maxByDescending { evaluatePlanetStrengthScore(it, solarReturnChart) }
+        return candidates.maxByOrNull { planet -> evaluatePlanetStrengthScore(planet, solarReturnChart) } ?: dayLords[dayOfWeek]
     }
 
     /**
@@ -967,6 +1003,9 @@ class VarshaphalaCalculator(context: Context) {
 
         planetLongitude = ((planetLongitude % 360.0) + 360.0) % 360.0
         val (nakshatra, pada) = Nakshatra.fromLongitude(planetLongitude)
+        val degree = floor(planetLongitude)
+        val minutes = floor((planetLongitude - degree) * 60)
+        val seconds = (((planetLongitude - degree) * 60) - minutes) * 60
 
         // Get house position
         val cusps = DoubleArray(13)
@@ -995,9 +1034,13 @@ class VarshaphalaCalculator(context: Context) {
             planet = planet,
             longitude = planetLongitude,
             latitude = xx[1],
+            distance = xx[2],
             speed = xx[3],
             isRetrograde = xx[3] < 0,
             sign = ZodiacSign.fromLongitude(planetLongitude),
+            degree = degree,
+            minutes = minutes,
+            seconds = seconds,
             nakshatra = nakshatra,
             nakshatraPada = pada,
             house = house
@@ -1052,42 +1095,6 @@ class VarshaphalaCalculator(context: Context) {
             minute.coerceIn(0, 59),
             second.coerceIn(0, 59)
         )
-    }
-
-    private fun getHouseMeaning(house: Int): String {
-        return when (house) {
-            1 -> "Self/Personality"
-            2 -> "Wealth/Family"
-            3 -> "Siblings/Communication"
-            4 -> "Home/Mother"
-            5 -> "Children/Creativity"
-            6 -> "Health/Service"
-            7 -> "Partnership/Marriage"
-            8 -> "Transformation/Longevity"
-            9 -> "Fortune/Spirituality"
-            10 -> "Career/Status"
-            11 -> "Gains/Friends"
-            12 -> "Losses/Spirituality"
-            else -> "General"
-        }
-    }
-
-    private fun getHouseKeywords(house: Int): List<String> {
-        return when (house) {
-            1 -> listOf("Self", "Body", "Personality", "Appearance")
-            2 -> listOf("Wealth", "Family", "Speech", "Food")
-            3 -> listOf("Siblings", "Courage", "Short Travels", "Communication")
-            4 -> listOf("Mother", "Home", "Property", "Happiness")
-            5 -> listOf("Children", "Intelligence", "Romance", "Speculation")
-            6 -> listOf("Enemies", "Disease", "Service", "Debts")
-            7 -> listOf("Spouse", "Partnership", "Business", "Public")
-            8 -> listOf("Death", "Inheritance", "Occult", "Transformation")
-            9 -> listOf("Father", "Guru", "Religion", "Fortune")
-            10 -> listOf("Career", "Fame", "Authority", "Government")
-            11 -> listOf("Gains", "Friends", "Elder Sibling", "Desires")
-            12 -> listOf("Losses", "Foreign", "Liberation", "Expenses")
-            else -> listOf()
-        }
     }
 
     fun close() {

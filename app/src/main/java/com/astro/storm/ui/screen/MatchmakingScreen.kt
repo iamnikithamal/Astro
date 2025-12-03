@@ -1038,8 +1038,7 @@ private fun ProfileSelectorDialog(
     val availableCharts = charts.filter { it.id != excludeId }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = AppTheme.CardBackground
+        onDismissRequest = onDismiss
     ) {
         Surface(
             color = AppTheme.CardBackground,
