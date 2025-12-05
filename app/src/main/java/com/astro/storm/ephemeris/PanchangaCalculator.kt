@@ -1,53 +1,42 @@
 package com.astro.storm.ephemeris
 
 import android.content.Context
-import com.astro.storm.data.model.*
+import com.astro.storm.data.model.Nakshatra
+import com.astro.storm.data.model.Planet
 import swisseph.DblObj
 import swisseph.SweConst
 import swisseph.SweDate
 import swisseph.SwissEph
+import java.io.Closeable
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import kotlin.math.abs
+import java.util.Locale
+import kotlin.math.cos
 import kotlin.math.floor
 
-/**
- * High-precision Panchanga (Five-limb Vedic almanac) Calculator
- *
- * Calculates the five elements of Panchanga:
- * 1. Tithi - Lunar day (based on Moon-Sun angular distance)
- * 2. Nakshatra - Moon's asterism position
- * 3. Yoga - Luni-solar combination
- * 4. Karana - Half of Tithi
- * 5. Vara - Day of the week
- *
- * Additionally calculates:
- * - Sunrise and Sunset times
- * - Moon phase
- * - Paksha (lunar fortnight)
- */
-class PanchangaCalculator(context: Context) {
+class PanchangaCalculator(context: Context) : Closeable {
 
-    private val swissEph = SwissEph()
+    private val swissEph: SwissEph = SwissEph()
     private val ephemerisPath: String
+    @Volatile
+    private var isClosed: Boolean = false
 
     companion object {
         private const val AYANAMSA_LAHIRI = SweConst.SE_SIDM_LAHIRI
-        private const val SEFLG_SIDEREAL = SweConst.SEFLG_SIDEREAL
-        private const val SEFLG_SPEED = SweConst.SEFLG_SPEED
 
-        // Tithi span is 12 degrees (360/30 tithis)
         private const val TITHI_SPAN = 12.0
-
-        // Nakshatra span is 13.333... degrees (360/27 nakshatras)
         private const val NAKSHATRA_SPAN = 360.0 / 27.0
-
-        // Yoga span is 13.333... degrees
         private const val YOGA_SPAN = 360.0 / 27.0
-
-        // Karana span is 6 degrees (half of tithi)
         private const val KARANA_SPAN = 6.0
+        private const val PADA_SPAN = NAKSHATRA_SPAN / 4.0
+
+        private const val TOTAL_TITHIS = 30
+        private const val TOTAL_NAKSHATRAS = 27
+        private const val TOTAL_YOGAS = 27
+        private const val TOTAL_KARANAS = 60
+        private const val MOVABLE_KARANAS = 7
+        private const val MOVABLE_KARANA_CYCLES = 8
     }
 
     init {
@@ -56,32 +45,30 @@ class PanchangaCalculator(context: Context) {
         swissEph.swe_set_sid_mode(AYANAMSA_LAHIRI, 0.0, 0.0)
     }
 
-    /**
-     * Calculate complete Panchanga for a given date, time, and location
-     */
     fun calculatePanchanga(
         dateTime: LocalDateTime,
         latitude: Double,
         longitude: Double,
         timezone: String
     ): PanchangaData {
-        // Validate input parameters
-        require(latitude in -90.0..90.0) { "Latitude must be between -90 and 90 degrees, got $latitude" }
-        require(longitude in -180.0..180.0) { "Longitude must be between -180 and 180 degrees, got $longitude" }
-        require(timezone.isNotBlank()) { "Timezone must not be blank" }
+        check(!isClosed) { "PanchangaCalculator has been closed" }
 
-        // Validate timezone
-        try {
+        require(latitude in -90.0..90.0) {
+            "Latitude must be between -90 and 90 degrees, got $latitude"
+        }
+        require(longitude in -180.0..180.0) {
+            "Longitude must be between -180 and 180 degrees, got $longitude"
+        }
+
+        val zoneId = try {
             ZoneId.of(timezone)
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid timezone: $timezone", e)
         }
 
-        // Convert to UTC
-        val zonedDateTime = ZonedDateTime.of(dateTime, ZoneId.of(timezone))
+        val zonedDateTime = ZonedDateTime.of(dateTime, zoneId)
         val utcDateTime = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
 
-        // Calculate Julian Day
         val julianDay = calculateJulianDay(
             utcDateTime.year,
             utcDateTime.monthValue,
@@ -91,33 +78,23 @@ class PanchangaCalculator(context: Context) {
             utcDateTime.second
         )
 
-        // Get Sun and Moon positions
-        val sunLongitude = getPlanetLongitude(SweConst.SE_SUN, julianDay)
-        val moonLongitude = getPlanetLongitude(SweConst.SE_MOON, julianDay)
+        val sunLongitudeSidereal = getPlanetLongitude(SweConst.SE_SUN, julianDay, sidereal = true)
+        val moonLongitudeSidereal = getPlanetLongitude(SweConst.SE_MOON, julianDay, sidereal = true)
 
-        // Calculate Tithi
-        val tithi = calculateTithi(sunLongitude, moonLongitude)
+        val sunLongitudeTropical = getPlanetLongitude(SweConst.SE_SUN, julianDay, sidereal = false)
+        val moonLongitudeTropical = getPlanetLongitude(SweConst.SE_MOON, julianDay, sidereal = false)
 
-        // Calculate Nakshatra (based on Moon position)
-        val nakshatra = calculateNakshatra(moonLongitude)
-
-        // Calculate Yoga
-        val yoga = calculateYoga(sunLongitude, moonLongitude)
-
-        // Calculate Karana
-        val karana = calculateKarana(sunLongitude, moonLongitude)
-
-        // Calculate Vara (day of week)
+        val tithi = calculateTithi(sunLongitudeSidereal, moonLongitudeSidereal)
+        val nakshatra = calculateNakshatra(moonLongitudeSidereal)
+        val yoga = calculateYoga(sunLongitudeSidereal, moonLongitudeSidereal)
+        val karana = calculateKarana(sunLongitudeSidereal, moonLongitudeSidereal)
         val vara = calculateVara(julianDay)
+        val paksha = determinePaksha(tithi.number)
 
-        // Calculate Paksha
-        val paksha = calculatePaksha(tithi)
+        val (sunrise, sunset) = calculateSunriseSunset(julianDay, latitude, longitude, zoneId)
+        val moonPhase = calculateMoonPhase(sunLongitudeTropical, moonLongitudeTropical)
 
-        // Calculate sunrise and sunset
-        val (sunrise, sunset) = calculateSunriseSunset(julianDay, latitude, longitude)
-
-        // Calculate moon phase percentage
-        val moonPhase = calculateMoonPhase(sunLongitude, moonLongitude)
+        val ayanamsa = swissEph.swe_get_ayanamsa_ut(julianDay)
 
         return PanchangaData(
             tithi = tithi,
@@ -129,222 +106,281 @@ class PanchangaCalculator(context: Context) {
             sunrise = sunrise,
             sunset = sunset,
             moonPhase = moonPhase,
-            sunLongitude = sunLongitude,
-            moonLongitude = moonLongitude
+            sunLongitude = sunLongitudeSidereal,
+            moonLongitude = moonLongitudeSidereal,
+            ayanamsa = ayanamsa
         )
     }
 
-    private fun getPlanetLongitude(planetId: Int, julianDay: Double): Double {
-        val xx = DoubleArray(6)
-        val serr = StringBuffer()
+    private fun getPlanetLongitude(planetId: Int, julianDay: Double, sidereal: Boolean): Double {
+        val positions = DoubleArray(6)
+        val errorBuffer = StringBuffer()
 
-        swissEph.swe_calc_ut(
-            julianDay,
-            planetId,
-            SEFLG_SIDEREAL or SEFLG_SPEED,
-            xx,
-            serr
-        )
+        val flags = if (sidereal) {
+            SweConst.SEFLG_SIDEREAL or SweConst.SEFLG_SPEED or SweConst.SEFLG_SWIEPH
+        } else {
+            SweConst.SEFLG_SPEED or SweConst.SEFLG_SWIEPH
+        }
 
-        return ((xx[0] % 360.0) + 360.0) % 360.0
+        val result = swissEph.swe_calc_ut(julianDay, planetId, flags, positions, errorBuffer)
+
+        if (result < 0) {
+            throw PanchangaCalculationException(
+                "Failed to calculate planet position for planet ID $planetId: $errorBuffer"
+            )
+        }
+
+        return normalizeDegrees(positions[0])
     }
 
-    /**
-     * Calculate Tithi (lunar day)
-     * Tithi is based on the angular distance between Moon and Sun
-     * Each tithi spans 12 degrees
-     */
+    private fun normalizeDegrees(degrees: Double): Double {
+        var normalized = degrees % 360.0
+        if (normalized < 0.0) normalized += 360.0
+        if (normalized >= 360.0) normalized = 0.0
+        return normalized
+    }
+
+    private fun calculateLunarElongation(sunLongitude: Double, moonLongitude: Double): Double {
+        var elongation = moonLongitude - sunLongitude
+        if (elongation < 0.0) elongation += 360.0
+        if (elongation >= 360.0) elongation = 0.0
+        return elongation
+    }
+
     private fun calculateTithi(sunLongitude: Double, moonLongitude: Double): TithiData {
-        var diff = moonLongitude - sunLongitude
-        if (diff < 0) diff += 360.0
+        val elongation = calculateLunarElongation(sunLongitude, moonLongitude)
 
-        val tithiNumber = (diff / TITHI_SPAN).toInt() + 1
-        val tithiProgress = (diff % TITHI_SPAN) / TITHI_SPAN * 100.0
+        val tithiIndex = (elongation / TITHI_SPAN).toInt()
+        val tithiNumber = tithiIndex + 1
+        val progressInTithi = elongation % TITHI_SPAN
+        val tithiProgress = (progressInTithi / TITHI_SPAN) * 100.0
 
-        val tithi = Tithi.entries[(tithiNumber - 1) % Tithi.entries.size]
+        val clampedIndex = tithiIndex.coerceIn(0, Tithi.entries.size - 1)
+        val tithi = Tithi.entries[clampedIndex]
         val lord = getTithiLord(tithiNumber)
+
+        val remainingDegrees = TITHI_SPAN - progressInTithi
 
         return TithiData(
             tithi = tithi,
-            number = tithiNumber,
+            number = tithiNumber.coerceIn(1, TOTAL_TITHIS),
             progress = tithiProgress,
-            lord = lord
+            lord = lord,
+            elongation = elongation,
+            remainingDegrees = remainingDegrees
         )
     }
 
     private fun getTithiLord(tithiNumber: Int): Planet {
-        // Tithi lords follow a specific sequence
-        val lords = listOf(
-            Planet.SUN,      // 1 - Pratipada
-            Planet.MOON,     // 2 - Dwitiya
-            Planet.MARS,     // 3 - Tritiya
-            Planet.MERCURY,  // 4 - Chaturthi
-            Planet.JUPITER,  // 5 - Panchami
-            Planet.VENUS,    // 6 - Shashthi
-            Planet.SATURN,   // 7 - Saptami
-            Planet.RAHU,     // 8 - Ashtami
-            Planet.SUN,      // 9 - Navami
-            Planet.MOON,     // 10 - Dashami
-            Planet.MARS,     // 11 - Ekadashi
-            Planet.MERCURY,  // 12 - Dwadashi
-            Planet.JUPITER,  // 13 - Trayodashi
-            Planet.VENUS,    // 14 - Chaturdashi
-            Planet.SATURN    // 15/30 - Purnima/Amavasya
-        )
-        return lords[(tithiNumber - 1) % 15]
-    }
-
-    /**
-     * Calculate Nakshatra based on Moon's sidereal position
-     */
-    private fun calculateNakshatra(moonLongitude: Double): NakshatraData {
-        val nakshatraNumber = (moonLongitude / NAKSHATRA_SPAN).toInt() + 1
-        val nakshatraProgress = (moonLongitude % NAKSHATRA_SPAN) / NAKSHATRA_SPAN * 100.0
-        val pada = ((moonLongitude % NAKSHATRA_SPAN) / (NAKSHATRA_SPAN / 4)).toInt() + 1
-
-        val nakshatra = Nakshatra.entries[(nakshatraNumber - 1) % Nakshatra.entries.size]
-
-        return NakshatraData(
-            nakshatra = nakshatra,
-            number = nakshatraNumber,
-            pada = pada.coerceIn(1, 4),
-            progress = nakshatraProgress,
-            lord = nakshatra.ruler
-        )
-    }
-
-    /**
-     * Calculate Yoga (Nithya Yoga)
-     * Yoga is calculated by adding Sun and Moon longitudes
-     * There are 27 Yogas, each spanning 13°20'
-     */
-    private fun calculateYoga(sunLongitude: Double, moonLongitude: Double): YogaData {
-        var sum = sunLongitude + moonLongitude
-        if (sum >= 360.0) sum -= 360.0
-
-        val yogaNumber = (sum / YOGA_SPAN).toInt() + 1
-        val yogaProgress = (sum % YOGA_SPAN) / YOGA_SPAN * 100.0
-
-        val yoga = Yoga.entries.getOrElse(yogaNumber - 1) { Yoga.VISHKUMBHA }
-
-        return YogaData(
-            yoga = yoga,
-            number = yogaNumber,
-            progress = yogaProgress
-        )
-    }
-
-    /**
-     * Calculate Karana
-     * Karana is half of a Tithi. There are 11 Karanas that repeat in a cycle.
-     * 4 fixed karanas occur only once per lunar month.
-     */
-    private fun calculateKarana(sunLongitude: Double, moonLongitude: Double): KaranaData {
-        var diff = moonLongitude - sunLongitude
-        if (diff < 0) diff += 360.0
-
-        val karanaNumber = (diff / KARANA_SPAN).toInt() + 1
-        val karanaProgress = (diff % KARANA_SPAN) / KARANA_SPAN * 100.0
-
-        val karana = getKarana(karanaNumber)
-
-        return KaranaData(
-            karana = karana,
-            number = karanaNumber,
-            progress = karanaProgress
-        )
-    }
-
-    private fun getKarana(karanaNumber: Int): Karana {
-        // First 4 karanas are fixed (occur only once)
-        // Then 7 movable karanas repeat
-        return when (karanaNumber) {
-            1 -> Karana.KIMSTUGHNA
-            in 2..8 -> Karana.entries[(karanaNumber - 2) % 7 + 1]
-            in 9..15 -> Karana.entries[(karanaNumber - 9) % 7 + 1]
-            in 16..22 -> Karana.entries[(karanaNumber - 16) % 7 + 1]
-            in 23..29 -> Karana.entries[(karanaNumber - 23) % 7 + 1]
-            in 30..36 -> Karana.entries[(karanaNumber - 30) % 7 + 1]
-            in 37..43 -> Karana.entries[(karanaNumber - 37) % 7 + 1]
-            in 44..50 -> Karana.entries[(karanaNumber - 44) % 7 + 1]
-            in 51..57 -> Karana.entries[(karanaNumber - 51) % 7 + 1]
-            58 -> Karana.SHAKUNI
-            59 -> Karana.CHATUSHPADA
-            60 -> Karana.NAGAVA
-            else -> Karana.BAVA
+        val tithiInPaksha = ((tithiNumber - 1) % 15) + 1
+        return when (tithiInPaksha) {
+            1 -> Planet.SUN
+            2 -> Planet.MOON
+            3 -> Planet.MARS
+            4 -> Planet.MERCURY
+            5 -> Planet.JUPITER
+            6 -> Planet.VENUS
+            7 -> Planet.SATURN
+            8 -> Planet.RAHU
+            9 -> Planet.SUN
+            10 -> Planet.MOON
+            11 -> Planet.MARS
+            12 -> Planet.MERCURY
+            13 -> Planet.JUPITER
+            14 -> Planet.VENUS
+            15 -> Planet.SATURN
+            else -> Planet.SUN
         }
     }
 
-    /**
-     * Calculate Vara (day of week)
-     */
+    private fun calculateNakshatra(moonLongitude: Double): NakshatraData {
+        val nakshatraIndex = (moonLongitude / NAKSHATRA_SPAN).toInt()
+        val nakshatraNumber = nakshatraIndex + 1
+
+        val positionInNakshatra = moonLongitude % NAKSHATRA_SPAN
+        val nakshatraProgress = (positionInNakshatra / NAKSHATRA_SPAN) * 100.0
+
+        val padaIndex = (positionInNakshatra / PADA_SPAN).toInt()
+        val pada = (padaIndex % 4) + 1
+
+        val clampedIndex = nakshatraIndex.coerceIn(0, Nakshatra.entries.size - 1)
+        val nakshatra = Nakshatra.entries[clampedIndex]
+
+        val remainingDegrees = NAKSHATRA_SPAN - positionInNakshatra
+
+        return NakshatraData(
+            nakshatra = nakshatra,
+            number = nakshatraNumber.coerceIn(1, TOTAL_NAKSHATRAS),
+            pada = pada,
+            progress = nakshatraProgress,
+            lord = nakshatra.ruler,
+            degreeInNakshatra = positionInNakshatra,
+            remainingDegrees = remainingDegrees
+        )
+    }
+
+    private fun calculateYoga(sunLongitude: Double, moonLongitude: Double): YogaData {
+        var sum = sunLongitude + moonLongitude
+
+        while (sum >= 360.0) {
+            sum -= 360.0
+        }
+
+        val yogaIndex = (sum / YOGA_SPAN).toInt()
+        val yogaNumber = yogaIndex + 1
+        val progressInYoga = sum % YOGA_SPAN
+        val yogaProgress = (progressInYoga / YOGA_SPAN) * 100.0
+
+        val clampedIndex = yogaIndex.coerceIn(0, Yoga.entries.size - 1)
+        val yoga = Yoga.entries[clampedIndex]
+
+        val remainingDegrees = YOGA_SPAN - progressInYoga
+
+        return YogaData(
+            yoga = yoga,
+            number = yogaNumber.coerceIn(1, TOTAL_YOGAS),
+            progress = yogaProgress,
+            combinedLongitude = sum,
+            remainingDegrees = remainingDegrees
+        )
+    }
+
+    private fun calculateKarana(sunLongitude: Double, moonLongitude: Double): KaranaData {
+        val elongation = calculateLunarElongation(sunLongitude, moonLongitude)
+
+        val karanaIndex = (elongation / KARANA_SPAN).toInt()
+        val karanaNumber = karanaIndex + 1
+        val progressInKarana = elongation % KARANA_SPAN
+        val karanaProgress = (progressInKarana / KARANA_SPAN) * 100.0
+
+        val karana = getKaranaFromNumber(karanaNumber)
+
+        val remainingDegrees = KARANA_SPAN - progressInKarana
+
+        return KaranaData(
+            karana = karana,
+            number = karanaNumber.coerceIn(1, TOTAL_KARANAS),
+            progress = karanaProgress,
+            remainingDegrees = remainingDegrees
+        )
+    }
+
+    private fun getKaranaFromNumber(karanaNumber: Int): Karana {
+        return when (karanaNumber) {
+            1 -> Karana.KIMSTUGHNA
+            58 -> Karana.SHAKUNI
+            59 -> Karana.CHATUSHPADA
+            60 -> Karana.NAGA
+            else -> {
+                val adjustedNumber = karanaNumber - 2
+                val movableIndex = adjustedNumber % MOVABLE_KARANAS
+                when (movableIndex) {
+                    0 -> Karana.BAVA
+                    1 -> Karana.BALAVA
+                    2 -> Karana.KAULAVA
+                    3 -> Karana.TAITILA
+                    4 -> Karana.GARA
+                    5 -> Karana.VANIJA
+                    6 -> Karana.VISHTI
+                    else -> Karana.BAVA
+                }
+            }
+        }
+    }
+
     private fun calculateVara(julianDay: Double): Vara {
-        val dayNumber = ((julianDay + 1.5) % 7).toInt()
-        return Vara.entries[dayNumber]
+        val dayNumber = (floor(julianDay + 1.5).toLong() % 7).toInt()
+        return Vara.entries[dayNumber.coerceIn(0, Vara.entries.size - 1)]
     }
 
-    /**
-     * Calculate Paksha (lunar fortnight)
-     */
-    private fun calculatePaksha(tithiData: TithiData): Paksha {
-        return if (tithiData.number <= 15) Paksha.SHUKLA else Paksha.KRISHNA
+    private fun determinePaksha(tithiNumber: Int): Paksha {
+        return if (tithiNumber <= 15) Paksha.SHUKLA else Paksha.KRISHNA
     }
 
-    /**
-     * Calculate Sunrise and Sunset times
-     */
     private fun calculateSunriseSunset(
         julianDay: Double,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        zoneId: ZoneId
     ): Pair<String, String> {
         val geopos = doubleArrayOf(longitude, latitude, 0.0)
-        val tret = DblObj()
-        val serr = StringBuffer()
+        val timeResult = DblObj()
+        val errorBuffer = StringBuffer()
 
-        // Calculate sunrise
+        val jdMidnight = floor(julianDay - 0.5) + 0.5
+
+        val sunriseFlags = SweConst.SE_CALC_RISE or SweConst.SE_BIT_DISC_CENTER
         val riseResult = swissEph.swe_rise_trans(
-            julianDay,
+            jdMidnight,
             SweConst.SE_SUN,
             null,
             SweConst.SEFLG_SWIEPH,
-            SweConst.SE_CALC_RISE,
+            sunriseFlags,
             geopos,
-            0.0,
-            0.0,
-            tret,
-            serr
+            1013.25,
+            15.0,
+            timeResult,
+            errorBuffer
         )
 
-        val sunriseJD = if (riseResult >= 0) tret.`val` else julianDay
+        val sunriseJD: Double? = if (riseResult >= 0 && timeResult.`val` > jdMidnight) {
+            timeResult.`val`
+        } else {
+            null
+        }
 
-        // Calculate sunset
+        val sunsetFlags = SweConst.SE_CALC_SET or SweConst.SE_BIT_DISC_CENTER
         val setResult = swissEph.swe_rise_trans(
-            julianDay,
+            jdMidnight,
             SweConst.SE_SUN,
             null,
             SweConst.SEFLG_SWIEPH,
-            SweConst.SE_CALC_SET,
+            sunsetFlags,
             geopos,
-            0.0,
-            0.0,
-            tret,
-            serr
+            1013.25,
+            15.0,
+            timeResult,
+            errorBuffer
         )
 
-        val sunsetJD = if (setResult >= 0) tret.`val` else julianDay
+        val sunsetJD: Double? = if (setResult >= 0 && timeResult.`val` > jdMidnight) {
+            timeResult.`val`
+        } else {
+            null
+        }
 
-        return Pair(
-            formatJulianDayToTime(sunriseJD),
-            formatJulianDayToTime(sunsetJD)
-        )
+        val sunrise = sunriseJD?.let { formatJulianDayToLocalTime(it, zoneId) } ?: "N/A"
+        val sunset = sunsetJD?.let { formatJulianDayToLocalTime(it, zoneId) } ?: "N/A"
+
+        return Pair(sunrise, sunset)
     }
 
-    private fun formatJulianDayToTime(julianDay: Double): String {
+    private fun formatJulianDayToLocalTime(julianDay: Double, zoneId: ZoneId): String {
         val sweDate = SweDate(julianDay)
-        val hour = sweDate.hour.toInt()
-        val minute = ((sweDate.hour - hour) * 60).toInt()
-        val second = ((((sweDate.hour - hour) * 60) - minute) * 60).toInt()
+
+        val utcHour = sweDate.hour
+        val hourInt = utcHour.toInt()
+        val minuteFraction = (utcHour - hourInt) * 60.0
+        val minuteInt = minuteFraction.toInt()
+        val secondFraction = (minuteFraction - minuteInt) * 60.0
+        val secondInt = secondFraction.toInt()
+
+        val utcZonedDateTime = ZonedDateTime.of(
+            sweDate.year,
+            sweDate.month,
+            sweDate.day,
+            hourInt,
+            minuteInt,
+            secondInt,
+            0,
+            ZoneId.of("UTC")
+        )
+
+        val localDateTime = utcZonedDateTime.withZoneSameInstant(zoneId)
+
+        val hour = localDateTime.hour
+        val minute = localDateTime.minute
+        val second = localDateTime.second
 
         val amPm = if (hour < 12) "AM" else "PM"
         val displayHour = when {
@@ -353,22 +389,18 @@ class PanchangaCalculator(context: Context) {
             else -> hour
         }
 
-        return String.format("%d:%02d:%02d %s", displayHour, minute, second, amPm)
+        return String.format(Locale.US, "%d:%02d:%02d %s", displayHour, minute, second, amPm)
     }
 
-    /**
-     * Calculate Moon phase percentage (0% = New Moon, 100% = Full Moon)
-     */
-    private fun calculateMoonPhase(sunLongitude: Double, moonLongitude: Double): Double {
-        var diff = moonLongitude - sunLongitude
-        if (diff < 0) diff += 360.0
+    private fun calculateMoonPhase(sunLongitudeTropical: Double, moonLongitudeTropical: Double): Double {
+        var elongation = moonLongitudeTropical - sunLongitudeTropical
+        if (elongation < 0.0) elongation += 360.0
+        if (elongation >= 360.0) elongation = 0.0
 
-        // Convert to percentage (0-180 = waxing, 180-360 = waning)
-        return if (diff <= 180) {
-            diff / 180.0 * 100.0
-        } else {
-            (360.0 - diff) / 180.0 * 100.0
-        }
+        val elongationRadians = Math.toRadians(elongation)
+        val illumination = (1.0 - cos(elongationRadians)) / 2.0 * 100.0
+
+        return illumination.coerceIn(0.0, 100.0)
     }
 
     private fun calculateJulianDay(
@@ -384,131 +416,179 @@ class PanchangaCalculator(context: Context) {
         return sweDate.julDay
     }
 
-    fun close() {
-        swissEph.swe_close()
+    override fun close() {
+        if (!isClosed) {
+            synchronized(this) {
+                if (!isClosed) {
+                    swissEph.swe_close()
+                    isClosed = true
+                }
+            }
+        }
     }
 }
 
-// Enums and Data Classes for Panchanga
+class PanchangaCalculationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-enum class Tithi(val number: Int, val displayName: String, val sanskrit: String) {
-    PRATIPADA(1, "Pratipada", "प्रतिपदा"),
-    DWITIYA(2, "Dwitiya", "द्वितीया"),
-    TRITIYA(3, "Tritiya", "तृतीया"),
-    CHATURTHI(4, "Chaturthi", "चतुर्थी"),
-    PANCHAMI(5, "Panchami", "पंचमी"),
-    SHASHTHI(6, "Shashthi", "षष्ठी"),
-    SAPTAMI(7, "Saptami", "सप्तमी"),
-    ASHTAMI(8, "Ashtami", "अष्टमी"),
-    NAVAMI(9, "Navami", "नवमी"),
-    DASHAMI(10, "Dashami", "दशमी"),
-    EKADASHI(11, "Ekadashi", "एकादशी"),
-    DWADASHI(12, "Dwadashi", "द्वादशी"),
-    TRAYODASHI(13, "Trayodashi", "त्रयोदशी"),
-    CHATURDASHI(14, "Chaturdashi", "चतुर्दशी"),
-    PURNIMA(15, "Purnima", "पूर्णिमा"),
-    PRATIPADA_K(16, "Pratipada", "प्रतिपदा"),
-    DWITIYA_K(17, "Dwitiya", "द्वितीया"),
-    TRITIYA_K(18, "Tritiya", "तृतीया"),
-    CHATURTHI_K(19, "Chaturthi", "चतुर्थी"),
-    PANCHAMI_K(20, "Panchami", "पंचमी"),
-    SHASHTHI_K(21, "Shashthi", "षष्ठी"),
-    SAPTAMI_K(22, "Saptami", "सप्तमी"),
-    ASHTAMI_K(23, "Ashtami", "अष्टमी"),
-    NAVAMI_K(24, "Navami", "नवमी"),
-    DASHAMI_K(25, "Dashami", "दशमी"),
-    EKADASHI_K(26, "Ekadashi", "एकादशी"),
-    DWADASHI_K(27, "Dwadashi", "द्वादशी"),
-    TRAYODASHI_K(28, "Trayodashi", "त्रयोदशी"),
-    CHATURDASHI_K(29, "Chaturdashi", "चतुर्दशी"),
-    AMAVASYA(30, "Amavasya", "अमावस्या")
+enum class Tithi(val number: Int, val displayName: String, val sanskrit: String, val group: TithiGroup) {
+    PRATIPADA(1, "Pratipada", "प्रतिपदा", TithiGroup.NANDA),
+    DWITIYA(2, "Dwitiya", "द्वितीया", TithiGroup.BHADRA),
+    TRITIYA(3, "Tritiya", "तृतीया", TithiGroup.JAYA),
+    CHATURTHI(4, "Chaturthi", "चतुर्थी", TithiGroup.RIKTA),
+    PANCHAMI(5, "Panchami", "पञ्चमी", TithiGroup.PURNA),
+    SHASHTHI(6, "Shashthi", "षष्ठी", TithiGroup.NANDA),
+    SAPTAMI(7, "Saptami", "सप्तमी", TithiGroup.BHADRA),
+    ASHTAMI(8, "Ashtami", "अष्टमी", TithiGroup.JAYA),
+    NAVAMI(9, "Navami", "नवमी", TithiGroup.RIKTA),
+    DASHAMI(10, "Dashami", "दशमी", TithiGroup.PURNA),
+    EKADASHI(11, "Ekadashi", "एकादशी", TithiGroup.NANDA),
+    DWADASHI(12, "Dwadashi", "द्वादशी", TithiGroup.BHADRA),
+    TRAYODASHI(13, "Trayodashi", "त्रयोदशी", TithiGroup.JAYA),
+    CHATURDASHI(14, "Chaturdashi", "चतुर्दशी", TithiGroup.RIKTA),
+    PURNIMA(15, "Purnima", "पूर्णिमा", TithiGroup.PURNA),
+    PRATIPADA_K(16, "Pratipada", "प्रतिपदा", TithiGroup.NANDA),
+    DWITIYA_K(17, "Dwitiya", "द्वितीया", TithiGroup.BHADRA),
+    TRITIYA_K(18, "Tritiya", "तृतीया", TithiGroup.JAYA),
+    CHATURTHI_K(19, "Chaturthi", "चतुर्थी", TithiGroup.RIKTA),
+    PANCHAMI_K(20, "Panchami", "पञ्चमी", TithiGroup.PURNA),
+    SHASHTHI_K(21, "Shashthi", "षष्ठी", TithiGroup.NANDA),
+    SAPTAMI_K(22, "Saptami", "सप्तमी", TithiGroup.BHADRA),
+    ASHTAMI_K(23, "Ashtami", "अष्टमी", TithiGroup.JAYA),
+    NAVAMI_K(24, "Navami", "नवमी", TithiGroup.RIKTA),
+    DASHAMI_K(25, "Dashami", "दशमी", TithiGroup.PURNA),
+    EKADASHI_K(26, "Ekadashi", "एकादशी", TithiGroup.NANDA),
+    DWADASHI_K(27, "Dwadashi", "द्वादशी", TithiGroup.BHADRA),
+    TRAYODASHI_K(28, "Trayodashi", "त्रयोदशी", TithiGroup.JAYA),
+    CHATURDASHI_K(29, "Chaturdashi", "चतुर्दशी", TithiGroup.RIKTA),
+    AMAVASYA(30, "Amavasya", "अमावस्या", TithiGroup.PURNA)
 }
 
-enum class Yoga(val number: Int, val displayName: String, val nature: String) {
-    VISHKUMBHA(1, "Vishkumbha", "Inauspicious"),
-    PRITI(2, "Priti", "Auspicious"),
-    AYUSHMAN(3, "Ayushman", "Auspicious"),
-    SAUBHAGYA(4, "Saubhagya", "Auspicious"),
-    SHOBHANA(5, "Shobhana", "Auspicious"),
-    ATIGANDA(6, "Atiganda", "Inauspicious"),
-    SUKARMA(7, "Sukarma", "Auspicious"),
-    DHRITI(8, "Dhriti", "Auspicious"),
-    SHOOLA(9, "Shoola", "Inauspicious"),
-    GANDA(10, "Ganda", "Inauspicious"),
-    VRIDDHI(11, "Vriddhi", "Auspicious"),
-    DHRUVA(12, "Dhruva", "Auspicious"),
-    VYAGHATA(13, "Vyaghata", "Inauspicious"),
-    HARSHANA(14, "Harshana", "Auspicious"),
-    VAJRA(15, "Vajra", "Inauspicious"),
-    SIDDHI(16, "Siddhi", "Auspicious"),
-    VYATIPATA(17, "Vyatipata", "Inauspicious"),
-    VARIYAN(18, "Variyan", "Auspicious"),
-    PARIGHA(19, "Parigha", "Inauspicious"),
-    SHIVA(20, "Shiva", "Auspicious"),
-    SIDDHA(21, "Siddha", "Auspicious"),
-    SADHYA(22, "Sadhya", "Auspicious"),
-    SHUBHA(23, "Shubha", "Auspicious"),
-    SHUKLA(24, "Shukla", "Auspicious"),
-    BRAHMA(25, "Brahma", "Auspicious"),
-    INDRA(26, "Indra", "Auspicious"),
-    VAIDHRITI(27, "Vaidhriti", "Inauspicious")
+enum class TithiGroup(val displayName: String, val nature: String) {
+    NANDA("Nanda", "Joyful"),
+    BHADRA("Bhadra", "Auspicious"),
+    JAYA("Jaya", "Victorious"),
+    RIKTA("Rikta", "Empty"),
+    PURNA("Purna", "Complete")
 }
 
-enum class Karana(val number: Int, val displayName: String, val nature: String) {
-    KIMSTUGHNA(1, "Kimstughna", "Fixed"),
-    BAVA(2, "Bava", "Movable"),
-    BALAVA(3, "Balava", "Movable"),
-    KAULAVA(4, "Kaulava", "Movable"),
-    TAITILA(5, "Taitila", "Movable"),
-    GARIJA(6, "Garija", "Movable"),
-    VANIJA(7, "Vanija", "Movable"),
-    VISHTI(8, "Vishti", "Movable"),
-    SHAKUNI(9, "Shakuni", "Fixed"),
-    CHATUSHPADA(10, "Chatushpada", "Fixed"),
-    NAGAVA(11, "Nagava", "Fixed")
+enum class Yoga(val number: Int, val displayName: String, val sanskrit: String, val nature: YogaNature) {
+    VISHKUMBHA(1, "Vishkumbha", "विष्कुम्भ", YogaNature.INAUSPICIOUS),
+    PRITI(2, "Priti", "प्रीति", YogaNature.AUSPICIOUS),
+    AYUSHMAN(3, "Ayushman", "आयुष्मान्", YogaNature.AUSPICIOUS),
+    SAUBHAGYA(4, "Saubhagya", "सौभाग्य", YogaNature.AUSPICIOUS),
+    SHOBHANA(5, "Shobhana", "शोभन", YogaNature.AUSPICIOUS),
+    ATIGANDA(6, "Atiganda", "अतिगण्ड", YogaNature.INAUSPICIOUS),
+    SUKARMA(7, "Sukarma", "सुकर्म", YogaNature.AUSPICIOUS),
+    DHRITI(8, "Dhriti", "धृति", YogaNature.AUSPICIOUS),
+    SHULA(9, "Shula", "शूल", YogaNature.INAUSPICIOUS),
+    GANDA(10, "Ganda", "गण्ड", YogaNature.INAUSPICIOUS),
+    VRIDDHI(11, "Vriddhi", "वृद्धि", YogaNature.AUSPICIOUS),
+    DHRUVA(12, "Dhruva", "ध्रुव", YogaNature.AUSPICIOUS),
+    VYAGHATA(13, "Vyaghata", "व्याघात", YogaNature.INAUSPICIOUS),
+    HARSHANA(14, "Harshana", "हर्षण", YogaNature.AUSPICIOUS),
+    VAJRA(15, "Vajra", "वज्र", YogaNature.MIXED),
+    SIDDHI(16, "Siddhi", "सिद्धि", YogaNature.AUSPICIOUS),
+    VYATIPATA(17, "Vyatipata", "व्यतीपात", YogaNature.INAUSPICIOUS),
+    VARIYAN(18, "Variyan", "वरीयान्", YogaNature.AUSPICIOUS),
+    PARIGHA(19, "Parigha", "परिघ", YogaNature.INAUSPICIOUS),
+    SHIVA(20, "Shiva", "शिव", YogaNature.AUSPICIOUS),
+    SIDDHA(21, "Siddha", "सिद्ध", YogaNature.AUSPICIOUS),
+    SADHYA(22, "Sadhya", "साध्य", YogaNature.AUSPICIOUS),
+    SHUBHA(23, "Shubha", "शुभ", YogaNature.AUSPICIOUS),
+    SHUKLA(24, "Shukla", "शुक्ल", YogaNature.AUSPICIOUS),
+    BRAHMA(25, "Brahma", "ब्रह्म", YogaNature.AUSPICIOUS),
+    INDRA(26, "Indra", "इन्द्र", YogaNature.AUSPICIOUS),
+    VAIDHRITI(27, "Vaidhriti", "वैधृति", YogaNature.INAUSPICIOUS)
 }
 
-enum class Vara(val number: Int, val displayName: String, val lord: Planet) {
-    SUNDAY(0, "Sunday", Planet.SUN),
-    MONDAY(1, "Monday", Planet.MOON),
-    TUESDAY(2, "Tuesday", Planet.MARS),
-    WEDNESDAY(3, "Wednesday", Planet.MERCURY),
-    THURSDAY(4, "Thursday", Planet.JUPITER),
-    FRIDAY(5, "Friday", Planet.VENUS),
-    SATURDAY(6, "Saturday", Planet.SATURN)
+enum class YogaNature(val displayName: String) {
+    AUSPICIOUS("Auspicious"),
+    INAUSPICIOUS("Inauspicious"),
+    MIXED("Mixed")
 }
 
-enum class Paksha(val displayName: String, val description: String) {
-    SHUKLA("Shukla Paksha", "Bright/Waxing Fortnight"),
-    KRISHNA("Krishna Paksha", "Dark/Waning Fortnight")
+enum class Karana(val displayName: String, val sanskrit: String, val type: KaranaType) {
+    KIMSTUGHNA("Kimstughna", "किंस्तुघ्न", KaranaType.FIXED),
+    BAVA("Bava", "बव", KaranaType.MOVABLE),
+    BALAVA("Balava", "बालव", KaranaType.MOVABLE),
+    KAULAVA("Kaulava", "कौलव", KaranaType.MOVABLE),
+    TAITILA("Taitila", "तैतिल", KaranaType.MOVABLE),
+    GARA("Gara", "गर", KaranaType.MOVABLE),
+    VANIJA("Vanija", "वणिज", KaranaType.MOVABLE),
+    VISHTI("Vishti", "विष्टि", KaranaType.MOVABLE),
+    SHAKUNI("Shakuni", "शकुनि", KaranaType.FIXED),
+    CHATUSHPADA("Chatushpada", "चतुष्पाद", KaranaType.FIXED),
+    NAGA("Naga", "नाग", KaranaType.FIXED);
+
+    val nature: String
+        get() = type.displayName
+}
+
+enum class KaranaType(val displayName: String) {
+    FIXED("Fixed"),
+    MOVABLE("Movable")
+}
+
+enum class Vara(val number: Int, val displayName: String, val sanskrit: String, val lord: Planet) {
+    SUNDAY(0, "Sunday", "रविवार", Planet.SUN),
+    MONDAY(1, "Monday", "सोमवार", Planet.MOON),
+    TUESDAY(2, "Tuesday", "मंगलवार", Planet.MARS),
+    WEDNESDAY(3, "Wednesday", "बुधवार", Planet.MERCURY),
+    THURSDAY(4, "Thursday", "गुरुवार", Planet.JUPITER),
+    FRIDAY(5, "Friday", "शुक्रवार", Planet.VENUS),
+    SATURDAY(6, "Saturday", "शनिवार", Planet.SATURN)
+}
+
+enum class Paksha(val displayName: String, val sanskrit: String) {
+    SHUKLA("Shukla Paksha", "शुक्ल पक्ष"),
+    KRISHNA("Krishna Paksha", "कृष्ण पक्ष")
 }
 
 data class TithiData(
     val tithi: Tithi,
     val number: Int,
     val progress: Double,
-    val lord: Planet
-)
+    val lord: Planet,
+    val elongation: Double,
+    val remainingDegrees: Double
+) {
+    val group: TithiGroup
+        get() = tithi.group
+
+    val isKrishnaPaksha: Boolean
+        get() = number > 15
+}
 
 data class NakshatraData(
     val nakshatra: Nakshatra,
     val number: Int,
     val pada: Int,
     val progress: Double,
-    val lord: Planet
+    val lord: Planet,
+    val degreeInNakshatra: Double,
+    val remainingDegrees: Double
 )
 
 data class YogaData(
     val yoga: Yoga,
     val number: Int,
-    val progress: Double
-)
+    val progress: Double,
+    val combinedLongitude: Double,
+    val remainingDegrees: Double
+) {
+    val isAuspicious: Boolean
+        get() = yoga.nature == YogaNature.AUSPICIOUS
+}
 
 data class KaranaData(
     val karana: Karana,
     val number: Int,
-    val progress: Double
-)
+    val progress: Double,
+    val remainingDegrees: Double
+) {
+    val isVishti: Boolean
+        get() = karana == Karana.VISHTI
+}
 
 data class PanchangaData(
     val tithi: TithiData,
@@ -521,39 +601,83 @@ data class PanchangaData(
     val sunset: String,
     val moonPhase: Double,
     val sunLongitude: Double,
-    val moonLongitude: Double
+    val moonLongitude: Double,
+    val ayanamsa: Double = 0.0
 ) {
-    fun toPlainText(): String {
+    val isShuklaPaksha: Boolean
+        get() = paksha == Paksha.SHUKLA
+
+    val tithiInPaksha: Int
+        get() = if (tithi.number <= 15) tithi.number else tithi.number - 15
+
+    fun toFormattedString(): String {
         return buildString {
-            appendLine("═══════════════════════════════════════════════════")
-            appendLine("                    PANCHANGA")
-            appendLine("═══════════════════════════════════════════════════")
+            appendLine("════════════════════════════════════════════════════")
+            appendLine("                    पञ्चाङ्ग (PANCHANGA)")
+            appendLine("════════════════════════════════════════════════════")
             appendLine()
-            appendLine("TITHI")
+            appendLine("तिथि (TITHI)")
             appendLine("  ${tithi.tithi.displayName} (${tithi.tithi.sanskrit})")
-            appendLine("  Progress: ${String.format("%.1f", tithi.progress)}%")
+            appendLine("  ${paksha.displayName} - ${tithiInPaksha}/15")
+            appendLine("  Group: ${tithi.group.displayName} (${tithi.group.nature})")
+            appendLine("  Progress: ${formatProgress(tithi.progress)}")
             appendLine("  Lord: ${tithi.lord.displayName}")
             appendLine()
-            appendLine("NAKSHATRA")
+            appendLine("नक्षत्र (NAKSHATRA)")
             appendLine("  ${nakshatra.nakshatra.displayName} - Pada ${nakshatra.pada}")
-            appendLine("  Progress: ${String.format("%.1f", nakshatra.progress)}%")
+            appendLine("  Number: ${nakshatra.number}/27")
+            appendLine("  Progress: ${formatProgress(nakshatra.progress)}")
             appendLine("  Lord: ${nakshatra.lord.displayName}")
             appendLine()
-            appendLine("YOGA")
-            appendLine("  ${yoga.yoga.displayName} (${yoga.yoga.nature})")
-            appendLine("  Progress: ${String.format("%.1f", yoga.progress)}%")
+            appendLine("योग (YOGA)")
+            appendLine("  ${yoga.yoga.displayName} (${yoga.yoga.sanskrit})")
+            appendLine("  Nature: ${yoga.yoga.nature.displayName}")
+            appendLine("  Number: ${yoga.number}/27")
+            appendLine("  Progress: ${formatProgress(yoga.progress)}")
             appendLine()
-            appendLine("KARANA")
-            appendLine("  ${karana.karana.displayName} (${karana.karana.nature})")
-            appendLine("  Progress: ${String.format("%.1f", karana.progress)}%")
+            appendLine("करण (KARANA)")
+            appendLine("  ${karana.karana.displayName} (${karana.karana.sanskrit})")
+            appendLine("  Type: ${karana.karana.nature}")
+            appendLine("  Number: ${karana.number}/60")
+            appendLine("  Progress: ${formatProgress(karana.progress)}")
+            if (karana.isVishti) {
+                appendLine("  ⚠ Vishti (Bhadra) Karana - Inauspicious")
+            }
             appendLine()
-            appendLine("VARA: ${vara.displayName}")
-            appendLine("PAKSHA: ${paksha.displayName}")
+            appendLine("वार (VARA): ${vara.displayName} (${vara.sanskrit})")
+            appendLine("  Lord: ${vara.lord.displayName}")
             appendLine()
-            appendLine("SUNRISE: $sunrise")
-            appendLine("SUNSET: $sunset")
-            appendLine("MOON ILLUMINATION: ${String.format("%.1f", moonPhase)}%")
+            appendLine("────────────────────────────────────────────────────")
+            appendLine("सूर्योदय (SUNRISE): $sunrise")
+            appendLine("सूर्यास्त (SUNSET): $sunset")
+            appendLine("चन्द्र प्रकाश (MOON ILLUMINATION): ${formatProgress(moonPhase)}")
+            appendLine()
+            appendLine("────────────────────────────────────────────────────")
+            appendLine("SIDEREAL POSITIONS")
+            appendLine("  Sun: ${formatDegrees(sunLongitude)}")
+            appendLine("  Moon: ${formatDegrees(moonLongitude)}")
+            appendLine("  Ayanamsa (Lahiri): ${formatDegrees(ayanamsa)}")
             appendLine()
         }
     }
+
+    private fun formatProgress(value: Double): String {
+        return String.format(Locale.US, "%.2f%%", value)
+    }
+
+    private fun formatDegrees(value: Double): String {
+        val degrees = value.toInt()
+        val minutesTotal = (value - degrees) * 60.0
+        val minutes = minutesTotal.toInt()
+        val seconds = ((minutesTotal - minutes) * 60.0).toInt()
+        return String.format(Locale.US, "%d° %d' %d\"", degrees, minutes, seconds)
+    }
 }
+
+private val Yoga.yogaNature: YogaNature
+    get() = when (this) {
+        Yoga.VISHKUMBHA, Yoga.ATIGANDA, Yoga.SHULA, Yoga.GANDA,
+        Yoga.VYAGHATA, Yoga.VYATIPATA, Yoga.PARIGHA, Yoga.VAIDHRITI -> YogaNature.INAUSPICIOUS
+        Yoga.VAJRA -> YogaNature.MIXED
+        else -> YogaNature.AUSPICIOUS
+    }

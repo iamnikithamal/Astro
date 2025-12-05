@@ -2,104 +2,178 @@ package com.astro.storm.ui.screen.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Cake
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CompareArrows
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.PersonAddAlt
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Stars
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ui.theme.AppTheme
 
-/**
- * Home Tab - Chart Analysis & Tools
- *
- * Displays:
- * - Quick access to detailed chart analysis features
- * - Feature grid for various astrological tools
- */
+private val GridSpacing = 12.dp
+private val CardCornerRadius = 12.dp
+private val IconContainerSize = 40.dp
+private val IconContainerCornerRadius = 10.dp
+private val IconSize = 22.dp
+private val CardContentPadding = 16.dp
+
 @Composable
 fun HomeTab(
     chart: VedicChart?,
-    onFeatureClick: (InsightFeature) -> Unit
+    onFeatureClick: (InsightFeature) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(bottom = 100.dp)
 ) {
     if (chart == null) {
-        EmptyHomeState()
+        EmptyHomeState(modifier = modifier)
         return
     }
 
+    val implementedFeatures = remember { InsightFeature.implementedFeatures }
+    val comingSoonFeatures = remember { InsightFeature.comingSoonFeatures }
+
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(AppTheme.ScreenBackground),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentPadding = contentPadding
     ) {
-        // Quick Actions Header
-        item {
-            Text(
+        item(key = "header_chart_analysis") {
+            SectionHeader(
                 text = "Chart Analysis",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextPrimary,
-                modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 12.dp)
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = 12.dp
+                )
             )
         }
 
-        // Feature Grid - Implemented features
-        item {
+        item(key = "grid_implemented") {
             FeatureGrid(
-                features = InsightFeature.implementedFeatures,
-                onFeatureClick = onFeatureClick
+                features = implementedFeatures,
+                onFeatureClick = onFeatureClick,
+                isDisabled = false
             )
         }
 
-        // Coming Soon Section
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
+        item(key = "header_coming_soon") {
+            SectionHeader(
                 text = "Coming Soon",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextMuted,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                isMuted = true,
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    top = 24.dp,
+                    end = 16.dp,
+                    bottom = 12.dp
+                )
             )
         }
 
-        // Coming Soon Features
-        item {
+        item(key = "grid_coming_soon") {
             FeatureGrid(
-                features = InsightFeature.comingSoonFeatures,
-                onFeatureClick = { /* Non-functional */ },
+                features = comingSoonFeatures,
+                onFeatureClick = {},
                 isDisabled = true
             )
         }
+
+        item(key = "bottom_spacer") {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
+}
+
+@Composable
+private fun SectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    isMuted: Boolean = false
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = if (isMuted) AppTheme.TextMuted else AppTheme.TextPrimary,
+        modifier = modifier
+    )
 }
 
 @Composable
 private fun FeatureGrid(
     features: List<InsightFeature>,
     onFeatureClick: (InsightFeature) -> Unit,
-    isDisabled: Boolean = false
+    isDisabled: Boolean,
+    modifier: Modifier = Modifier,
+    columns: Int = 2,
+    horizontalSpacing: Dp = GridSpacing,
+    verticalSpacing: Dp = GridSpacing
 ) {
+    val chunkedFeatures = remember(features, columns) {
+        features.chunked(columns)
+    }
+
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(verticalSpacing)
     ) {
-        features.chunked(2).forEach { rowFeatures ->
+        chunkedFeatures.forEach { rowFeatures ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
             ) {
                 rowFeatures.forEach { feature ->
                     FeatureCard(
@@ -109,16 +183,15 @@ private fun FeatureGrid(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // Fill empty space if odd number of features
-                if (rowFeatures.size == 1) {
+                repeat(columns - rowFeatures.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 private fun FeatureCard(
     feature: InsightFeature,
@@ -126,48 +199,63 @@ private fun FeatureCard(
     isDisabled: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val containerColor = remember(isDisabled) {
+        if (isDisabled) AppTheme.CardBackground.copy(alpha = 0.5f)
+        else AppTheme.CardBackground
+    }
+
+    val iconBackgroundColor = remember(isDisabled, feature.color) {
+        if (isDisabled) AppTheme.TextSubtle.copy(alpha = 0.1f)
+        else feature.color.copy(alpha = 0.15f)
+    }
+
+    val iconTint = if (isDisabled) AppTheme.TextSubtle else feature.color
+    val titleColor = if (isDisabled) AppTheme.TextSubtle else AppTheme.TextPrimary
+    val descriptionColor = if (isDisabled) {
+        AppTheme.TextSubtle.copy(alpha = 0.7f)
+    } else {
+        AppTheme.TextMuted
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val rippleIndication = rememberRipple(color = feature.color)
+
     Card(
         modifier = modifier
-            .clickable(enabled = !isDisabled) { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDisabled) AppTheme.CardBackground.copy(alpha = 0.5f) else AppTheme.CardBackground
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            if (isDisabled) AppTheme.TextSubtle.copy(alpha = 0.1f)
-                            else feature.color.copy(alpha = 0.15f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = feature.icon,
-                        contentDescription = null,
-                        tint = if (isDisabled) AppTheme.TextSubtle else feature.color,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                if (isDisabled) {
-                    Text(
-                        text = "Soon",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AppTheme.TextSubtle
-                    )
+            .semantics(mergeDescendants = true) {
+                contentDescription = buildString {
+                    append(feature.title)
+                    append(": ")
+                    append(feature.description)
+                    if (isDisabled) append(". Coming soon")
                 }
             }
+            .clip(RoundedCornerShape(CardCornerRadius))
+            .clickable(
+                enabled = !isDisabled,
+                role = Role.Button,
+                interactionSource = interactionSource,
+                indication = rippleIndication,
+                onClick = onClick
+            ),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        shape = RoundedCornerShape(CardCornerRadius),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDisabled) 0.dp else 2.dp,
+            pressedElevation = 4.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(CardContentPadding)
+        ) {
+            FeatureCardHeader(
+                icon = feature.icon,
+                iconBackgroundColor = iconBackgroundColor,
+                iconTint = iconTint,
+                showComingSoonBadge = isDisabled
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -175,7 +263,10 @@ private fun FeatureCard(
                 text = feature.title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = if (isDisabled) AppTheme.TextSubtle else AppTheme.TextPrimary
+                color = titleColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.clearAndSetSemantics { }
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -183,18 +274,67 @@ private fun FeatureCard(
             Text(
                 text = feature.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isDisabled) AppTheme.TextSubtle.copy(alpha = 0.7f) else AppTheme.TextMuted,
+                color = descriptionColor,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 16.sp
+                lineHeight = 16.sp,
+                modifier = Modifier.clearAndSetSemantics { }
             )
         }
     }
 }
 
-/**
- * Available insight features
- */
+@Composable
+private fun FeatureCardHeader(
+    icon: ImageVector,
+    iconBackgroundColor: Color,
+    iconTint: Color,
+    showComingSoonBadge: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(IconContainerSize)
+                .clip(RoundedCornerShape(IconContainerCornerRadius))
+                .background(iconBackgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(IconSize)
+            )
+        }
+
+        if (showComingSoonBadge) {
+            ComingSoonBadge()
+        }
+    }
+}
+
+@Composable
+private fun ComingSoonBadge(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = AppTheme.TextSubtle.copy(alpha = 0.12f)
+    ) {
+        Text(
+            text = "Soon",
+            style = MaterialTheme.typography.labelSmall,
+            color = AppTheme.TextSubtle,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+        )
+    }
+}
+
+@Stable
 enum class InsightFeature(
     val title: String,
     val description: String,
@@ -202,7 +342,6 @@ enum class InsightFeature(
     val color: Color,
     val isImplemented: Boolean
 ) {
-    // Implemented features
     FULL_CHART(
         title = "Birth Chart",
         description = "View your complete Vedic birth chart",
@@ -252,8 +391,6 @@ enum class InsightFeature(
         color = AppTheme.LifeAreaFinance,
         isImplemented = true
     ),
-
-    // Newly implemented features
     MATCHMAKING(
         title = "Matchmaking",
         description = "Kundli Milan compatibility",
@@ -282,8 +419,6 @@ enum class InsightFeature(
         color = AppTheme.LifeAreaCareer,
         isImplemented = true
     ),
-
-    // Coming soon features
     PRASHNA(
         title = "Prashna",
         description = "Horary astrology",
@@ -314,23 +449,28 @@ enum class InsightFeature(
     );
 
     companion object {
-        val implementedFeatures = entries.filter { it.isImplemented }
-        val comingSoonFeatures = entries.filter { !it.isImplemented }
+        val implementedFeatures: List<InsightFeature> by lazy(LazyThreadSafetyMode.PUBLICATION) {
+            entries.filter { it.isImplemented }
+        }
+
+        val comingSoonFeatures: List<InsightFeature> by lazy(LazyThreadSafetyMode.PUBLICATION) {
+            entries.filter { !it.isImplemented }
+        }
     }
 }
 
-
 @Composable
-private fun EmptyHomeState() {
+private fun EmptyHomeState(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(AppTheme.ScreenBackground)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = Icons.Outlined.PersonAddAlt,
@@ -345,7 +485,8 @@ private fun EmptyHomeState() {
                 text = "No Profile Selected",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextPrimary
+                color = AppTheme.TextPrimary,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -354,7 +495,8 @@ private fun EmptyHomeState() {
                 text = "Select or create a profile to view your personalized astrological insights.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextMuted,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(max = 280.dp)
             )
         }
     }
