@@ -57,7 +57,9 @@ import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
+import com.astro.storm.ephemeris.PlanetaryShadbala
 import com.astro.storm.ephemeris.RetrogradeCombustionCalculator
+import com.astro.storm.ephemeris.ShadbalaAnalysis
 import com.astro.storm.ephemeris.ShadbalaCalculator
 import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import com.astro.storm.ui.screen.chartdetail.ChartDetailUtils
@@ -120,7 +122,7 @@ private object DecimalFormatters {
 @Stable
 private data class PlanetCardState(
     val position: PlanetPosition,
-    val shadbala: ShadbalaCalculator.PlanetaryShadbala?,
+    val shadbala: PlanetaryShadbala?,
     val conditions: RetrogradeCombustionCalculator.PlanetCondition?,
     val dignityStatus: DignityStatus
 ) {
@@ -305,7 +307,7 @@ private fun ConditionStatBadge(
 
 @Composable
 private fun ShadbalaOverviewCard(
-    shadbala: ShadbalaCalculator.ShadbalaAnalysis,
+    shadbala: ShadbalaAnalysis,
     onClick: () -> Unit
 ) {
     val formattedScore = remember(shadbala.overallStrengthScore) {
@@ -573,7 +575,7 @@ private fun NakshatraChip(
 }
 
 @Composable
-private fun ShadbalaProgressSection(shadbala: ShadbalaCalculator.PlanetaryShadbala) {
+private fun ShadbalaProgressSection(shadbala: PlanetaryShadbala) {
     val progress = remember(shadbala.percentageOfRequired) {
         (shadbala.percentageOfRequired / 150.0).coerceIn(0.0, 1.0).toFloat()
     }

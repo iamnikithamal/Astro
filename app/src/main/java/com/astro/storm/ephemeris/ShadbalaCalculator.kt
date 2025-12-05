@@ -4,6 +4,8 @@ import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
+import com.astro.storm.ephemeris.DivisionalChartData
+import com.astro.storm.ephemeris.DivisionalChartType
 import com.astro.storm.util.PlanetaryRelationships
 import java.text.DecimalFormat
 import java.time.LocalDateTime
@@ -316,11 +318,11 @@ object ShadbalaCalculator {
         val sunPosition: PlanetPosition? by lazy { planetMap[Planet.SUN] }
         val moonPosition: PlanetPosition? by lazy { planetMap[Planet.MOON] }
 
-        val divisionalCharts: List<DivisionalChart> by lazy {
+        val divisionalCharts: List<DivisionalChartData> by lazy {
             DivisionalChartCalculator.calculateAllDivisionalCharts(chart)
         }
 
-        val divisionalChartMap: Map<DivisionalChartType, DivisionalChart> by lazy {
+        val divisionalChartMap: Map<DivisionalChartType, DivisionalChartData> by lazy {
             divisionalCharts.associateBy { it.chartType }
         }
 
@@ -360,7 +362,7 @@ object ShadbalaCalculator {
         val overallScore = strengths.values.map { it.percentageOfRequired }.average()
 
         return ShadbalaAnalysis(
-            chartId = chart.id,
+            chartId = generateStableChartId(chart),
             planetaryStrengths = strengths.toMap(),
             strongestPlanet = sortedStrengths.first().planet,
             weakestPlanet = sortedStrengths.last().planet,
@@ -437,37 +439,37 @@ object ShadbalaCalculator {
                 SaptavargaWeights.D1_RASHI
 
         context.divisionalChartMap[DivisionalChartType.D2_HORA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D2_HORA
             }
         }
 
         context.divisionalChartMap[DivisionalChartType.D3_DREKKANA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D3_DREKKANA
             }
         }
 
         context.divisionalChartMap[DivisionalChartType.D7_SAPTAMSA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D7_SAPTAMSA
             }
         }
 
         context.divisionalChartMap[DivisionalChartType.D9_NAVAMSA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D9_NAVAMSA
             }
         }
 
         context.divisionalChartMap[DivisionalChartType.D12_DWADASAMSA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D12_DWADASAMSA
             }
         }
 
         context.divisionalChartMap[DivisionalChartType.D30_TRIMSAMSA]?.let { chart ->
-            chart.planetPositions.find { it.planet == planet }?.let { pos ->
+            chart.planetPositions.find { position: PlanetPosition -> position.planet == planet }?.let { pos ->
                 totalBala += getVargaStrengthBasic(planet, pos.sign) * SaptavargaWeights.D30_TRIMSAMSA
             }
         }
@@ -745,4 +747,12 @@ object ShadbalaCalculator {
     private val WAR_CAPABLE_PLANETS = setOf(
         Planet.MARS, Planet.MERCURY, Planet.JUPITER, Planet.VENUS, Planet.SATURN
     )
+
+    private fun generateStableChartId(chart: VedicChart): String {
+        val birthData = chart.birthData
+        return "${birthData.name}-${birthData.dateTime}-${birthData.latitude}-${birthData.longitude}".replace(
+            Regex("[^a-zA-Z0-9-]"),
+            "_"
+        )
+    }
 }
