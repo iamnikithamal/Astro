@@ -3623,7 +3623,7 @@ private fun PanchangaTabContent(chart: VedicChart, context: android.content.Cont
                     title = "Yoga",
                     icon = Icons.Outlined.AllInclusive,
                     mainValue = panchanga.yoga.yoga.displayName,
-                    subValue = panchanga.yoga.yoga.nature,
+                    subValue = panchanga.yoga.yoga.nature.displayName,
                     detail = null,
                     progress = panchanga.yoga.progress.toFloat() / 100f,
                     color = AccentPurple

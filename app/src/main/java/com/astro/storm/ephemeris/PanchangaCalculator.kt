@@ -498,12 +498,7 @@ enum class Yoga(val number: Int, val displayName: String, val sanskrit: String, 
     SHUKLA(24, "Shukla", "शुक्ल", YogaNature.AUSPICIOUS),
     BRAHMA(25, "Brahma", "ब्रह्म", YogaNature.AUSPICIOUS),
     INDRA(26, "Indra", "इन्द्र", YogaNature.AUSPICIOUS),
-    VAIDHRITI(27, "Vaidhriti", "वैधृति", YogaNature.INAUSPICIOUS);
-
-    val nature: String
-        get() = yogaNature.displayName
-
-    private val yogaNature: YogaNature = nature
+    VAIDHRITI(27, "Vaidhriti", "वैधृति", YogaNature.INAUSPICIOUS)
 }
 
 enum class YogaNature(val displayName: String) {
@@ -582,7 +577,7 @@ data class YogaData(
     val remainingDegrees: Double
 ) {
     val isAuspicious: Boolean
-        get() = yoga.yogaNature == YogaNature.AUSPICIOUS
+        get() = yoga.nature == YogaNature.AUSPICIOUS
 }
 
 data class KaranaData(
@@ -636,7 +631,7 @@ data class PanchangaData(
             appendLine()
             appendLine("योग (YOGA)")
             appendLine("  ${yoga.yoga.displayName} (${yoga.yoga.sanskrit})")
-            appendLine("  Nature: ${yoga.yoga.nature}")
+            appendLine("  Nature: ${yoga.yoga.nature.displayName}")
             appendLine("  Number: ${yoga.number}/27")
             appendLine("  Progress: ${formatProgress(yoga.progress)}")
             appendLine()

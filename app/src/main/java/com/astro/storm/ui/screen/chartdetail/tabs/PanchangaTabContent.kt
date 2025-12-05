@@ -497,7 +497,7 @@ private fun YogaCard(
             DetailRow("Sanskrit", yogaData.sanskrit, ChartDetailColors.TextSecondary)
             DetailRow("Number", "${panchanga.yoga.number} of 27", ChartDetailColors.TextPrimary)
             DetailRow("Meaning", yogaData.meaning, ChartDetailColors.TextSecondary)
-            DetailRow("Nature", panchanga.yoga.yoga.nature, getQualityColor(yogaData.quality))
+            DetailRow("Nature", panchanga.yoga.yoga.nature.displayName, getQualityColor(yogaData.quality))
             ProgressRow("Progress", panchanga.yoga.progress, ChartDetailColors.AccentTeal)
 
             DescriptionSection(
