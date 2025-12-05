@@ -171,7 +171,7 @@ private fun PlanetPositionCard(position: PlanetPosition) {
 }
 
 @Composable
-private fun ShadbalaCard(shadbala: ShadbalaCalculator.PlanetaryShadbala) {
+private fun ShadbalaCard(shadbala: PlanetaryShadbala) {
     DialogCard(title = "Strength Analysis (Shadbala)", icon = Icons.Outlined.TrendingUp) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val strengthPercentage = (shadbala.percentageOfRequired / 150.0).coerceIn(0.0, 1.0).toFloat()
@@ -331,7 +331,7 @@ private fun PlanetStatusCard(position: PlanetPosition, chart: VedicChart) {
 @Composable
 private fun PredictionsCard(
     position: PlanetPosition,
-    shadbala: ShadbalaCalculator.PlanetaryShadbala,
+    shadbala: PlanetaryShadbala,
     chart: VedicChart
 ) {
     val predictions = getPlanetPredictions(position, shadbala)
