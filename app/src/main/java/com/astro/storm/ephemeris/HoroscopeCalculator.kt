@@ -292,7 +292,7 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
     ): List<PlanetaryInfluence> {
         // Pre-calculate Ashtakavarga if available
         val ashtakavarga = try {
-            AshtakavargaCalculator.calculateFullAshtakavarga(natalChart)
+            AshtakavargaCalculator.calculateAshtakavarga(natalChart)
         } catch (e: Exception) {
             Log.w(TAG, "Ashtakavarga calculation failed, proceeding without it", e)
             null
@@ -393,23 +393,14 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
     private fun getAshtakavargaTransitScore(
         planet: Planet,
         transitSign: ZodiacSign,
-        ashtakavarga: AshtakavargaCalculator.AshtakavargaResult?
+        ashtakavarga: AshtakavargaCalculator.AshtakavargaAnalysis?
     ): Int? {
         if (ashtakavarga == null) return null
 
         // Get BAV (Bhinnashtakavarga) score for this planet in the transit sign
-        val bavChart = when (planet) {
-            Planet.SUN -> ashtakavarga.sunBav
-            Planet.MOON -> ashtakavarga.moonBav
-            Planet.MARS -> ashtakavarga.marsBav
-            Planet.MERCURY -> ashtakavarga.mercuryBav
-            Planet.JUPITER -> ashtakavarga.jupiterBav
-            Planet.VENUS -> ashtakavarga.venusBav
-            Planet.SATURN -> ashtakavarga.saturnBav
-            else -> return null
-        }
+        val bav = ashtakavarga.bhinnashtakavarga[planet] ?: return null
 
-        return bavChart.getOrNull(transitSign.ordinal)
+        return bav.getBindusForSign(transitSign)
     }
 
     private fun calculateHouseFromMoon(transitSign: ZodiacSign, natalChart: VedicChart): Int {
