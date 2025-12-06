@@ -92,7 +92,7 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
                 }
             }
 
-            val calculator = HoroscopeCalculator(application)
+            val calculator = HoroscopeCalculator(getApplication())
             try {
                 val todayDeferred = async(Dispatchers.Default) {
                     try {
