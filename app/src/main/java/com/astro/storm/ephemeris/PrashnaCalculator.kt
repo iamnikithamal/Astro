@@ -1482,7 +1482,7 @@ class PrashnaCalculator(context: Context) {
                 HouseStrength.POOR -> -2
                 HouseStrength.AFFLICTED -> -4
                 null -> 0
-            }
+            } as Int
         }
         score += (relevantHouseScore * 15) / (houseAnalysis.relevantHouses.size * 5)
         if (relevantHouseScore > 0) {
