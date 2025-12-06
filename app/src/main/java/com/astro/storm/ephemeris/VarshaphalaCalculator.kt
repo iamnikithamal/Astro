@@ -2263,6 +2263,42 @@ class VarshaphalaCalculator(context: Context) {
         return houseOfSun in listOf(7, 8, 9, 10, 11, 12, 1)
     }
 
+    private fun getYearLordDignityDescription(planet: Planet, chart: SolarReturnChart): String {
+        val position = chart.planetPositions[planet] ?: return "Year Lord's position is undefined."
+
+        val dignityDetails = mutableListOf<String>()
+
+        // Sign-based dignity
+        when {
+            isExalted(planet, position.sign) -> dignityDetails.add("exalted in ${position.sign.displayName}")
+            OWN_SIGNS[planet]?.contains(position.sign) == true -> dignityDetails.add("in its own sign of ${position.sign.displayName}")
+            isDebilitated(planet, position.sign) -> dignityDetails.add("debilitated in ${position.sign.displayName}")
+            else -> {
+                val signLord = position.sign.ruler
+                when {
+                    areFriends(planet, signLord) -> dignityDetails.add("in the friendly sign of ${position.sign.displayName}")
+                    areNeutral(planet, signLord) -> dignityDetails.add("in the neutral sign of ${position.sign.displayName}")
+                    else -> dignityDetails.add("in the enemy sign of ${position.sign.displayName}")
+                }
+            }
+        }
+
+        // House-based placement
+        when (position.house) {
+            1, 4, 7, 10 -> dignityDetails.add("in an angular house (Kendra)")
+            5, 9 -> dignityDetails.add("in a trine house (Trikona)")
+            2, 11 -> dignityDetails.add("in a house of gains")
+            3, 6 -> dignityDetails.add("in an upachaya house")
+            8, 12 -> dignityDetails.add("in a challenging house (Dusthana)")
+        }
+
+        if (position.isRetrograde) {
+            dignityDetails.add("and is retrograde")
+        }
+
+        return "The Year Lord ${planet.displayName} is ${dignityDetails.joinToString(", ")}. This suggests its influence will be potent and its results will manifest clearly throughout the year."
+    }
+
     private fun evaluatePlanetStrengthDescription(planet: Planet, chart: SolarReturnChart): String {
         val position = chart.planetPositions[planet] ?: return "Unknown"
         val sign = position.sign

@@ -1175,7 +1175,7 @@ private fun PlanetBalaRow(bala: PanchaVargiyaBala) {
         )
 
         LinearProgressIndicator(
-            progress = { (bala.total / 20f).coerceIn(0f, 1f) },
+            progress = { (bala.total.toFloat() / 20f).coerceIn(0f, 1f) },
             modifier = Modifier
                 .weight(1f)
                 .height(8.dp)
