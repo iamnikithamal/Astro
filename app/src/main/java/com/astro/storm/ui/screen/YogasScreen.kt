@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.YogaCalculator
 import com.astro.storm.ui.screen.chartdetail.tabs.YogasTabContent
@@ -163,7 +164,7 @@ private fun YogaInfoDialog(
                     color = AppTheme.TextSecondary
                 )
                 androidx.compose.foundation.layout.Spacer(
-                    modifier = Modifier.padding(vertical = androidx.compose.ui.unit.dp.times(8))
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = "Yoga Categories:",
@@ -172,7 +173,7 @@ private fun YogaInfoDialog(
                     color = AppTheme.AccentGold
                 )
                 androidx.compose.foundation.layout.Spacer(
-                    modifier = Modifier.padding(vertical = androidx.compose.ui.unit.dp.times(4))
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
                 YogaCategoryInfo("Raja Yoga", "Power, authority, leadership")
                 YogaCategoryInfo("Dhana Yoga", "Wealth and prosperity")
@@ -193,7 +194,7 @@ private fun YogaInfoDialog(
             }
         },
         containerColor = AppTheme.CardBackground,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(androidx.compose.ui.unit.dp.times(16))
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
     )
 }
 
@@ -203,7 +204,7 @@ private fun YogaCategoryInfo(
     description: String
 ) {
     androidx.compose.foundation.layout.Row(
-        modifier = Modifier.padding(vertical = androidx.compose.ui.unit.dp.times(2))
+        modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Text(
             text = "• $name: ",

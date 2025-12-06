@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
@@ -242,7 +243,7 @@ fun EmptyChartScreen(
         ) {
             Column(
                 horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = androidx.compose.ui.unit.dp.times(32))
+                modifier = Modifier.padding(horizontal = 32.dp)
             ) {
                 Text(
                     text = message,

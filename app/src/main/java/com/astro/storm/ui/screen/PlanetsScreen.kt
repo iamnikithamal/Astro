@@ -28,7 +28,7 @@ import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ui.components.NakshatraDetailDialog
 import com.astro.storm.ui.components.PlanetDetailDialog
-import com.astro.storm.ui.components.ShadbalaDetailDialog
+import com.astro.storm.ui.components.ShadbalaDialog
 import com.astro.storm.ui.screen.chartdetail.tabs.PlanetsTabContent
 import com.astro.storm.ui.theme.AppTheme
 
@@ -81,7 +81,7 @@ fun PlanetsScreen(
     }
 
     if (showShadbalaDialog) {
-        ShadbalaDetailDialog(
+        ShadbalaDialog(
             chart = chart,
             onDismiss = { showShadbalaDialog = false }
         )
