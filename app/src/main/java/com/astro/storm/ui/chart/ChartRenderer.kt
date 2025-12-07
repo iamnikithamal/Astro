@@ -26,13 +26,11 @@ class ChartRenderer {
         isAntiAlias = true
         isSubpixelText = true
         hinting = android.graphics.Paint.HINTING_ON
-        letterSpacing = 0.02f
     }
 
     private val borderStroke = Stroke(width = 2.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)
     private val lineStroke = Stroke(width = 1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)
     private val frameLinesPath = Path()
-    private val arrowPath = Path()
 
     private enum class HouseType {
         DIAMOND,
@@ -45,7 +43,6 @@ class ChartRenderer {
         MOOL_TRIKONA,
         OWN_SIGN,
         NEUTRAL,
-        ENEMY,
         DEBILITATED
     }
 
@@ -93,7 +90,6 @@ class ChartRenderer {
         private val BORDER_COLOR = Color(0xFF8B7355)
         private val LINE_COLOR = Color(0xFFA69276)
         private val HOUSE_NUMBER_COLOR = Color(0xFF6B5B4F)
-        private val TEXT_BACKGROUND_COLOR = Color(0xFFFAF8F5)
 
         private val SUN_COLOR = Color(0xFFE67E22)
         private val MOON_COLOR = Color(0xFFE74C3C)
@@ -114,19 +110,15 @@ class ChartRenderer {
         private val MOOL_TRIKONA_COLOR = Color(0xFF6C3483)
         private val DEBILITATED_COLOR = Color(0xFFC0392B)
 
-        const val SYMBOL_RETROGRADE = "ᴿ"
-        const val SYMBOL_COMBUST = "°"
-        const val SYMBOL_VARGOTTAMA = "ᵛ"
-        const val SYMBOL_EXALTED = "↑"
-        const val SYMBOL_DEBILITATED = "↓"
-        const val SYMBOL_OWN_SIGN = "⌂"
-        const val SYMBOL_MOOL_TRIKONA = "△"
+        const val SYMBOL_RETROGRADE = "*"
+        const val SYMBOL_COMBUST = "^"
+        const val SYMBOL_VARGOTTAMA = "\u00A4"
 
         private const val BASE_TEXT_SIZE_RATIO = 0.032f
         private const val BASE_LINE_HEIGHT_RATIO = 0.042f
         private const val MIN_SCALE_FACTOR = 0.65f
         private const val MAX_SCALE_FACTOR = 1.0f
-        private const val TEXT_PADDING_RATIO = 0.15f
+        private const val ARROW_SIZE_RATIO = 0.38f
         private const val CHART_PADDING_RATIO = 0.025f
     }
 
@@ -452,13 +444,6 @@ class ChartRenderer {
                 if (planet.isRetrograde) append(SYMBOL_RETROGRADE)
                 if (isCombust(planet, sunPosition)) append(SYMBOL_COMBUST)
                 if (isVargottama(planet)) append(SYMBOL_VARGOTTAMA)
-                when (dignity) {
-                    PlanetaryDignity.EXALTED -> append(SYMBOL_EXALTED)
-                    PlanetaryDignity.DEBILITATED -> append(SYMBOL_DEBILITATED)
-                    PlanetaryDignity.OWN_SIGN -> append(SYMBOL_OWN_SIGN)
-                    PlanetaryDignity.MOOL_TRIKONA -> append(SYMBOL_MOOL_TRIKONA)
-                    else -> {}
-                }
             }
 
             items.add(
@@ -775,24 +760,31 @@ class ChartRenderer {
             val yOffset = row * layout.lineHeight
             val position = Offset(contentCenter.x + xOffset, startY + yOffset)
 
-            drawTextWithBackground(
+            val arrowWidth = when (item.dignity) {
+                PlanetaryDignity.EXALTED, PlanetaryDignity.DEBILITATED -> layout.textSize * ARROW_SIZE_RATIO * 1.3f
+                else -> 0f
+            }
+
+            drawPlanetText(
                 text = item.text,
                 position = position,
                 textSize = layout.textSize,
                 color = item.color,
                 isBold = item.isBold,
-                dignity = item.dignity
+                dignity = item.dignity,
+                arrowWidth = arrowWidth
             )
         }
     }
 
-    private fun DrawScope.drawTextWithBackground(
+    private fun DrawScope.drawPlanetText(
         text: String,
         position: Offset,
         textSize: Float,
         color: Color,
         isBold: Boolean,
-        dignity: PlanetaryDignity = PlanetaryDignity.NEUTRAL
+        dignity: PlanetaryDignity,
+        arrowWidth: Float
     ) {
         val typeface = if (isBold) TYPEFACE_BOLD else TYPEFACE_NORMAL
         textPaint.color = color.toArgb()
@@ -801,40 +793,107 @@ class ChartRenderer {
 
         val textWidth = textPaint.measureText(text)
         val textHeight = textPaint.descent() - textPaint.ascent()
-        val padding = textSize * TEXT_PADDING_RATIO
-
-        val bgLeft = position.x - textWidth / 2 - padding
-        val bgTop = position.y - textHeight / 2 - padding * 0.5f
-        val bgWidth = textWidth + padding * 2
-        val bgHeight = textHeight + padding
-
-        drawRect(
-            color = TEXT_BACKGROUND_COLOR,
-            topLeft = Offset(bgLeft, bgTop),
-            size = Size(bgWidth, bgHeight)
-        )
-
-        if (dignity != PlanetaryDignity.NEUTRAL) {
-            val underlineColor = when (dignity) {
-                PlanetaryDignity.EXALTED -> EXALTED_COLOR
-                PlanetaryDignity.DEBILITATED -> DEBILITATED_COLOR
-                PlanetaryDignity.OWN_SIGN -> OWN_SIGN_COLOR
-                PlanetaryDignity.MOOL_TRIKONA -> MOOL_TRIKONA_COLOR
-                else -> Color.Transparent
-            }
-
-            drawLine(
-                color = underlineColor,
-                start = Offset(bgLeft + padding * 0.5f, bgTop + bgHeight - padding * 0.3f),
-                end = Offset(bgLeft + bgWidth - padding * 0.5f, bgTop + bgHeight - padding * 0.3f),
-                strokeWidth = 1.5f
-            )
-        }
 
         drawContext.canvas.nativeCanvas.apply {
             val textOffset = textHeight / 2 - textPaint.descent()
             drawText(text, position.x, position.y + textOffset, textPaint)
         }
+
+        when (dignity) {
+            PlanetaryDignity.EXALTED -> drawExaltedArrow(position, textSize, textWidth)
+            PlanetaryDignity.DEBILITATED -> drawDebilitatedArrow(position, textSize, textWidth)
+            PlanetaryDignity.OWN_SIGN -> drawOwnSignIndicator(position, textSize, textWidth)
+            PlanetaryDignity.MOOL_TRIKONA -> drawMoolTrikonaIndicator(position, textSize, textWidth)
+            else -> {}
+        }
+    }
+
+    private fun DrawScope.drawExaltedArrow(
+        textPosition: Offset,
+        textSize: Float,
+        textWidth: Float
+    ) {
+        val arrowSize = textSize * ARROW_SIZE_RATIO
+        val arrowCenterX = textPosition.x + textWidth / 2 + arrowSize * 0.9f
+        val arrowCenterY = textPosition.y
+
+        val path = Path().apply {
+            moveTo(arrowCenterX, arrowCenterY - arrowSize * 0.7f)
+            lineTo(arrowCenterX - arrowSize * 0.5f, arrowCenterY + arrowSize * 0.15f)
+            lineTo(arrowCenterX - arrowSize * 0.15f, arrowCenterY + arrowSize * 0.15f)
+            lineTo(arrowCenterX - arrowSize * 0.15f, arrowCenterY + arrowSize * 0.7f)
+            lineTo(arrowCenterX + arrowSize * 0.15f, arrowCenterY + arrowSize * 0.7f)
+            lineTo(arrowCenterX + arrowSize * 0.15f, arrowCenterY + arrowSize * 0.15f)
+            lineTo(arrowCenterX + arrowSize * 0.5f, arrowCenterY + arrowSize * 0.15f)
+            close()
+        }
+
+        drawPath(path = path, color = EXALTED_COLOR)
+    }
+
+    private fun DrawScope.drawDebilitatedArrow(
+        textPosition: Offset,
+        textSize: Float,
+        textWidth: Float
+    ) {
+        val arrowSize = textSize * ARROW_SIZE_RATIO
+        val arrowCenterX = textPosition.x + textWidth / 2 + arrowSize * 0.9f
+        val arrowCenterY = textPosition.y
+
+        val path = Path().apply {
+            moveTo(arrowCenterX, arrowCenterY + arrowSize * 0.7f)
+            lineTo(arrowCenterX - arrowSize * 0.5f, arrowCenterY - arrowSize * 0.15f)
+            lineTo(arrowCenterX - arrowSize * 0.15f, arrowCenterY - arrowSize * 0.15f)
+            lineTo(arrowCenterX - arrowSize * 0.15f, arrowCenterY - arrowSize * 0.7f)
+            lineTo(arrowCenterX + arrowSize * 0.15f, arrowCenterY - arrowSize * 0.7f)
+            lineTo(arrowCenterX + arrowSize * 0.15f, arrowCenterY - arrowSize * 0.15f)
+            lineTo(arrowCenterX + arrowSize * 0.5f, arrowCenterY - arrowSize * 0.15f)
+            close()
+        }
+
+        drawPath(path = path, color = DEBILITATED_COLOR)
+    }
+
+    private fun DrawScope.drawOwnSignIndicator(
+        textPosition: Offset,
+        textSize: Float,
+        textWidth: Float
+    ) {
+        val size = textSize * 0.35f
+        val centerX = textPosition.x + textWidth / 2 + size * 1.0f
+        val centerY = textPosition.y
+
+        val path = Path().apply {
+            moveTo(centerX - size * 0.5f, centerY + size * 0.4f)
+            lineTo(centerX - size * 0.5f, centerY - size * 0.2f)
+            lineTo(centerX - size * 0.25f, centerY - size * 0.5f)
+            lineTo(centerX, centerY - size * 0.6f)
+            lineTo(centerX + size * 0.25f, centerY - size * 0.5f)
+            lineTo(centerX + size * 0.5f, centerY - size * 0.2f)
+            lineTo(centerX + size * 0.5f, centerY + size * 0.4f)
+            close()
+        }
+
+        drawPath(path = path, color = OWN_SIGN_COLOR)
+    }
+
+    private fun DrawScope.drawMoolTrikonaIndicator(
+        textPosition: Offset,
+        textSize: Float,
+        textWidth: Float
+    ) {
+        val size = textSize * 0.35f
+        val centerX = textPosition.x + textWidth / 2 + size * 1.0f
+        val centerY = textPosition.y
+
+        val path = Path().apply {
+            moveTo(centerX, centerY - size * 0.6f)
+            lineTo(centerX + size * 0.55f, centerY + size * 0.45f)
+            lineTo(centerX - size * 0.55f, centerY + size * 0.45f)
+            close()
+        }
+
+        drawPath(path = path, color = MOOL_TRIKONA_COLOR)
     }
 
     private fun polygonCentroid(points: List<Offset>): Offset {
@@ -952,7 +1011,7 @@ class ChartRenderer {
     ) {
         val legendY = chartBottom + textSize * 1.8f
         val legendSpacing = chartWidth / 6f
-        val legendStartX = chartLeft + legendSpacing * 0.8f
+        val legendStartX = chartLeft + legendSpacing * 0.6f
         val itemTextSize = textSize * 0.72f
 
         drawTextCentered(
@@ -979,29 +1038,80 @@ class ChartRenderer {
             isBold = false
         )
 
+        val exaltedX = legendStartX + legendSpacing * 3
+        drawLegendExaltedArrow(Offset(exaltedX - textSize * 0.6f, legendY), textSize)
         drawTextCentered(
-            text = "${SYMBOL_EXALTED}Exalt",
-            position = Offset(legendStartX + legendSpacing * 3, legendY),
+            text = "Exalt",
+            position = Offset(exaltedX + textSize * 0.4f, legendY),
             textSize = itemTextSize,
-            color = EXALTED_COLOR,
+            color = HOUSE_NUMBER_COLOR,
             isBold = false
         )
 
+        val debilitatedX = legendStartX + legendSpacing * 4
+        drawLegendDebilitatedArrow(Offset(debilitatedX - textSize * 0.6f, legendY), textSize)
         drawTextCentered(
-            text = "${SYMBOL_DEBILITATED}Deb",
-            position = Offset(legendStartX + legendSpacing * 4, legendY),
+            text = "Deb",
+            position = Offset(debilitatedX + textSize * 0.3f, legendY),
             textSize = itemTextSize,
-            color = DEBILITATED_COLOR,
+            color = HOUSE_NUMBER_COLOR,
             isBold = false
         )
 
+        val ownX = legendStartX + legendSpacing * 5
+        drawLegendOwnSignIndicator(Offset(ownX - textSize * 0.6f, legendY), textSize)
         drawTextCentered(
-            text = "${SYMBOL_OWN_SIGN}Own",
-            position = Offset(legendStartX + legendSpacing * 5, legendY),
+            text = "Own",
+            position = Offset(ownX + textSize * 0.3f, legendY),
             textSize = itemTextSize,
-            color = OWN_SIGN_COLOR,
+            color = HOUSE_NUMBER_COLOR,
             isBold = false
         )
+    }
+
+    private fun DrawScope.drawLegendExaltedArrow(position: Offset, textSize: Float) {
+        val arrowSize = textSize * 0.4f
+        val path = Path().apply {
+            moveTo(position.x, position.y - arrowSize * 0.6f)
+            lineTo(position.x - arrowSize * 0.45f, position.y + arrowSize * 0.15f)
+            lineTo(position.x - arrowSize * 0.12f, position.y + arrowSize * 0.15f)
+            lineTo(position.x - arrowSize * 0.12f, position.y + arrowSize * 0.6f)
+            lineTo(position.x + arrowSize * 0.12f, position.y + arrowSize * 0.6f)
+            lineTo(position.x + arrowSize * 0.12f, position.y + arrowSize * 0.15f)
+            lineTo(position.x + arrowSize * 0.45f, position.y + arrowSize * 0.15f)
+            close()
+        }
+        drawPath(path = path, color = EXALTED_COLOR)
+    }
+
+    private fun DrawScope.drawLegendDebilitatedArrow(position: Offset, textSize: Float) {
+        val arrowSize = textSize * 0.4f
+        val path = Path().apply {
+            moveTo(position.x, position.y + arrowSize * 0.6f)
+            lineTo(position.x - arrowSize * 0.45f, position.y - arrowSize * 0.15f)
+            lineTo(position.x - arrowSize * 0.12f, position.y - arrowSize * 0.15f)
+            lineTo(position.x - arrowSize * 0.12f, position.y - arrowSize * 0.6f)
+            lineTo(position.x + arrowSize * 0.12f, position.y - arrowSize * 0.6f)
+            lineTo(position.x + arrowSize * 0.12f, position.y - arrowSize * 0.15f)
+            lineTo(position.x + arrowSize * 0.45f, position.y - arrowSize * 0.15f)
+            close()
+        }
+        drawPath(path = path, color = DEBILITATED_COLOR)
+    }
+
+    private fun DrawScope.drawLegendOwnSignIndicator(position: Offset, textSize: Float) {
+        val size = textSize * 0.35f
+        val path = Path().apply {
+            moveTo(position.x - size * 0.5f, position.y + size * 0.4f)
+            lineTo(position.x - size * 0.5f, position.y - size * 0.2f)
+            lineTo(position.x - size * 0.25f, position.y - size * 0.5f)
+            lineTo(position.x, position.y - size * 0.6f)
+            lineTo(position.x + size * 0.25f, position.y - size * 0.5f)
+            lineTo(position.x + size * 0.5f, position.y - size * 0.2f)
+            lineTo(position.x + size * 0.5f, position.y + size * 0.4f)
+            close()
+        }
+        drawPath(path = path, color = OWN_SIGN_COLOR)
     }
 
     fun drawChartWithLegend(
