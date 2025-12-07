@@ -157,11 +157,6 @@ fun BirthChartScreen(
                 .padding(paddingValues)
                 .background(AppTheme.ScreenBackground)
         ) {
-            BirthInfoSummaryCard(
-                chart = chart,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
             ChartTabContent(
                 chart = chart,
                 chartRenderer = chartRenderer,
@@ -177,110 +172,6 @@ fun BirthChartScreen(
     }
 }
 
-@Composable
-private fun BirthInfoSummaryCard(
-    chart: VedicChart,
-    modifier: Modifier = Modifier
-) {
-    val birthData = chart.birthData
-
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()) }
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()) }
-
-    val formattedDate = remember(birthData.dateTime) {
-        try {
-            birthData.dateTime.format(dateFormatter)
-        } catch (e: Exception) {
-            "N/A"
-        }
-    }
-
-    val formattedTime = remember(birthData.dateTime) {
-        try {
-            birthData.dateTime.format(timeFormatter)
-        } catch (e: Exception) {
-            "N/A"
-        }
-    }
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = AppTheme.CardBackground
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BirthInfoItem(
-                icon = Icons.Outlined.CalendarMonth,
-                label = "Date",
-                value = formattedDate,
-                modifier = Modifier.weight(1f)
-            )
-
-            BirthInfoItem(
-                icon = Icons.Outlined.Schedule,
-                label = "Time",
-                value = formattedTime,
-                modifier = Modifier.weight(1f)
-            )
-
-            BirthInfoItem(
-                icon = Icons.Outlined.LocationOn,
-                label = "Place",
-                value = birthData.location.takeIf { it.isNotBlank() }
-                    ?: "${String.format(Locale.US, "%.2f", birthData.latitude)}°, ${String.format(Locale.US, "%.2f", birthData.longitude)}°",
-                modifier = Modifier.weight(1.2f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun BirthInfoItem(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = AppTheme.TextMuted,
-            modifier = Modifier.size(18.dp)
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
-            color = AppTheme.TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = AppTheme.TextMuted,
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

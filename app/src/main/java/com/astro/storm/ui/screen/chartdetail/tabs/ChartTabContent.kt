@@ -31,8 +31,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -54,6 +57,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,6 +71,8 @@ import com.astro.storm.ephemeris.DivisionalChartType
 import com.astro.storm.ui.chart.ChartRenderer
 import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import com.astro.storm.ui.screen.chartdetail.ChartDetailUtils
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun ChartTabContent(
@@ -133,6 +139,20 @@ fun ChartTabContent(
                         expandedCardTitles.add("HouseCusps")
                     } else {
                         expandedCardTitles.remove("HouseCusps")
+                    }
+                }
+            )
+        }
+
+        item {
+            BirthDetailsCard(
+                chart = chart,
+                isExpanded = "BirthDetails" in expandedCardTitles,
+                onToggleExpand = {
+                    if (it) {
+                        expandedCardTitles.add("BirthDetails")
+                    } else {
+                        expandedCardTitles.remove("BirthDetails")
                     }
                 }
             )
@@ -406,6 +426,149 @@ private fun TextLegendItem(
             fontSize = 10.sp,
             color = ChartDetailColors.TextMuted
         )
+    }
+}
+
+@Composable
+private fun BirthDetailsCard(
+    chart: VedicChart,
+    isExpanded: Boolean,
+    onToggleExpand: (Boolean) -> Unit
+) {
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "rotation"
+    )
+
+    val birthData = chart.birthData
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()) }
+
+    val formattedDate = remember(birthData.dateTime) {
+        try { birthData.dateTime.format(dateFormatter) } catch (e: Exception) { "N/A" }
+    }
+    val formattedTime = remember(birthData.dateTime) {
+        try { birthData.dateTime.format(timeFormatter) } catch (e: Exception) { "N/A" }
+    }
+    val formattedLocation = remember(birthData.location, birthData.latitude, birthData.longitude) {
+        birthData.location.takeIf { it.isNotBlank() }
+            ?: "${String.format(Locale.US, "%.3f", birthData.latitude)} / ${String.format(Locale.US, "%.3f", birthData.longitude)}"
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = ChartDetailColors.CardBackground
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpand(!isExpanded) },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = ChartDetailColors.AccentPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Birth Details",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ChartDetailColors.TextPrimary
+                    )
+                }
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = ChartDetailColors.TextMuted,
+                    modifier = Modifier.rotate(rotation)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            BirthDataItem(
+                                icon = Icons.Outlined.CalendarMonth,
+                                label = "Date",
+                                value = formattedDate
+                            )
+                            BirthDataItem(
+                                icon = Icons.Outlined.LocationOn,
+                                label = "Location",
+                                value = formattedLocation
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            BirthDataItem(
+                                icon = Icons.Outlined.Schedule,
+                                label = "Time",
+                                value = formattedTime
+                            )
+                            BirthDataItem(
+                                icon = Icons.Outlined.Star,
+                                label = "Ayanamsa",
+                                value = chart.ayanamsaName
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BirthDataItem(
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = ChartDetailColors.TextMuted,
+            modifier = Modifier.size(20.dp)
+        )
+        Column {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = ChartDetailColors.TextMuted,
+                lineHeight = 12.sp
+            )
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = ChartDetailColors.TextPrimary,
+                lineHeight = 14.sp
+            )
+        }
     }
 }
 
