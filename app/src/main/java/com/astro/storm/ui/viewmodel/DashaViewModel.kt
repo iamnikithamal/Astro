@@ -106,7 +106,7 @@ class DashaViewModel : ViewModel() {
             append('|')
             append((birthData.longitude * 1_000_000).toLong())
             append('|')
-            append(chart.ayanamsa.ordinal)
+            append(chart.ayanamsaName)
         }
     }
 
