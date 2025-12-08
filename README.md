@@ -1,7 +1,5 @@
 # AstroStorm - Ultra-Precision Vedic Astrology
 
-[![Android CI](https://github.com/yourusername/astrostorm/actions/workflows/android.yml/badge.svg)](https://github.com/yourusername/astrostorm/actions/workflows/android.yml)
-
 AstroStorm is a production-grade Android application for generating ultra-accurate Vedic natal charts using the Swiss Ephemeris engine in JPL mode.
 
 ## Features
