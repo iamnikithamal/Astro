@@ -107,6 +107,10 @@ fun MatchmakingScreen(
         } ?: run { groomChart = null }
     }
 
+    // Pre-fetch localized strings for use in LaunchedEffect and scope.launch (stringResource is @Composable)
+    val errorCalculationFailedText = stringResource(StringKey.ERROR_CALCULATION_FAILED)
+    val copiedToClipboardText = stringResource(StringKey.MATCH_COPIED_TO_CLIPBOARD)
+
     LaunchedEffect(brideChart, groomChart) {
         if (brideChart != null && groomChart != null) {
             isCalculating = true
@@ -117,7 +121,7 @@ fun MatchmakingScreen(
                     MatchmakingCalculator.calculateMatchmaking(brideChart!!, groomChart!!)
                 }
             } catch (e: Exception) {
-                errorMessage = e.message ?: stringResource(StringKey.ERROR_CALCULATION_FAILED)
+                errorMessage = e.message ?: errorCalculationFailedText
             }
             isCalculating = false
         } else {
@@ -176,7 +180,7 @@ fun MatchmakingScreen(
                                     val report = generateTextReport(result, brideChart, groomChart)
                                     clipboardManager.setText(AnnotatedString(report))
                                     scope.launch {
-                                        snackbarHostState.showSnackbar(stringResource(StringKey.MATCH_COPIED_TO_CLIPBOARD))
+                                        snackbarHostState.showSnackbar(copiedToClipboardText)
                                     }
                                 }
                             }) {
@@ -380,7 +384,7 @@ fun MatchmakingScreen(
             onCopyToClipboard = { report ->
                 clipboardManager.setText(AnnotatedString(report))
                 scope.launch {
-                    snackbarHostState.showSnackbar(stringResource(StringKey.MATCH_COPIED_TO_CLIPBOARD))
+                    snackbarHostState.showSnackbar(copiedToClipboardText)
                 }
                 showShareSheet = false
             }
@@ -2890,33 +2894,44 @@ private fun getMoonPosition(chart: VedicChart) = chart.planetPositions.find {
     it.planet == com.astro.storm.data.model.Planet.MOON
 }
 
+@Composable
 private fun getNakshatraName(chart: VedicChart): String {
     return getMoonPosition(chart)?.nakshatra?.displayName ?: stringResource(StringKey.MISC_UNKNOWN)
 }
 
+@Composable
 private fun getRashiName(chart: VedicChart): String {
-    val moonPosition = getMoonPosition(chart) ?: return stringResource(StringKey.MISC_UNKNOWN)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+    val moonPosition = getMoonPosition(chart) ?: return unknownText
     return moonPosition.sign.displayName
 }
 
+@Composable
 private fun getPada(chart: VedicChart): String {
-    val moonPosition = getMoonPosition(chart) ?: return stringResource(StringKey.MISC_UNKNOWN)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+    val moonPosition = getMoonPosition(chart) ?: return unknownText
     return "Pada ${moonPosition.nakshatraPada}"
 }
 
+@Composable
 private fun getNakshatraLord(chart: VedicChart): String {
-    val moonPosition = getMoonPosition(chart) ?: return stringResource(StringKey.MISC_UNKNOWN)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+    val moonPosition = getMoonPosition(chart) ?: return unknownText
     return moonPosition.nakshatra.ruler.displayName
 }
 
+@Composable
 private fun getGana(chart: VedicChart): String {
-    val moonPosition = getMoonPosition(chart) ?: return stringResource(StringKey.MISC_UNKNOWN)
-    return nakshatraGanaMap[moonPosition.nakshatra] ?: stringResource(StringKey.MISC_UNKNOWN)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+    val moonPosition = getMoonPosition(chart) ?: return unknownText
+    return nakshatraGanaMap[moonPosition.nakshatra] ?: unknownText
 }
 
+@Composable
 private fun getYoni(chart: VedicChart): String {
-    val moonPosition = getMoonPosition(chart) ?: return stringResource(StringKey.MISC_UNKNOWN)
-    return nakshatraYoniMap[moonPosition.nakshatra] ?: stringResource(StringKey.MISC_UNKNOWN)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+    val moonPosition = getMoonPosition(chart) ?: return unknownText
+    return nakshatraYoniMap[moonPosition.nakshatra] ?: unknownText
 }
 
 // Gana mapping for each nakshatra

@@ -127,6 +127,9 @@ fun ProfileEditScreen(
         ).distinct()
     }
 
+    // Extract localized string outside of regular function (stringResource is @Composable)
+    val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+
     fun saveProfile() {
         try {
             val lat = latitude.toDoubleOrNull()
@@ -152,7 +155,6 @@ fun ProfileEditScreen(
 
             isSaving = true
             val dateTime = LocalDateTime.of(selectedDate, selectedTime)
-            val unknownText = stringResource(StringKey.MISC_UNKNOWN)
             val updatedBirthData = BirthData(
                 name = name.ifBlank { unknownText },
                 dateTime = dateTime,

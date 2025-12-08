@@ -232,6 +232,9 @@ fun ChartInputScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // Extract localized string outside the lambda (stringResource is @Composable)
+            val unknownText = stringResource(StringKey.MISC_UNKNOWN)
+
             GenerateButton(
                 isCalculating = isCalculating,
                 onClick = {
@@ -247,12 +250,12 @@ fun ChartInputScreen(
                     val dateTime = LocalDateTime.of(selectedDate, selectedTime)
 
                     val birthData = BirthData(
-                        name = name.ifBlank { stringResource(StringKey.MISC_UNKNOWN) },
+                        name = name.ifBlank { unknownText },
                         dateTime = dateTime,
                         latitude = lat,
                         longitude = lon,
                         timezone = selectedTimezone,
-                        location = locationLabel.ifBlank { stringResource(StringKey.MISC_UNKNOWN) },
+                        location = locationLabel.ifBlank { unknownText },
                         gender = selectedGender
                     )
 
