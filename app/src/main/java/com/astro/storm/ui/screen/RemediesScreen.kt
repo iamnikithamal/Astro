@@ -42,6 +42,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.RemediesCalculator
@@ -1010,7 +1012,7 @@ private fun CategoryFilter(
             FilterChip(
                 selected = selectedCategory == null,
                 onClick = { onCategoryChange(null) },
-                label = { Text("All") },
+                label = { Text(stringResource(StringKey.REMEDIES_FILTER_ALL)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = AppTheme.AccentPrimary.copy(alpha = 0.2f),
                     selectedLabelColor = AppTheme.AccentPrimary,
@@ -1802,7 +1804,7 @@ private fun ErrorState(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Retry")
+                Text(stringResource(StringKey.BTN_RETRY))
             }
         }
     }
