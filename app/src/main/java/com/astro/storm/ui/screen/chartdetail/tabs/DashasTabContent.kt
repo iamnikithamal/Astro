@@ -659,7 +659,7 @@ private fun SandhiAlertRow(
                         daysUntil == 0L -> "Today"
                         daysUntil == 1L -> "Tomorrow"
                         isImminent -> "In $daysUntil days"
-                        else -> sandhi.transitionDate.format(DATE_FORMATTER_MONTH_YEAR)
+                        else -> formatDate(sandhi.transitionDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)
                     },
                     fontSize = 12.sp,
                     fontWeight = if (isWithinSandhi || isImminent) FontWeight.Bold else FontWeight.Normal,
@@ -672,7 +672,7 @@ private fun SandhiAlertRow(
                 if (!isWithinSandhi && daysUntil > 0) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${sandhi.sandhiStartDate.format(DATE_FORMATTER_MONTH_YEAR)} – ${sandhi.sandhiEndDate.format(DATE_FORMATTER_MONTH_YEAR)}",
+                        text = "${formatDate(sandhi.sandhiStartDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(sandhi.sandhiEndDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
                         fontSize = 10.sp,
                         color = ChartDetailColors.TextMuted.copy(alpha = 0.8f)
                     )
@@ -1080,7 +1080,7 @@ private fun DashaTimelineCard(timeline: DashaCalculator.DashaTimeline) {
                         )
 
                         Text(
-                            text = "${dasha.startDate.format(DATE_FORMATTER_YEAR)} – ${dasha.endDate.format(DATE_FORMATTER_YEAR)}",
+                            text = "${formatDate(dasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)} – ${formatDate(dasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)}",
                             fontSize = 12.sp,
                             color = if (isCurrent) ChartDetailColors.TextPrimary else ChartDetailColors.TextMuted,
                             modifier = Modifier.weight(1f)
@@ -1210,7 +1210,7 @@ private fun MahadashaCard(
                         }
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = "${formatDurationYears(mahadasha.durationYears)} • ${mahadasha.startDate.format(DATE_FORMATTER_FULL)} – ${mahadasha.endDate.format(DATE_FORMATTER_FULL)}",
+                            text = "${formatDurationYears(mahadasha.durationYears)} • ${formatDate(mahadasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)} – ${formatDate(mahadasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)}",
                             fontSize = 11.sp,
                             color = ChartDetailColors.TextMuted,
                             maxLines = 1,
@@ -1219,7 +1219,7 @@ private fun MahadashaCard(
                         if (isCurrentMahadasha) {
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
-                                text = "${String.format(Locale.ENGLISH, "%.1f", mahadasha.getProgressPercent())}% complete • ${formatRemainingYears(mahadasha.getRemainingYears())}",
+                                text = "${String.format(java.util.Locale.ENGLISH, "%.1f", mahadasha.getProgressPercent())}% complete • ${formatRemainingYears(mahadasha.getRemainingYears())}",
                                 fontSize = 10.sp,
                                 color = ChartDetailColors.AccentTeal,
                                 fontWeight = FontWeight.Medium
@@ -1355,7 +1355,7 @@ private fun AntardashaRow(
                     if (isCurrent) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${String.format(Locale.ENGLISH, "%.0f", antardasha.getProgressPercent())}%",
+                            text = "${String.format(java.util.Locale.ENGLISH, "%.0f", antardasha.getProgressPercent())}%",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = planetColor.copy(alpha = 0.9f)
@@ -1379,7 +1379,7 @@ private fun AntardashaRow(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = "${antardasha.startDate.format(DATE_FORMATTER_MONTH_YEAR)} – ${antardasha.endDate.format(DATE_FORMATTER_MONTH_YEAR)}",
+                text = "${formatDate(antardasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(antardasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
                 fontSize = 11.sp,
                 color = ChartDetailColors.TextMuted
             )

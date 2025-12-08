@@ -675,6 +675,10 @@ private fun formatPercentage(value: Double, language: Language): String {
 }
 
 private fun getLocalizedStrength(strength: YogaCalculator.YogaStrength, language: Language): String = when (strength) {
+    YogaCalculator.YogaStrength.EXTREMELY_STRONG -> when (language) {
+        Language.ENGLISH -> "Extremely Strong"
+        Language.NEPALI -> "अत्यन्त बलियो"
+    }
     YogaCalculator.YogaStrength.STRONG -> when (language) {
         Language.ENGLISH -> "Strong"
         Language.NEPALI -> "बलियो"
@@ -687,12 +691,8 @@ private fun getLocalizedStrength(strength: YogaCalculator.YogaStrength, language
         Language.ENGLISH -> "Weak"
         Language.NEPALI -> "कमजोर"
     }
-    YogaCalculator.YogaStrength.FULL -> when (language) {
-        Language.ENGLISH -> "Full"
-        Language.NEPALI -> "पूर्ण"
-    }
-    YogaCalculator.YogaStrength.PARTIAL -> when (language) {
-        Language.ENGLISH -> "Partial"
-        Language.NEPALI -> "आंशिक"
+    YogaCalculator.YogaStrength.VERY_WEAK -> when (language) {
+        Language.ENGLISH -> "Very Weak"
+        Language.NEPALI -> "धेरै कमजोर"
     }
 }

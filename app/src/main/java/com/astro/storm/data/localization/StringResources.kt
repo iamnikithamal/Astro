@@ -547,11 +547,6 @@ enum class StringKey(val en: String, val ne: String) {
     YOGA_CATEGORY_NEGATIVE_DESC("Combinations indicating challenges", "चुनौतीहरू संकेत गर्ने संयोजनहरू"),
 
     // Yoga Tab Content UI Strings
-    YOGA_ANALYSIS_SUMMARY("Yoga Analysis Summary", "योग विश्लेषण सारांश"),
-    YOGA_TOTAL("Total Yogas", "कुल योगहरू"),
-    YOGA_AUSPICIOUS("Auspicious", "शुभ"),
-    YOGA_CHALLENGING("Challenging", "चुनौतीपूर्ण"),
-    YOGA_OVERALL_STRENGTH("Overall Yoga Strength", "समग्र योग शक्ति"),
     YOGA_MOST_SIGNIFICANT("Most Significant Yogas", "सबैभन्दा महत्त्वपूर्ण योगहरू"),
     YOGA_SANSKRIT("Sanskrit", "संस्कृत"),
     YOGA_EFFECTS("Effects", "प्रभावहरू"),
