@@ -372,6 +372,7 @@ enum class StringKey(val en: String, val ne: String) {
     CHART_ASCENDANT("Ascendant", "लग्न"),
     CHART_MOON_SIGN("Moon Sign", "चन्द्र राशि"),
     CHART_NAKSHATRA("Nakshatra", "नक्षत्र"),
+    NAKSHATRA_PADA("Pada", "पद"),
 
     // ============================================
     // CHART INPUT SCREEN
@@ -569,7 +570,15 @@ enum class StringKey(val en: String, val ne: String) {
     // ============================================
     PROFILE_SWITCH("Switch Profile", "प्रोफाइल बदल्नुहोस्"),
     PROFILE_ADD_NEW("Add New Profile", "नयाँ प्रोफाइल थप्नुहोस्"),
+    PROFILE_ADD_NEW_CHART("Add new chart", "नयाँ कुण्डली थप्नुहोस्"),
     PROFILE_CURRENT("Current", "हालको"),
+    PROFILE_NO_SAVED_CHARTS("No saved charts", "कुनै सुरक्षित कुण्डली छैन"),
+    PROFILE_ADD_FIRST_CHART("Add your first chart to get started", "सुरु गर्न आफ्नो पहिलो कुण्डली थप्नुहोस्"),
+    PROFILE_SELECTED("selected", "छानिएको"),
+    PROFILE_SELECT("Select Profile", "प्रोफाइल छान्नुहोस्"),
+    PROFILE_CURRENT_A11Y("Current profile: %s. Tap to switch profiles", "हालको प्रोफाइल: %s। प्रोफाइलहरू बदल्न ट्याप गर्नुहोस्"),
+    PROFILE_NO_SELECTED_A11Y("No profile selected. Tap to select a profile", "कुनै प्रोफाइल छानिएको छैन। प्रोफाइल छान्न ट्याप गर्नुहोस्"),
+    PROFILE_BIRTH_CHART("Birth chart", "जन्म कुण्डली"),
 
     // ============================================
     // MATCHMAKING
@@ -1316,9 +1325,22 @@ enum class StringKey(val en: String, val ne: String) {
     REPORT_TIMING("Timing", "समय"),
 
     REPORT_MATCHMAKING("KUNDLI MILAN (MATCHMAKING) REPORT", "कुण्डली मिलान रिपोर्ट"),
+    REPORT_MATCHMAKING_TITLE("KUNDLI MILAN REPORT", "कुण्डली मिलान रिपोर्ट"),
+    REPORT_ASTROSTORM_ANALYSIS("AstroStorm Analysis", "AstroStorm विश्लेषण"),
+    REPORT_PROFILES("PROFILES", "प्रोफाइलहरू"),
     REPORT_BRIDE("BRIDE", "वधू"),
+    REPORT_BRIDE_LABEL("Bride:", "वधू:"),
     REPORT_GROOM("GROOM", "वर"),
+    REPORT_GROOM_LABEL("Groom:", "वर:"),
+    REPORT_MOON_SIGN_LABEL("Moon Sign:", "चन्द्र राशि:"),
+    REPORT_NAKSHATRA_LABEL("Nakshatra:", "नक्षत्र:"),
+    REPORT_COMPATIBILITY_SCORE("COMPATIBILITY SCORE", "अनुकूलता अंक"),
+    REPORT_TOTAL_POINTS("Total Points:", "कुल अंक:"),
+    REPORT_PERCENTAGE("Percentage:", "प्रतिशत:"),
+    REPORT_RATING_LABEL("Rating:", "मूल्याङ्कन:"),
     REPORT_ASHTAKOOTA("ASHTAKOOTA ANALYSIS", "अष्टकूट विश्लेषण"),
+    REPORT_ASHTAKOOTA_8_GUNA("ASHTAKOOTA (8 GUNA) ANALYSIS", "अष्टकूट (८ गुण) विश्लेषण"),
+    REPORT_SCORE_LABEL("Score:", "अंक:"),
     REPORT_GUNA("GUNA", "गुण"),
     REPORT_MAX("MAX", "अधिकतम"),
     REPORT_OBTAINED("OBTAINED", "प्राप्त"),
@@ -1327,14 +1349,23 @@ enum class StringKey(val en: String, val ne: String) {
     REPORT_OVERALL_RATING("OVERALL RATING", "समग्र मूल्याङ्कन"),
     REPORT_ADDITIONAL_FACTORS("ADDITIONAL FACTORS", "थप कारकहरू"),
     REPORT_MANGLIK_ANALYSIS("MANGLIK ANALYSIS", "मांगलिक विश्लेषण"),
+    REPORT_MANGLIK_DOSHA_ANALYSIS("MANGLIK DOSHA ANALYSIS", "मांगलिक दोष विश्लेषण"),
+    REPORT_MARS_IN_HOUSE("Mars in House %d", "भाव %d मा मंगल"),
+    REPORT_CANCELLATION("(Cancellation)", "(रद्द)"),
     REPORT_SPECIAL_CONSIDERATIONS("SPECIAL CONSIDERATIONS", "विशेष विचारहरू"),
     REPORT_SUGGESTED_REMEDIES("SUGGESTED REMEDIES", "सुझाव गरिएका उपायहरू"),
     REPORT_COMPATIBILITY("Compatibility", "अनुकूलता"),
+    REPORT_COMPATIBILITY_LABEL("Compatibility:", "अनुकूलता:"),
     REPORT_NOT_PRESENT("Not Present", "उपस्थित छैन"),
     REPORT_COMPATIBLE("Compatible", "अनुकूल"),
     REPORT_SATISFIED("Satisfied", "सन्तुष्ट"),
     REPORT_NOT_SATISFIED("Not satisfied", "सन्तुष्ट छैन"),
     REPORT_NOT_APPLICABLE("Not applicable", "लागू हुँदैन"),
+    REPORT_NA("N/A", "उपलब्ध छैन"),
+    REPORT_ASTROSTORM_VEDIC("Vedic Astrology • Ultra-Precision", "वैदिक ज्योतिष • अति-सटीक"),
+    REPORT_KUNDLI_MILAN_SUMMARY("KUNDLI MILAN SUMMARY", "कुण्डली मिलान सारांश"),
+    REPORT_MANGLIK_LABEL("Manglik:", "मांगलिक:"),
+    REPORT_ASHTAKOOTA_GUNA_SCORES("ASHTAKOOTA GUNA SCORES", "अष्टकूट गुण अंकहरू"),
 
     // ============================================
     // SPECIFIC YOGA NAMES (For display)

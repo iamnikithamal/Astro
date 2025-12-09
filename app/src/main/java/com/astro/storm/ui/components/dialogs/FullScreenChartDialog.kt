@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.DivisionalChartData
 import com.astro.storm.ui.chart.ChartRenderer
@@ -169,11 +171,20 @@ fun FullScreenChartDialog(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(StringKey.DIALOG_CLOSE),
                         tint = DialogColors.TextPrimary
                     )
                 }
             }
+
+            // Localized strings for action buttons
+            val resetLabel = stringResource(StringKey.DIALOG_RESET)
+            val zoomInLabel = stringResource(StringKey.DIALOG_ZOOM_IN)
+            val zoomOutLabel = stringResource(StringKey.DIALOG_ZOOM_OUT)
+            val savingLabel = stringResource(StringKey.DIALOG_SAVING)
+            val downloadLabel = stringResource(StringKey.DIALOG_DOWNLOAD)
+            val savedMessage = stringResource(StringKey.DIALOG_CHART_SAVED)
+            val failedMessage = stringResource(StringKey.DIALOG_SAVE_FAILED)
 
             // Bottom action bar
             Row(
@@ -187,7 +198,7 @@ fun FullScreenChartDialog(
             ) {
                 ActionButton(
                     icon = Icons.Default.CenterFocusStrong,
-                    label = "Reset",
+                    label = resetLabel,
                     onClick = {
                         scale = 1f
                         offsetX = 0f
@@ -197,19 +208,19 @@ fun FullScreenChartDialog(
 
                 ActionButton(
                     icon = Icons.Default.ZoomIn,
-                    label = "Zoom In",
+                    label = zoomInLabel,
                     onClick = { scale = (scale * 1.2f).coerceAtMost(3f) }
                 )
 
                 ActionButton(
                     icon = Icons.Default.ZoomOut,
-                    label = "Zoom Out",
+                    label = zoomOutLabel,
                     onClick = { scale = (scale / 1.2f).coerceAtLeast(0.5f) }
                 )
 
                 ActionButton(
                     icon = if (isDownloading) Icons.Default.HourglassEmpty else Icons.Default.Download,
-                    label = if (isDownloading) "Saving..." else "Download",
+                    label = if (isDownloading) savingLabel else downloadLabel,
                     onClick = {
                         if (!isDownloading) {
                             isDownloading = true
@@ -226,7 +237,7 @@ fun FullScreenChartDialog(
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(
                                         context,
-                                        if (success) "Chart saved to gallery!" else "Failed to save chart",
+                                        if (success) savedMessage else failedMessage,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }

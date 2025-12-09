@@ -440,9 +440,10 @@ private fun DateSelectorBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val prevDayDesc = stringResource(StringKey.MUHURTA_PREV_DAY_A11Y)
             IconButton(
                 onClick = { onDateChange(selectedDate.minusDays(1)) },
-                modifier = Modifier.semantics { contentDescription = stringResource(StringKey.MUHURTA_PREV_DAY_A11Y) }
+                modifier = Modifier.semantics { contentDescription = prevDayDesc }
             ) {
                 Icon(
                     Icons.Filled.ChevronLeft,
@@ -485,9 +486,10 @@ private fun DateSelectorBar(
                 }
             }
 
+            val nextDayDesc = stringResource(StringKey.MUHURTA_NEXT_DAY_A11Y)
             IconButton(
                 onClick = { onDateChange(selectedDate.plusDays(1)) },
-                modifier = Modifier.semantics { contentDescription = stringResource(StringKey.MUHURTA_NEXT_DAY_A11Y) }
+                modifier = Modifier.semantics { contentDescription = nextDayDesc }
             ) {
                 Icon(
                     Icons.Filled.ChevronRight,

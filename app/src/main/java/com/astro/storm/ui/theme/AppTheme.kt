@@ -110,15 +110,15 @@ val DarkAppThemeColors = AppThemeColors(
     AccentGold = Color(0xFFD4AF37),
     AccentTeal = Color(0xFF4DB6AC),
 
-    // Text Colors
+    // Text Colors (WCAG AA compliant on ScreenBackground #1C1410)
     TextPrimary = Color(0xFFE8DFD6),
     TextSecondary = Color(0xFFB8A99A),
-    TextMuted = Color(0xFF8A7A6A),
-    TextSubtle = Color(0xFF6A5A4A),
+    TextMuted = Color(0xFF9A8A7A),      // Improved from 0xFF8A7A6A for better contrast (4.5:1+)
+    TextSubtle = Color(0xFF8A7A6A),     // Improved from 0xFF6A5A4A for better contrast (3:1+)
 
     // Border and Divider Colors
-    BorderColor = Color(0xFF4A3F38),
-    DividerColor = Color(0xFF3A302A),
+    BorderColor = Color(0xFF5A4F48),    // Improved from 0xFF4A3F38 for better visibility
+    DividerColor = Color(0xFF4A403A),   // Improved from 0xFF3A302A for better visibility
 
     // Interactive Element Colors
     ChipBackground = Color(0xFF3D322B),

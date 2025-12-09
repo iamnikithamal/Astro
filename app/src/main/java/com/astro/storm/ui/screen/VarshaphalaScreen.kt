@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
@@ -1729,6 +1730,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
 
 @Composable
 private fun TajikaAspectCard(aspect: TajikaAspectResult) {
+    val language = currentLanguage()
     val color = if (aspect.type.isPositive) AppTheme.SuccessColor else AppTheme.WarningColor
 
     Card(
@@ -1770,7 +1772,7 @@ private fun TajikaAspectCard(aspect: TajikaAspectResult) {
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            aspect.type.displayName,
+                            aspect.type.getDisplayName(language),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = color,
@@ -1806,7 +1808,7 @@ private fun TajikaAspectCard(aspect: TajikaAspectResult) {
                     color = AppTheme.TextMuted
                 )
                 Text(
-                    aspect.strength.displayName,
+                    aspect.strength.getDisplayName(language),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = getAspectStrengthColor(aspect.strength)
