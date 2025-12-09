@@ -1,6 +1,9 @@
 package com.astro.storm.ephemeris
 
 import android.content.Context
+import com.astro.storm.data.localization.Language
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.*
 import swisseph.SweConst
 import swisseph.SwissEph
@@ -225,61 +228,79 @@ class VarshaphalaCalculator(context: Context) {
         swissEph.swe_set_sid_mode(AYANAMSA_LAHIRI, 0.0, 0.0)
     }
 
-    enum class TajikaAspectType(val displayName: String, val description: String, val isPositive: Boolean) {
-        ITHASALA("Ithasala", "Applying aspect - promises fulfillment of matters", true),
-        EASARAPHA("Easarapha", "Separating aspect - event has passed or is fading", false),
-        NAKTA("Nakta", "Transmission of light with reception - indirect completion", true),
-        YAMAYA("Yamaya", "Translation of light - third planet connects significators", true),
-        MANAU("Manau", "Reverse application - slower planet applies to faster", false),
-        KAMBOOLA("Kamboola", "Powerful Ithasala with angular placement", true),
-        GAIRI_KAMBOOLA("Gairi-Kamboola", "Weaker form of Kamboola", true),
-        KHALASARA("Khalasara", "Mutual separation - dissolution of matters", false),
-        RADDA("Radda", "Refranation - retrograde breaks the aspect", false),
-        DUHPHALI_KUTTHA("Duhphali-Kuttha", "Malefic intervention prevents completion", false),
-        TAMBIRA("Tambira", "Indirect aspect through intermediary", true),
-        KUTTHA("Kuttha", "Impediment to aspect completion", false),
-        DURAPHA("Durapha", "Hard aspect causing difficulties", false),
-        MUTHASHILA("Muthashila", "Mutual application between planets", true),
-        IKKABALA("Ikkabala", "Unity of strength between planets", true)
+    enum class TajikaAspectType(
+        val displayNameKey: StringKey,
+        val descriptionKey: StringKey,
+        val isPositive: Boolean
+    ) {
+        ITHASALA(StringKey.TAJIKA_ITHASALA, StringKey.TAJIKA_ITHASALA_DESC, true),
+        EASARAPHA(StringKey.TAJIKA_EASARAPHA, StringKey.TAJIKA_EASARAPHA_DESC, false),
+        NAKTA(StringKey.TAJIKA_NAKTA, StringKey.TAJIKA_NAKTA_DESC, true),
+        YAMAYA(StringKey.TAJIKA_YAMAYA, StringKey.TAJIKA_YAMAYA_DESC, true),
+        MANAU(StringKey.TAJIKA_MANAU, StringKey.TAJIKA_MANAU_DESC, false),
+        KAMBOOLA(StringKey.TAJIKA_KAMBOOLA, StringKey.TAJIKA_KAMBOOLA_DESC, true),
+        GAIRI_KAMBOOLA(StringKey.TAJIKA_GAIRI_KAMBOOLA, StringKey.TAJIKA_GAIRI_KAMBOOLA_DESC, true),
+        KHALASARA(StringKey.TAJIKA_KHALASARA, StringKey.TAJIKA_KHALASARA_DESC, false),
+        RADDA(StringKey.TAJIKA_RADDA, StringKey.TAJIKA_RADDA_DESC, false),
+        DUHPHALI_KUTTHA(StringKey.TAJIKA_DUHPHALI_KUTTHA, StringKey.TAJIKA_DUHPHALI_KUTTHA_DESC, false),
+        TAMBIRA(StringKey.TAJIKA_TAMBIRA, StringKey.TAJIKA_TAMBIRA_DESC, true),
+        KUTTHA(StringKey.TAJIKA_KUTTHA, StringKey.TAJIKA_KUTTHA_DESC, false),
+        DURAPHA(StringKey.TAJIKA_DURAPHA, StringKey.TAJIKA_DURAPHA_DESC, false),
+        MUTHASHILA(StringKey.TAJIKA_MUTHASHILA, StringKey.TAJIKA_MUTHASHILA_DESC, true),
+        IKKABALA(StringKey.TAJIKA_IKKABALA, StringKey.TAJIKA_IKKABALA_DESC, true);
+
+        fun getDisplayName(language: Language): String = StringResources.get(displayNameKey, language)
+        fun getDescription(language: Language): String = StringResources.get(descriptionKey, language)
     }
 
-    enum class AspectStrength(val displayName: String, val weight: Double) {
-        VERY_STRONG("Very Strong", 1.0),
-        STRONG("Strong", 0.8),
-        MODERATE("Moderate", 0.6),
-        WEAK("Weak", 0.4),
-        VERY_WEAK("Very Weak", 0.2)
+    enum class AspectStrength(val displayNameKey: StringKey, val weight: Double) {
+        VERY_STRONG(StringKey.ASPECT_VERY_STRONG, 1.0),
+        STRONG(StringKey.ASPECT_STRONG, 0.8),
+        MODERATE(StringKey.ASPECT_MODERATE, 0.6),
+        WEAK(StringKey.ASPECT_WEAK, 0.4),
+        VERY_WEAK(StringKey.ASPECT_VERY_WEAK, 0.2);
+
+        fun getDisplayName(language: Language): String = StringResources.get(displayNameKey, language)
     }
 
     enum class SahamType(
-        val displayName: String,
-        val sanskritName: String,
-        val description: String
+        val displayNameKey: StringKey,
+        val sanskritNameKey: StringKey,
+        val descriptionKey: StringKey
     ) {
-        PUNYA("Fortune", "Punya Saham", "Overall luck and prosperity"),
-        VIDYA("Education", "Vidya Saham", "Learning and knowledge"),
-        YASHAS("Fame", "Yashas Saham", "Reputation and recognition"),
-        MITRA("Friends", "Mitra Saham", "Friendship and alliances"),
-        MAHATMYA("Greatness", "Mahatmya Saham", "Spiritual achievement"),
-        ASHA("Hope", "Asha Saham", "Aspirations and wishes"),
-        SAMARTHA("Capability", "Samartha Saham", "Ability and competence"),
-        BHRATRI("Siblings", "Bhratri Saham", "Brothers and sisters"),
-        PITRI("Father", "Pitri Saham", "Father's welfare"),
-        MATRI("Mother", "Matri Saham", "Mother's welfare"),
-        PUTRA("Children", "Putra Saham", "Offspring and progeny"),
-        VIVAHA("Marriage", "Vivaha Saham", "Matrimony and partnership"),
-        KARMA("Career", "Karma Saham", "Profession and livelihood"),
-        ROGA("Disease", "Roga Saham", "Health challenges"),
-        MRITYU("Longevity", "Mrityu Saham", "Life span indicators"),
-        PARADESA("Foreign", "Paradesa Saham", "Travel and foreign lands"),
-        DHANA("Wealth", "Dhana Saham", "Financial prosperity"),
-        RAJA("Power", "Raja Saham", "Authority and position"),
-        BANDHANA("Bondage", "Bandhana Saham", "Restrictions and obstacles"),
-        KARYASIDDHI("Success", "Karyasiddhi Saham", "Accomplishment of goals")
+        PUNYA(StringKey.SAHAM_PUNYA, StringKey.SAHAM_PUNYA_SANSKRIT, StringKey.SAHAM_PUNYA_DESC),
+        VIDYA(StringKey.SAHAM_VIDYA, StringKey.SAHAM_VIDYA_SANSKRIT, StringKey.SAHAM_VIDYA_DESC),
+        YASHAS(StringKey.SAHAM_YASHAS, StringKey.SAHAM_YASHAS_SANSKRIT, StringKey.SAHAM_YASHAS_DESC),
+        MITRA(StringKey.SAHAM_MITRA, StringKey.SAHAM_MITRA_SANSKRIT, StringKey.SAHAM_MITRA_DESC),
+        MAHATMYA(StringKey.SAHAM_MAHATMYA, StringKey.SAHAM_MAHATMYA_SANSKRIT, StringKey.SAHAM_MAHATMYA_DESC),
+        ASHA(StringKey.SAHAM_ASHA, StringKey.SAHAM_ASHA_SANSKRIT, StringKey.SAHAM_ASHA_DESC),
+        SAMARTHA(StringKey.SAHAM_SAMARTHA, StringKey.SAHAM_SAMARTHA_SANSKRIT, StringKey.SAHAM_SAMARTHA_DESC),
+        BHRATRI(StringKey.SAHAM_BHRATRI, StringKey.SAHAM_BHRATRI_SANSKRIT, StringKey.SAHAM_BHRATRI_DESC),
+        PITRI(StringKey.SAHAM_PITRI, StringKey.SAHAM_PITRI_SANSKRIT, StringKey.SAHAM_PITRI_DESC),
+        MATRI(StringKey.SAHAM_MATRI, StringKey.SAHAM_MATRI_SANSKRIT, StringKey.SAHAM_MATRI_DESC),
+        PUTRA(StringKey.SAHAM_PUTRA, StringKey.SAHAM_PUTRA_SANSKRIT, StringKey.SAHAM_PUTRA_DESC),
+        VIVAHA(StringKey.SAHAM_VIVAHA, StringKey.SAHAM_VIVAHA_SANSKRIT, StringKey.SAHAM_VIVAHA_DESC),
+        KARMA(StringKey.SAHAM_KARMA, StringKey.SAHAM_KARMA_SANSKRIT, StringKey.SAHAM_KARMA_DESC),
+        ROGA(StringKey.SAHAM_ROGA, StringKey.SAHAM_ROGA_SANSKRIT, StringKey.SAHAM_ROGA_DESC),
+        MRITYU(StringKey.SAHAM_MRITYU, StringKey.SAHAM_MRITYU_SANSKRIT, StringKey.SAHAM_MRITYU_DESC),
+        PARADESA(StringKey.SAHAM_PARADESA, StringKey.SAHAM_PARADESA_SANSKRIT, StringKey.SAHAM_PARADESA_DESC),
+        DHANA(StringKey.SAHAM_DHANA, StringKey.SAHAM_DHANA_SANSKRIT, StringKey.SAHAM_DHANA_DESC),
+        RAJA(StringKey.SAHAM_RAJA, StringKey.SAHAM_RAJA_SANSKRIT, StringKey.SAHAM_RAJA_DESC),
+        BANDHANA(StringKey.SAHAM_BANDHANA, StringKey.SAHAM_BANDHANA_SANSKRIT, StringKey.SAHAM_BANDHANA_DESC),
+        KARYASIDDHI(StringKey.SAHAM_KARYASIDDHI_TYPE, StringKey.SAHAM_KARYASIDDHI_TYPE_SANSKRIT, StringKey.SAHAM_KARYASIDDHI_TYPE_DESC);
+
+        fun getDisplayName(language: Language): String = StringResources.get(displayNameKey, language)
+        fun getSanskritName(language: Language): String = StringResources.get(sanskritNameKey, language)
+        fun getDescription(language: Language): String = StringResources.get(descriptionKey, language)
     }
 
-    enum class KeyDateType {
-        FAVORABLE, CHALLENGING, IMPORTANT, TRANSIT
+    enum class KeyDateType(val displayNameKey: StringKey) {
+        FAVORABLE(StringKey.KEY_DATE_FAVORABLE),
+        CHALLENGING(StringKey.KEY_DATE_CHALLENGING),
+        IMPORTANT(StringKey.KEY_DATE_IMPORTANT),
+        TRANSIT(StringKey.KEY_DATE_TRANSIT);
+
+        fun getDisplayName(language: Language): String = StringResources.get(displayNameKey, language)
     }
 
     data class SolarReturnChart(
@@ -1108,8 +1129,8 @@ class VarshaphalaCalculator(context: Context) {
                 sahams.add(
                     SahamResult(
                         type = type,
-                        name = type.displayName,
-                        sanskritName = type.sanskritName,
+                        name = type.getDisplayName(Language.ENGLISH),
+                        sanskritName = type.getSanskritName(Language.ENGLISH),
                         formula = formulaStr,
                         longitude = longitude,
                         sign = sign,
@@ -1150,6 +1171,7 @@ class VarshaphalaCalculator(context: Context) {
         lordHouse: Int,
         lordStrength: String
     ): String {
+        // Interpretation stored in English for data, UI will localize on display
         val lordQuality = when (lordStrength) {
             "Exalted", "Strong" -> "well-placed, promising positive outcomes"
             "Moderate", "Angular" -> "providing reasonable support"
@@ -1157,7 +1179,7 @@ class VarshaphalaCalculator(context: Context) {
             else -> "influencing matters variably"
         }
 
-        return "The ${type.displayName} Saham in ${sign.displayName} (House $house) relates to ${type.description.lowercase()} this year. " +
+        return "The ${type.getDisplayName(Language.ENGLISH)} Saham in ${sign.displayName} (House $house) relates to ${type.getDescription(Language.ENGLISH).lowercase()} this year. " +
                 "Its lord ${lord.displayName} in House $lordHouse is $lordQuality."
     }
 
@@ -1300,21 +1322,23 @@ class VarshaphalaCalculator(context: Context) {
     }
 
     private fun getAspectEffectDescription(type: TajikaAspectType, planet1: Planet, planet2: Planet): String {
+        // Effect descriptions stored in English for data, UI will localize on display
         return when (type) {
             TajikaAspectType.ITHASALA -> "${planet1.displayName} applying to ${planet2.displayName} promises fulfillment"
             TajikaAspectType.EASARAPHA -> "Separating aspect suggests matters are concluding"
             TajikaAspectType.KAMBOOLA -> "Powerful angular conjunction promises prominent success"
             TajikaAspectType.RADDA -> "Retrograde motion causes delays or reversals"
             TajikaAspectType.DURAPHA -> "Hard aspect creates challenges that strengthen through difficulty"
-            else -> "${type.displayName} influences matters with ${if (type.isPositive) "supportive" else "challenging"} energy"
+            else -> "${type.getDisplayName(Language.ENGLISH)} influences matters with ${if (type.isPositive) "supportive" else "challenging"} energy"
         }
     }
 
     private fun generateAspectPrediction(type: TajikaAspectType, planet1: Planet, planet2: Planet, houses: List<Int>): String {
+        // Predictions stored in English for data, UI will localize on display
         val houseStr = houses.joinToString(" and ") { "House $it" }
         val quality = if (type.isPositive) "favorable" else "requiring attention"
 
-        return "The ${type.displayName} between ${planet1.displayName} and ${planet2.displayName} is $quality for matters of $houseStr."
+        return "The ${type.getDisplayName(Language.ENGLISH)} between ${planet1.displayName} and ${planet2.displayName} is $quality for matters of $houseStr."
     }
 
     private fun calculateMuddaDasha(chart: SolarReturnChart, startDate: LocalDate): List<MuddaDashaPeriod> {

@@ -67,6 +67,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.theme.AppTheme
 import java.time.LocalDateTime
@@ -154,7 +156,7 @@ private fun ProfileSwitcherDragHandle() {
 @Composable
 private fun ProfileSwitcherHeader() {
     Text(
-        text = "Switch Profile",
+        text = stringResource(StringKey.PROFILE_SWITCH),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
         color = AppTheme.TextPrimary,
@@ -190,14 +192,14 @@ private fun ProfileSwitcherEmptyState() {
             }
 
             Text(
-                text = "No saved charts",
+                text = stringResource(StringKey.PROFILE_NO_SAVED_CHARTS),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = AppTheme.TextMuted
             )
 
             Text(
-                text = "Add your first chart to get started",
+                text = stringResource(StringKey.PROFILE_ADD_FIRST_CHART),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextSubtle
             )
@@ -246,11 +248,20 @@ private fun ProfileItem(
         label = "profile_item_bg"
     )
 
-    val formattedDetails = remember(chart.dateTime, chart.location) {
-        formatChartDetails(chart)
+    val birthChartFallback = stringResource(StringKey.PROFILE_BIRTH_CHART)
+    val formattedDetails = remember(chart.dateTime, chart.location, birthChartFallback) {
+        formatChartDetails(chart, birthChartFallback)
     }
 
     val interactionSource = remember { MutableInteractionSource() }
+    val selectedText = stringResource(StringKey.PROFILE_SELECTED)
+
+    val accessibilityDesc = buildString {
+        append(chart.name)
+        append(", ")
+        append(formattedDetails)
+        if (isSelected) append(", $selectedText")
+    }
 
     Row(
         modifier = Modifier
@@ -263,12 +274,7 @@ private fun ProfileItem(
                 role = Role.Button
             )
             .semantics {
-                contentDescription = buildString {
-                    append(chart.name)
-                    append(", ")
-                    append(formattedDetails)
-                    if (isSelected) append(", selected")
-                }
+                contentDescription = accessibilityDesc
                 selected = isSelected
                 role = Role.Button
             }
@@ -395,6 +401,7 @@ fun ProfileAvatar(
 @Composable
 private fun AddNewChartButton(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
+    val addNewChartDesc = stringResource(StringKey.PROFILE_ADD_NEW_CHART)
 
     Row(
         modifier = Modifier
@@ -406,7 +413,7 @@ private fun AddNewChartButton(onClick: () -> Unit) {
                 role = Role.Button
             )
             .semantics {
-                contentDescription = "Add new birth chart"
+                contentDescription = addNewChartDesc
             }
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -434,7 +441,7 @@ private fun AddNewChartButton(onClick: () -> Unit) {
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = "Add new chart",
+            text = addNewChartDesc,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium,
             color = AppTheme.AccentPrimary
@@ -450,6 +457,14 @@ fun ProfileHeaderRow(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
+    val selectProfileText = stringResource(StringKey.PROFILE_SELECT)
+
+    val accessibilityDesc = currentChart?.let {
+        String.format(
+            stringResource(StringKey.PROFILE_CURRENT_A11Y),
+            it.name
+        )
+    } ?: stringResource(StringKey.PROFILE_NO_SELECTED_A11Y)
 
     Row(
         modifier = modifier
@@ -467,9 +482,7 @@ fun ProfileHeaderRow(
                 role = Role.DropdownList
             )
             .semantics {
-                contentDescription = currentChart?.let {
-                    "Current profile: ${it.name}. Tap to switch profiles"
-                } ?: "No profile selected. Tap to select a profile"
+                contentDescription = accessibilityDesc
             }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -512,7 +525,7 @@ fun ProfileHeaderRow(
             Spacer(modifier = Modifier.width(10.dp))
 
             Text(
-                text = "Select Profile",
+                text = selectProfileText,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = AppTheme.TextMuted
@@ -543,7 +556,7 @@ private fun extractInitials(name: String): String {
         .ifEmpty { "?" }
 }
 
-private fun formatChartDetails(chart: SavedChart): String {
+private fun formatChartDetails(chart: SavedChart, fallback: String): String {
     val formattedDate = try {
         val dateTime = LocalDateTime.parse(
             chart.dateTime,
@@ -562,6 +575,6 @@ private fun formatChartDetails(chart: SavedChart): String {
         formattedDate != null && location != null -> "$formattedDate • $location"
         formattedDate != null -> formattedDate
         location != null -> location
-        else -> "Birth chart"
+        else -> fallback
     }
 }

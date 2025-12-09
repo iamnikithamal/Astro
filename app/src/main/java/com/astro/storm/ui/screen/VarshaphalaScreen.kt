@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
@@ -398,14 +399,14 @@ private fun EmptyState() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                "No Chart Selected",
+                stringResource(StringKey.VARSHAPHALA_NO_CHART),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Select a birth chart to view Varshaphala",
+                stringResource(StringKey.VARSHAPHALA_NO_CHART_DESC),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextMuted,
                 textAlign = TextAlign.Center
@@ -428,14 +429,14 @@ private fun LoadingState() {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "Computing Annual Horoscope...",
+                stringResource(StringKey.VARSHAPHALA_COMPUTING),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 color = AppTheme.TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Calculating Tajika aspects, Sahams & Mudda Dasha",
+                stringResource(StringKey.VARSHAPHALA_COMPUTING_DESC),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.TextMuted
             )
@@ -461,7 +462,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                "Calculation Error",
+                stringResource(StringKey.VARSHAPHALA_ERROR),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.ErrorColor
@@ -551,13 +552,13 @@ private fun SolarReturnCard(result: VarshaphalaResult) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Solar Return",
+                        stringResource(StringKey.VARSHAPHALA_SOLAR_RETURN),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        "Sun returns to natal position",
+                        stringResource(StringKey.VARSHAPHALA_SUN_RETURNS),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -565,7 +566,7 @@ private fun SolarReturnCard(result: VarshaphalaResult) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "Age ${result.age}",
+                        stringResource(StringKey.VARSHAPHALA_AGE_FORMAT, result.age),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.AccentPrimary
@@ -580,7 +581,7 @@ private fun SolarReturnCard(result: VarshaphalaResult) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Return Date",
+                        stringResource(StringKey.VARSHAPHALA_RETURN_DATE),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -603,13 +604,13 @@ private fun SolarReturnCard(result: VarshaphalaResult) {
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 InfoChip(
-                    label = "Ascendant",
+                    label = stringResource(StringKey.CHART_ASCENDANT),
                     value = "${result.solarReturnChart.ascendant.displayName} ${String.format("%.1f", result.solarReturnChart.ascendantDegree)}°",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 InfoChip(
-                    label = "Moon",
+                    label = stringResource(StringKey.PLANET_MOON),
                     value = result.solarReturnChart.moonSign.displayName,
                     subValue = result.solarReturnChart.moonNakshatra,
                     modifier = Modifier.weight(1f)
@@ -698,7 +699,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
 
                     Column {
                         Text(
-                            "Year Lord",
+                            stringResource(StringKey.VARSHAPHALA_YEAR_LORD),
                             style = MaterialTheme.typography.labelSmall,
                             color = AppTheme.TextMuted
                         )
@@ -712,7 +713,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                             StrengthBadge(result.yearLordStrength)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "House ${result.yearLordHouse}",
+                                stringResource(StringKey.VARSHAPHALA_IN_HOUSE, result.yearLordHouse),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = AppTheme.TextSecondary
                             )
@@ -771,7 +772,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                     ) {
                         Column {
                             Text(
-                                "Muntha",
+                                stringResource(StringKey.VARSHAPHALA_MUNTHA),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = AppTheme.TextMuted
                             )
@@ -782,7 +783,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                                 color = AppTheme.TextPrimary
                             )
                             Text(
-                                "House ${result.muntha.house} • ${String.format("%.1f", result.muntha.degree)}°",
+                                "${stringResource(StringKey.VARSHAPHALA_HOUSE)} ${result.muntha.house} • ${String.format("%.1f", result.muntha.degree)}°",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = AppTheme.TextSecondary
                             )
@@ -790,13 +791,13 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                "Lord: ${result.muntha.lord.displayName}",
+                                stringResource(StringKey.VARSHAPHALA_LORD_PREFIX, result.muntha.lord.displayName),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = getPlanetColor(result.muntha.lord),
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                "in House ${result.muntha.lordHouse}",
+                                stringResource(StringKey.VARSHAPHALA_IN_HOUSE, result.muntha.lordHouse),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = AppTheme.TextMuted
                             )
@@ -812,7 +813,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Text(
-                                    theme,
+                                    getMunthaThemeLocalized(theme),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = AppTheme.AccentGold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -878,7 +879,7 @@ private fun AnnualChartVisualization(result: VarshaphalaResult) {
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "Tajika Annual Chart",
+                        stringResource(StringKey.VARSHAPHALA_TAJIKA_CHART),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
@@ -900,6 +901,7 @@ private fun AnnualChartVisualization(result: VarshaphalaResult) {
                         planetPositions = result.solarReturnChart.planetPositions,
                         ascendantSign = result.solarReturnChart.ascendant,
                         munthaSign = result.muntha.sign,
+                        title = stringResource(StringKey.VARSHAPHALA_TITLE),
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
@@ -911,10 +913,10 @@ private fun AnnualChartVisualization(result: VarshaphalaResult) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        ChartLegendItem("Asc", AppTheme.AccentPrimary)
-                        ChartLegendItem("Muntha", AppTheme.AccentGold)
-                        ChartLegendItem("Benefic", AppTheme.SuccessColor)
-                        ChartLegendItem("Malefic", AppTheme.ErrorColor)
+                        ChartLegendItem(stringResource(StringKey.VARSHAPHALA_CHART_LEGEND_ASC), AppTheme.AccentPrimary)
+                        ChartLegendItem(stringResource(StringKey.VARSHAPHALA_CHART_LEGEND_MUNTHA), AppTheme.AccentGold)
+                        ChartLegendItem(stringResource(StringKey.VARSHAPHALA_CHART_LEGEND_BENEFIC), AppTheme.SuccessColor)
+                        ChartLegendItem(stringResource(StringKey.VARSHAPHALA_CHART_LEGEND_MALEFIC), AppTheme.ErrorColor)
                     }
                 }
             }
@@ -927,6 +929,7 @@ private fun SouthIndianChart(
     planetPositions: Map<Planet, SolarReturnPlanetPosition>,
     ascendantSign: ZodiacSign,
     munthaSign: ZodiacSign,
+    title: String,
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
@@ -1065,7 +1068,7 @@ private fun SouthIndianChart(
         )
 
         val titleLayout = textMeasurer.measure(
-            text = "Varshaphala",
+            text = title,
             style = TextStyle(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -1127,13 +1130,13 @@ private fun PanchaVargiyaBalaCard(result: VarshaphalaResult) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            "Pancha Vargiya Bala",
+                            stringResource(StringKey.VARSHAPHALA_PANCHA_VARGIYA),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            "Five-fold Planetary Strength",
+                            stringResource(StringKey.VARSHAPHALA_FIVEFOLD_STRENGTH),
                             style = MaterialTheme.typography.labelSmall,
                             color = AppTheme.TextMuted
                         )
@@ -1245,13 +1248,13 @@ private fun TriPatakiChakraCard(result: VarshaphalaResult) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            "Tri-Pataki Chakra",
+                            stringResource(StringKey.VARSHAPHALA_TRI_PATAKI),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            "Three-flag Diagram",
+                            stringResource(StringKey.VARSHAPHALA_THREE_FLAG),
                             style = MaterialTheme.typography.labelSmall,
                             color = AppTheme.TextMuted
                         )
@@ -1331,7 +1334,7 @@ private fun TriPatakiSectorRow(sector: TriPatakiSector) {
             }
         } else {
             Text(
-                "No planets",
+                stringResource(StringKey.VARSHAPHALA_NO_PLANETS),
                 style = MaterialTheme.typography.labelSmall,
                 color = AppTheme.TextMuted
             )
@@ -1364,7 +1367,7 @@ private fun MajorThemesCard(result: VarshaphalaResult) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Major Themes",
+                    stringResource(StringKey.VARSHAPHALA_MAJOR_THEMES),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1426,7 +1429,7 @@ private fun MonthsCard(result: VarshaphalaResult) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Monthly Outlook",
+                    stringResource(StringKey.VARSHAPHALA_MONTHLY_OUTLOOK),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1438,7 +1441,7 @@ private fun MonthsCard(result: VarshaphalaResult) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Favorable",
+                        stringResource(StringKey.VARSHAPHALA_FAVORABLE),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.SuccessColor
                     )
@@ -1464,7 +1467,7 @@ private fun MonthsCard(result: VarshaphalaResult) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Challenging",
+                        stringResource(StringKey.VARSHAPHALA_CHALLENGING),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.WarningColor
                     )
@@ -1519,13 +1522,13 @@ private fun KeyDatesCard(result: VarshaphalaResult) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            "Key Dates",
+                            stringResource(StringKey.VARSHAPHALA_KEY_DATES),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            "${result.keyDates.size} important dates",
+                            stringResource(StringKey.VARSHAPHALA_IMPORTANT_DATES, result.keyDates.size),
                             style = MaterialTheme.typography.labelSmall,
                             color = AppTheme.TextMuted
                         )
@@ -1608,7 +1611,7 @@ private fun OverallPredictionCard(result: VarshaphalaResult) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Overall Prediction",
+                    stringResource(StringKey.VARSHAPHALA_OVERALL_PREDICTION),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1661,7 +1664,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                "Tajika Yogas Summary",
+                stringResource(StringKey.VARSHAPHALA_TAJIKA_SUMMARY),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
@@ -1681,7 +1684,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
                         color = AppTheme.SuccessColor
                     )
                     Text(
-                        "Favorable",
+                        stringResource(StringKey.VARSHAPHALA_FAVORABLE),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -1698,7 +1701,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
                         color = AppTheme.WarningColor
                     )
                     Text(
-                        "Challenging",
+                        stringResource(StringKey.VARSHAPHALA_CHALLENGING),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -1715,7 +1718,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
                         color = AppTheme.AccentPrimary
                     )
                     Text(
-                        "Total",
+                        stringResource(StringKey.VARSHAPHALA_TOTAL),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -1727,6 +1730,7 @@ private fun TajikaAspectsHeader(aspects: List<TajikaAspectResult>) {
 
 @Composable
 private fun TajikaAspectCard(aspect: TajikaAspectResult) {
+    val language = currentLanguage()
     val color = if (aspect.type.isPositive) AppTheme.SuccessColor else AppTheme.WarningColor
 
     Card(
@@ -1768,7 +1772,7 @@ private fun TajikaAspectCard(aspect: TajikaAspectResult) {
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            aspect.type.displayName,
+                            aspect.type.getDisplayName(language),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = color,
@@ -1799,12 +1803,12 @@ private fun TajikaAspectCard(aspect: TajikaAspectResult) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Houses: ${aspect.relatedHouses.joinToString(", ")}",
+                    stringResource(StringKey.VARSHAPHALA_HOUSES_PREFIX) + aspect.relatedHouses.joinToString(", "),
                     style = MaterialTheme.typography.labelSmall,
                     color = AppTheme.TextMuted
                 )
                 Text(
-                    aspect.strength.displayName,
+                    aspect.strength.getDisplayName(language),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = getAspectStrengthColor(aspect.strength)
@@ -1853,7 +1857,7 @@ private fun SahamsHeader() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Sahams (Arabic Parts)",
+                    stringResource(StringKey.VARSHAPHALA_SAHAMS_TITLE),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1863,7 +1867,7 @@ private fun SahamsHeader() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "Sensitive points calculated from planetary positions that indicate specific life areas",
+                stringResource(StringKey.VARSHAPHALA_SAHAMS_DESC),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.TextMuted
             )
@@ -1910,7 +1914,7 @@ private fun SahamCard(saham: SahamResult) {
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            "Active",
+                            stringResource(StringKey.VARSHAPHALA_ACTIVE),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.SuccessColor,
@@ -1924,15 +1928,15 @@ private fun SahamCard(saham: SahamResult) {
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 InfoChip(
-                    label = "Position",
+                    label = stringResource(StringKey.VARSHAPHALA_POSITION),
                     value = "${String.format("%.1f", saham.degree)}° ${saham.sign.displayName}",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 InfoChip(
-                    label = "House",
+                    label = stringResource(StringKey.VARSHAPHALA_HOUSE),
                     value = "${saham.house}",
-                    subValue = "Lord: ${saham.lord.displayName}",
+                    subValue = stringResource(StringKey.VARSHAPHALA_LORD_PREFIX, saham.lord.displayName),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1988,7 +1992,7 @@ private fun DashaHeader() {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Mudda Dasha",
+                    stringResource(StringKey.VARSHAPHALA_MUDDA_DASHA),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1998,7 +2002,7 @@ private fun DashaHeader() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "Annual planetary periods based on Moon's position in the solar return chart",
+                stringResource(StringKey.VARSHAPHALA_MUDDA_DASHA_DESC),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.TextMuted
             )
@@ -2064,7 +2068,7 @@ private fun MuddaDashaPeriodCard(period: MuddaDashaPeriod) {
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 Text(
-                                    "CURRENT",
+                                    stringResource(StringKey.VARSHAPHALA_CURRENT),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
@@ -2082,7 +2086,7 @@ private fun MuddaDashaPeriodCard(period: MuddaDashaPeriod) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "${period.days} days",
+                        stringResource(StringKey.VARSHAPHALA_DAYS_FORMAT, period.days),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
                         color = AppTheme.TextPrimary
@@ -2138,7 +2142,7 @@ private fun MuddaDashaPeriodCard(period: MuddaDashaPeriod) {
                     if (period.houseRuled.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Rules Houses: ${period.houseRuled.joinToString(", ")}",
+                            stringResource(StringKey.VARSHAPHALA_RULES_HOUSES, period.houseRuled.joinToString(", ")),
                             style = MaterialTheme.typography.labelSmall,
                             color = AppTheme.TextMuted
                         )
@@ -2201,13 +2205,13 @@ private fun HousePredictionCard(prediction: HousePrediction) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "House ${prediction.house} - ${prediction.signOnCusp.displayName}",
+                        stringResource(StringKey.VARSHAPHALA_HOUSE_SIGN, prediction.house, prediction.signOnCusp.displayName),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        "Lord: ${prediction.houseLord.displayName} in H${prediction.lordPosition}",
+                        stringResource(StringKey.VARSHAPHALA_LORD_IN_HOUSE, prediction.houseLord.displayName, prediction.lordPosition),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -2234,7 +2238,7 @@ private fun HousePredictionCard(prediction: HousePrediction) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "Planets: ",
+                        stringResource(StringKey.VARSHAPHALA_PLANETS),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -2283,7 +2287,7 @@ private fun HousePredictionCard(prediction: HousePrediction) {
                     if (prediction.specificEvents.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Specific Indications:",
+                            stringResource(StringKey.VARSHAPHALA_SPECIFIC_INDICATIONS),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
@@ -2373,20 +2377,64 @@ private fun getZodiacSymbol(sign: ZodiacSign): String {
     }
 }
 
+@Composable
 private fun getMonthName(month: Int): String {
     return when (month) {
-        1 -> "Jan"
-        2 -> "Feb"
-        3 -> "Mar"
-        4 -> "Apr"
-        5 -> "May"
-        6 -> "Jun"
-        7 -> "Jul"
-        8 -> "Aug"
-        9 -> "Sep"
-        10 -> "Oct"
-        11 -> "Nov"
-        12 -> "Dec"
+        1 -> stringResource(StringKey.MONTH_JAN)
+        2 -> stringResource(StringKey.MONTH_FEB)
+        3 -> stringResource(StringKey.MONTH_MAR)
+        4 -> stringResource(StringKey.MONTH_APR)
+        5 -> stringResource(StringKey.MONTH_MAY)
+        6 -> stringResource(StringKey.MONTH_JUN)
+        7 -> stringResource(StringKey.MONTH_JUL)
+        8 -> stringResource(StringKey.MONTH_AUG)
+        9 -> stringResource(StringKey.MONTH_SEP)
+        10 -> stringResource(StringKey.MONTH_OCT)
+        11 -> stringResource(StringKey.MONTH_NOV)
+        12 -> stringResource(StringKey.MONTH_DEC)
         else -> ""
+    }
+}
+
+@Composable
+private fun getMunthaThemeLocalized(theme: String): String {
+    return when (theme) {
+        "Personal Growth" -> stringResource(StringKey.MUNTHA_PERSONAL_GROWTH)
+        "New Beginnings" -> stringResource(StringKey.MUNTHA_NEW_BEGINNINGS)
+        "Health Focus" -> stringResource(StringKey.MUNTHA_HEALTH_FOCUS)
+        "Financial Gains" -> stringResource(StringKey.MUNTHA_FINANCIAL_GAINS)
+        "Family Matters" -> stringResource(StringKey.MUNTHA_FAMILY_MATTERS)
+        "Speech" -> stringResource(StringKey.MUNTHA_SPEECH)
+        "Communication" -> stringResource(StringKey.MUNTHA_COMMUNICATION)
+        "Short Travels" -> stringResource(StringKey.MUNTHA_SHORT_TRAVELS)
+        "Siblings" -> stringResource(StringKey.MUNTHA_SIBLINGS)
+        "Home Affairs" -> stringResource(StringKey.MUNTHA_HOME_AFFAIRS)
+        "Property" -> stringResource(StringKey.MUNTHA_PROPERTY)
+        "Inner Peace" -> stringResource(StringKey.MUNTHA_INNER_PEACE)
+        "Creativity" -> stringResource(StringKey.MUNTHA_CREATIVITY)
+        "Romance" -> stringResource(StringKey.MUNTHA_ROMANCE)
+        "Children" -> stringResource(StringKey.MUNTHA_CHILDREN)
+        "Service" -> stringResource(StringKey.MUNTHA_SERVICE)
+        "Health Issues" -> stringResource(StringKey.MUNTHA_HEALTH_ISSUES)
+        "Competition" -> stringResource(StringKey.MUNTHA_COMPETITION)
+        "Partnerships" -> stringResource(StringKey.MUNTHA_PARTNERSHIPS)
+        "Marriage" -> stringResource(StringKey.MUNTHA_MARRIAGE)
+        "Business" -> stringResource(StringKey.MUNTHA_BUSINESS)
+        "Transformation" -> stringResource(StringKey.MUNTHA_TRANSFORMATION)
+        "Research" -> stringResource(StringKey.MUNTHA_RESEARCH)
+        "Inheritance" -> stringResource(StringKey.MUNTHA_INHERITANCE)
+        "Fortune" -> stringResource(StringKey.MUNTHA_FORTUNE)
+        "Long Travel" -> stringResource(StringKey.MUNTHA_LONG_TRAVEL)
+        "Higher Learning" -> stringResource(StringKey.MUNTHA_HIGHER_LEARNING)
+        "Career Advancement" -> stringResource(StringKey.MUNTHA_CAREER_ADVANCEMENT)
+        "Recognition" -> stringResource(StringKey.MUNTHA_RECOGNITION)
+        "Authority" -> stringResource(StringKey.MUNTHA_AUTHORITY)
+        "Gains" -> stringResource(StringKey.MUNTHA_GAINS)
+        "Friends" -> stringResource(StringKey.MUNTHA_FRIENDS)
+        "Fulfilled Wishes" -> stringResource(StringKey.MUNTHA_FULFILLED_WISHES)
+        "Spirituality" -> stringResource(StringKey.MUNTHA_SPIRITUALITY)
+        "Foreign Lands" -> stringResource(StringKey.MUNTHA_FOREIGN_LANDS)
+        "Expenses" -> stringResource(StringKey.MUNTHA_EXPENSES)
+        else -> theme
     }
 }

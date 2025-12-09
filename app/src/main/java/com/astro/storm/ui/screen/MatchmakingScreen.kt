@@ -42,8 +42,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.local.ChartEntity
+import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringResources
+import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.MatchmakingCalculator
@@ -107,9 +110,10 @@ fun MatchmakingScreen(
         } ?: run { groomChart = null }
     }
 
-    // Pre-fetch localized strings for use in LaunchedEffect and scope.launch (stringResource is @Composable)
+    // Pre-fetch localized strings and language for use in LaunchedEffect and scope.launch (stringResource is @Composable)
     val errorCalculationFailedText = stringResource(StringKey.ERROR_CALCULATION_FAILED)
     val copiedToClipboardText = stringResource(StringKey.MATCH_COPIED_TO_CLIPBOARD)
+    val language = currentLanguage()
 
     LaunchedEffect(brideChart, groomChart) {
         if (brideChart != null && groomChart != null) {
@@ -177,7 +181,7 @@ fun MatchmakingScreen(
                             IconButton(onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 matchingResult?.let { result ->
-                                    val report = generateTextReport(result, brideChart, groomChart)
+                                    val report = generateTextReport(result, brideChart, groomChart, language)
                                     clipboardManager.setText(AnnotatedString(report))
                                     scope.launch {
                                         snackbarHostState.showSnackbar(copiedToClipboardText)
@@ -2586,6 +2590,7 @@ private fun ShareOptionsSheet(
     onCopyToClipboard: (String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val language = currentLanguage()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -2628,7 +2633,7 @@ private fun ShareOptionsSheet(
                 subtitle = stringResource(StringKey.MATCH_COPY_FULL_DESC),
                 onClick = {
                     result?.let {
-                        onCopyToClipboard(generateTextReport(it, brideChart, groomChart))
+                        onCopyToClipboard(generateTextReport(it, brideChart, groomChart, language))
                     }
                 }
             )
@@ -2639,7 +2644,7 @@ private fun ShareOptionsSheet(
                 subtitle = stringResource(StringKey.MATCH_COPY_SUMMARY_DESC),
                 onClick = {
                     result?.let {
-                        onCopyToClipboard(generateSummaryReport(it, brideChart, groomChart))
+                        onCopyToClipboard(generateSummaryReport(it, brideChart, groomChart, language))
                     }
                 }
             )
@@ -2650,7 +2655,7 @@ private fun ShareOptionsSheet(
                 subtitle = stringResource(StringKey.MATCH_COPY_SCORES_DESC),
                 onClick = {
                     result?.let {
-                        onCopyToClipboard(generateScoresReport(it))
+                        onCopyToClipboard(generateScoresReport(it, language))
                     }
                 }
             )
@@ -2717,83 +2722,91 @@ private fun ShareOptionItem(
 private fun generateTextReport(
     result: MatchmakingCalculator.MatchmakingResult,
     brideChart: VedicChart?,
-    groomChart: VedicChart?
+    groomChart: VedicChart?,
+    language: Language
 ): String {
+    val naText = StringResources.get(StringKey.REPORT_NA, language)
+    val brideLabel = StringResources.get(StringKey.REPORT_BRIDE_LABEL, language)
+    val groomLabel = StringResources.get(StringKey.REPORT_GROOM_LABEL, language)
+    val moonSignLabel = StringResources.get(StringKey.REPORT_MOON_SIGN_LABEL, language)
+    val nakshatraLabel = StringResources.get(StringKey.REPORT_NAKSHATRA_LABEL, language)
+    val cancellationText = StringResources.get(StringKey.REPORT_CANCELLATION, language)
+
     return buildString {
         appendLine("═══════════════════════════════════════")
-        appendLine("       KUNDLI MILAN REPORT")
-        appendLine("         AstroStorm Analysis")
+        appendLine("       ${StringResources.get(StringKey.REPORT_MATCHMAKING_TITLE, language)}")
+        appendLine("         ${StringResources.get(StringKey.REPORT_ASTROSTORM_ANALYSIS, language)}")
         appendLine("═══════════════════════════════════════")
         appendLine()
-        
-        appendLine("PROFILES")
+
+        appendLine(StringResources.get(StringKey.REPORT_PROFILES, language))
         appendLine("─────────────────────────────────────")
         brideChart?.let {
-            appendLine("Bride: ${it.birthData.name ?: "N/A"}")
-            appendLine("  Moon Sign: ${getRashiNameForReport(it)}")
-            appendLine("  Nakshatra: ${getNakshatraNameForReport(it)} (${getPadaForReport(it)})")
+            appendLine("$brideLabel ${it.birthData.name ?: naText}")
+            appendLine("  $moonSignLabel ${getRashiNameForReport(it)}")
+            appendLine("  $nakshatraLabel ${getNakshatraNameForReport(it)} (${getPadaForReport(it)})")
         }
         groomChart?.let {
-            appendLine("Groom: ${it.birthData.name ?: "N/A"}")
-            appendLine("  Moon Sign: ${getRashiNameForReport(it)}")
-            appendLine("  Nakshatra: ${getNakshatraNameForReport(it)} (${getPadaForReport(it)})")
+            appendLine("$groomLabel ${it.birthData.name ?: naText}")
+            appendLine("  $moonSignLabel ${getRashiNameForReport(it)}")
+            appendLine("  $nakshatraLabel ${getNakshatraNameForReport(it)} (${getPadaForReport(it)})")
         }
         appendLine()
-        
-        appendLine("COMPATIBILITY SCORE")
+
+        appendLine(StringResources.get(StringKey.REPORT_COMPATIBILITY_SCORE, language))
         appendLine("─────────────────────────────────────")
-        appendLine("Total Points: ${String.format("%.1f", result.totalPoints)} / ${result.maxPoints.toInt()}")
-        appendLine("Percentage: ${String.format("%.1f", result.percentage)}%")
-        appendLine("Rating: ${result.rating.displayName}")
+        appendLine("${StringResources.get(StringKey.REPORT_TOTAL_POINTS, language)} ${String.format("%.1f", result.totalPoints)} / ${result.maxPoints.toInt()}")
+        appendLine("${StringResources.get(StringKey.REPORT_PERCENTAGE, language)} ${String.format("%.1f", result.percentage)}%")
+        appendLine("${StringResources.get(StringKey.REPORT_RATING_LABEL, language)} ${result.rating.displayName}")
         appendLine()
-        
-        appendLine("ASHTAKOOTA (8 GUNA) ANALYSIS")
+
+        appendLine(StringResources.get(StringKey.REPORT_ASHTAKOOTA_8_GUNA, language))
         appendLine("─────────────────────────────────────")
         result.gunaAnalyses.forEach { guna ->
             val status = if (guna.isPositive) "✓" else "✗"
             appendLine("$status ${guna.name} (${guna.description})")
-            appendLine("  Score: ${guna.obtainedPoints.toInt()}/${guna.maxPoints.toInt()}")
-            appendLine("  Bride: ${guna.brideValue} | Groom: ${guna.groomValue}")
+            appendLine("  ${StringResources.get(StringKey.REPORT_SCORE_LABEL, language)} ${guna.obtainedPoints.toInt()}/${guna.maxPoints.toInt()}")
+            appendLine("  ${StringResources.get(StringKey.MATCH_BRIDE, language)}: ${guna.brideValue} | ${StringResources.get(StringKey.MATCH_GROOM, language)}: ${guna.groomValue}")
             appendLine("  ${guna.analysis}")
             appendLine()
         }
-        
-        appendLine("MANGLIK DOSHA ANALYSIS")
+
+        appendLine(StringResources.get(StringKey.REPORT_MANGLIK_DOSHA_ANALYSIS, language))
         appendLine("─────────────────────────────────────")
-        appendLine("Compatibility: ${result.manglikCompatibility}")
+        appendLine("${StringResources.get(StringKey.REPORT_COMPATIBILITY_LABEL, language)} ${result.manglikCompatibility}")
         appendLine()
-        appendLine("Bride: ${result.brideManglik.effectiveDosha.displayName}")
+        appendLine("${StringResources.get(StringKey.MATCH_BRIDE, language)}: ${result.brideManglik.effectiveDosha.displayName}")
         if (result.brideManglik.marsHouse > 0) {
-            appendLine("  Mars in House ${result.brideManglik.marsHouse}")
+            appendLine("  ${String.format(StringResources.get(StringKey.REPORT_MARS_IN_HOUSE, language), result.brideManglik.marsHouse)}")
         }
         result.brideManglik.factors.forEach { appendLine("  • $it") }
-        result.brideManglik.cancellations.forEach { appendLine("  ✓ $it (Cancellation)") }
+        result.brideManglik.cancellations.forEach { appendLine("  ✓ $it $cancellationText") }
         appendLine()
-        appendLine("Groom: ${result.groomManglik.effectiveDosha.displayName}")
+        appendLine("${StringResources.get(StringKey.MATCH_GROOM, language)}: ${result.groomManglik.effectiveDosha.displayName}")
         if (result.groomManglik.marsHouse > 0) {
-            appendLine("  Mars in House ${result.groomManglik.marsHouse}")
+            appendLine("  ${String.format(StringResources.get(StringKey.REPORT_MARS_IN_HOUSE, language), result.groomManglik.marsHouse)}")
         }
         result.groomManglik.factors.forEach { appendLine("  • $it") }
-        result.groomManglik.cancellations.forEach { appendLine("  ✓ $it (Cancellation)") }
+        result.groomManglik.cancellations.forEach { appendLine("  ✓ $it $cancellationText") }
         appendLine()
-        
+
         if (result.specialConsiderations.isNotEmpty()) {
-            appendLine("SPECIAL CONSIDERATIONS")
+            appendLine(StringResources.get(StringKey.REPORT_SPECIAL_CONSIDERATIONS, language))
             appendLine("─────────────────────────────────────")
             result.specialConsiderations.forEach { appendLine("• $it") }
             appendLine()
         }
-        
-        appendLine("SUGGESTED REMEDIES")
+
+        appendLine(StringResources.get(StringKey.REPORT_SUGGESTED_REMEDIES, language))
         appendLine("─────────────────────────────────────")
         result.remedies.forEachIndexed { index, remedy ->
             appendLine("${index + 1}. $remedy")
         }
         appendLine()
-        
+
         appendLine("═══════════════════════════════════════")
-        appendLine("Generated by AstroStorm")
-        appendLine("Vedic Astrology • Ultra-Precision")
+        appendLine(StringResources.get(StringKey.REPORT_GENERATED_BY, language))
+        appendLine(StringResources.get(StringKey.REPORT_ASTROSTORM_VEDIC, language))
         appendLine("═══════════════════════════════════════")
     }
 }
@@ -2801,35 +2814,43 @@ private fun generateTextReport(
 private fun generateSummaryReport(
     result: MatchmakingCalculator.MatchmakingResult,
     brideChart: VedicChart?,
-    groomChart: VedicChart?
+    groomChart: VedicChart?,
+    language: Language
 ): String {
+    val naText = StringResources.get(StringKey.REPORT_NA, language)
+    val brideLabel = StringResources.get(StringKey.MATCH_BRIDE, language)
+    val groomLabel = StringResources.get(StringKey.MATCH_GROOM, language)
+
     return buildString {
-        appendLine("🔮 KUNDLI MILAN SUMMARY")
+        appendLine("🔮 ${StringResources.get(StringKey.REPORT_KUNDLI_MILAN_SUMMARY, language)}")
         appendLine()
-        brideChart?.let { appendLine("👰 Bride: ${it.birthData.name ?: "N/A"}") }
-        groomChart?.let { appendLine("🤵 Groom: ${it.birthData.name ?: "N/A"}") }
+        brideChart?.let { appendLine("👰 $brideLabel: ${it.birthData.name ?: naText}") }
+        groomChart?.let { appendLine("🤵 $groomLabel: ${it.birthData.name ?: naText}") }
         appendLine()
-        appendLine("⭐ Score: ${String.format("%.1f", result.totalPoints)}/${result.maxPoints.toInt()} (${String.format("%.1f", result.percentage)}%)")
-        appendLine("📊 Rating: ${result.rating.displayName}")
+        appendLine("⭐ ${StringResources.get(StringKey.REPORT_SCORE_LABEL, language)} ${String.format("%.1f", result.totalPoints)}/${result.maxPoints.toInt()} (${String.format("%.1f", result.percentage)}%)")
+        appendLine("📊 ${StringResources.get(StringKey.REPORT_RATING_LABEL, language)} ${result.rating.displayName}")
         appendLine()
         appendLine("${result.rating.description}")
         appendLine()
-        appendLine("🔴 Manglik: ${result.manglikCompatibility}")
+        appendLine("🔴 ${StringResources.get(StringKey.REPORT_MANGLIK_LABEL, language)} ${result.manglikCompatibility}")
         appendLine()
-        appendLine("— Generated by AstroStorm")
+        appendLine("— ${StringResources.get(StringKey.REPORT_GENERATED_BY, language)}")
     }
 }
 
-private fun generateScoresReport(result: MatchmakingCalculator.MatchmakingResult): String {
+private fun generateScoresReport(
+    result: MatchmakingCalculator.MatchmakingResult,
+    language: Language
+): String {
     return buildString {
-        appendLine("ASHTAKOOTA GUNA SCORES")
+        appendLine(StringResources.get(StringKey.REPORT_ASHTAKOOTA_GUNA_SCORES, language))
         appendLine("━━━━━━━━━━━━━━━━━━━━━━")
         result.gunaAnalyses.forEach { guna ->
             val emoji = if (guna.isPositive) "✅" else "⚠️"
             appendLine("$emoji ${guna.name}: ${guna.obtainedPoints.toInt()}/${guna.maxPoints.toInt()}")
         }
         appendLine("━━━━━━━━━━━━━━━━━━━━━━")
-        appendLine("TOTAL: ${String.format("%.1f", result.totalPoints)}/${result.maxPoints.toInt()}")
+        appendLine("${StringResources.get(StringKey.REPORT_TOTAL, language)}: ${String.format("%.1f", result.totalPoints)}/${result.maxPoints.toInt()}")
         appendLine()
         appendLine("— AstroStorm")
     }

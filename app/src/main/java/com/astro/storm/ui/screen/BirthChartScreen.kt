@@ -129,7 +129,7 @@ fun BirthChartScreen(
     }
 
     selectedHouse?.let { houseNum ->
-        val houseCusp = if (houseNum <= chart.houseCusps.size) chart.houseCusps[houseNum - 1] else 0.0
+        val houseCusp = if (houseNum in 1..chart.houseCusps.size) chart.houseCusps[houseNum - 1] else 0.0
         val planetsInHouse = chart.planetPositions.filter { it.house == houseNum }
         HouseDetailDialog(
             houseNumber = houseNum,
