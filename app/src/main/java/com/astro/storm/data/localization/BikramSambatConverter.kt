@@ -3,6 +3,7 @@ package com.astro.storm.data.localization
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 
 object BikramSambatConverter {
 
@@ -139,7 +140,7 @@ object BikramSambatConverter {
     }
 
     private const val REFERENCE_BS_YEAR = 2000
-    private val REFERENCE_AD_DATE: LocalDate = LocalDate.of(1943, 4, 13)
+    private val REFERENCE_AD_DATE: LocalDate = LocalDate.of(1943, 4, 14)
 
     private val BS_MONTH_DATA: Map<Int, IntArray> = mapOf(
         1970 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
@@ -252,25 +253,25 @@ object BikramSambatConverter {
         2077 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31),
         2078 to intArrayOf(31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30),
         2079 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2080 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31),
-        2081 to intArrayOf(31, 32, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30),
-        2082 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2080 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
+        2081 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
+        2082 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
         2083 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2084 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
         2085 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2086 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2086 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30),
         2087 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2088 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
         2089 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2090 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2090 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30),
         2091 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2092 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
         2093 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2094 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2094 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30),
         2095 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2096 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
         2097 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2098 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
+        2098 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 29, 30, 29, 30, 30),
         2099 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2100 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30)
     )
@@ -289,6 +290,7 @@ object BikramSambatConverter {
     }
 
     private val yearCache: Map<Int, YearCacheEntry> by lazy { buildYearCache() }
+    private val sortedYears: IntArray by lazy { yearCache.keys.sorted().toIntArray() }
 
     private fun buildYearCache(): Map<Int, YearCacheEntry> {
         val result = mutableMapOf<Int, YearCacheEntry>()
@@ -323,12 +325,12 @@ object BikramSambatConverter {
     val minBSYear: Int get() = BS_MONTH_DATA.keys.minOrNull() ?: 1970
     val maxBSYear: Int get() = BS_MONTH_DATA.keys.maxOrNull() ?: 2100
 
-    val minADDate: LocalDate by lazy { toAD(minBSYear, 1, 1) ?: LocalDate.of(1913, 4, 13) }
+    val minADDate: LocalDate by lazy { toAD(minBSYear, 1, 1) ?: LocalDate.of(1913, 4, 14) }
     val maxADDate: LocalDate by lazy {
         val lastYear = maxBSYear
         val lastMonth = 12
         val lastDay = getDaysInMonth(lastYear, lastMonth) ?: 30
-        toAD(lastYear, lastMonth, lastDay) ?: LocalDate.of(2044, 4, 12)
+        toAD(lastYear, lastMonth, lastDay) ?: LocalDate.of(2044, 4, 13)
     }
 
     fun getDaysInMonth(year: Int, month: Int): Int? {
@@ -362,21 +364,19 @@ object BikramSambatConverter {
         if (adDate.isBefore(minADDate) || adDate.isAfter(maxADDate)) return null
 
         val daysDiff = ChronoUnit.DAYS.between(REFERENCE_AD_DATE, adDate)
-        val bsYear = findBSYear(daysDiff) ?: return null
+        val bsYear = findBSYearBinarySearch(daysDiff) ?: return null
         val cache = yearCache[bsYear] ?: return null
 
         val daysIntoYear = (daysDiff - cache.daysFromReference).toInt()
-
         if (daysIntoYear < 0) return null
 
         val monthStarts = cache.monthStartDays
-        var bsMonth = 1
+        var bsMonth = 12
         for (m in 1..12) {
             if (daysIntoYear < monthStarts[m]) {
                 bsMonth = m
                 break
             }
-            if (m == 12) bsMonth = 12
         }
 
         val bsDay = daysIntoYear - monthStarts[bsMonth - 1] + 1
@@ -387,27 +387,32 @@ object BikramSambatConverter {
         return BSDate(bsYear, bsMonth, bsDay)
     }
 
-    private fun findBSYear(daysDiff: Long): Int? {
-        if (daysDiff >= 0) {
-            for (year in REFERENCE_BS_YEAR..maxBSYear) {
-                val cache = yearCache[year] ?: continue
-                val nextYear = year + 1
-                val nextCache = yearCache[nextYear]
+    private fun findBSYearBinarySearch(daysDiff: Long): Int? {
+        val years = sortedYears
+        if (years.isEmpty()) return null
 
-                if (nextCache == null) {
-                    val yearDays = getDaysInYear(year) ?: continue
-                    if (daysDiff < cache.daysFromReference + yearDays) return year
-                } else if (daysDiff < nextCache.daysFromReference) {
-                    return year
-                }
+        var low = 0
+        var high = years.size - 1
+
+        while (low <= high) {
+            val mid = (low + high) ushr 1
+            val midYear = years[mid]
+            val cache = yearCache[midYear] ?: continue
+
+            val yearStart = cache.daysFromReference
+            val yearEnd = yearStart + (getDaysInYear(midYear) ?: 365) - 1
+
+            when {
+                daysDiff < yearStart -> high = mid - 1
+                daysDiff > yearEnd -> low = mid + 1
+                else -> return midYear
             }
-            return maxBSYear
-        } else {
-            for (year in (REFERENCE_BS_YEAR - 1) downTo minBSYear) {
-                val cache = yearCache[year] ?: continue
-                if (daysDiff >= cache.daysFromReference) return year
-            }
-            return minBSYear
+        }
+
+        return when {
+            daysDiff < 0 && low > 0 -> years[low - 1]
+            daysDiff >= 0 && high >= 0 && high < years.size -> years[high]
+            else -> null
         }
     }
 
@@ -452,6 +457,7 @@ object BikramSambatConverter {
 
     fun toNepaliNumerals(number: Int): String {
         if (number < 0) return "-${toNepaliNumerals(-number)}"
+        if (number == 0) return NEPALI_DIGITS[0].toString()
         if (number < 10) return NEPALI_DIGITS[number].toString()
 
         val sb = StringBuilder()
@@ -536,28 +542,28 @@ object BikramSambatConverter {
     fun addMonths(bsDate: BSDate, months: Int): BSDate? {
         if (months == 0) return bsDate
 
-        var year = bsDate.year
-        var month = bsDate.month
-        var day = bsDate.day
-
-        val totalMonths = (year * 12 + month - 1) + months
-        year = totalMonths / 12
-        month = (totalMonths % 12) + 1
-
-        if (month < 1) {
-            month += 12
-            year--
-        } else if (month > 12) {
-            month -= 12
-            year++
-        }
+        val totalMonths = bsDate.year * 12L + (bsDate.month - 1) + months
+        val year = floorDiv(totalMonths, 12).toInt()
+        val month = floorMod(totalMonths, 12).toInt() + 1
 
         if (year !in minBSYear..maxBSYear) return null
 
         val maxDay = getDaysInMonth(year, month) ?: return null
-        day = day.coerceAtMost(maxDay)
+        val day = bsDate.day.coerceAtMost(maxDay)
 
         return BSDate(year, month, day)
+    }
+
+    private fun floorDiv(x: Long, y: Long): Long {
+        var r = x / y
+        if ((x xor y) < 0 && r * y != x) {
+            r--
+        }
+        return r
+    }
+
+    private fun floorMod(x: Long, y: Long): Long {
+        return x - floorDiv(x, y) * y
     }
 
     fun addYears(bsDate: BSDate, years: Int): BSDate? {
