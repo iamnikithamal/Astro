@@ -72,7 +72,7 @@ object BikramSambatConverter {
         val month: Int,
         val day: Int
     ) : Comparable<BSDate> {
-        
+
         val bsMonth: BSMonth get() = BSMonth.fromIndex(month)
 
         val weekday: BSWeekday? get() = toAD(this)?.let { BSWeekday.fromJavaDayOfWeek(it.dayOfWeek) }
@@ -139,9 +139,7 @@ object BikramSambatConverter {
     }
 
     private const val REFERENCE_BS_YEAR = 2000
-    private const val REFERENCE_BS_MONTH = 1
-    private const val REFERENCE_BS_DAY = 1
-    private val REFERENCE_AD_DATE: LocalDate = LocalDate.of(1943, 4, 14)
+    private val REFERENCE_AD_DATE: LocalDate = LocalDate.of(1943, 4, 13)
 
     private val BS_MONTH_DATA: Map<Int, IntArray> = mapOf(
         1970 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
@@ -254,8 +252,8 @@ object BikramSambatConverter {
         2077 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31),
         2078 to intArrayOf(31, 31, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30),
         2079 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
-        2080 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 30),
-        2081 to intArrayOf(31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30),
+        2080 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31),
+        2081 to intArrayOf(31, 32, 31, 32, 31, 31, 30, 29, 30, 29, 30, 30),
         2082 to intArrayOf(31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30),
         2083 to intArrayOf(31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31),
         2084 to intArrayOf(31, 31, 31, 32, 31, 31, 29, 30, 30, 29, 30, 30),
@@ -292,8 +290,6 @@ object BikramSambatConverter {
 
     private val yearCache: Map<Int, YearCacheEntry> by lazy { buildYearCache() }
 
-    private val adToYearIndex: List<Pair<LocalDate, Int>> by lazy { buildADToYearIndex() }
-
     private fun buildYearCache(): Map<Int, YearCacheEntry> {
         val result = mutableMapOf<Int, YearCacheEntry>()
         var daysFromRef = 0L
@@ -322,15 +318,6 @@ object BikramSambatConverter {
         }
 
         return result
-    }
-
-    private fun buildADToYearIndex(): List<Pair<LocalDate, Int>> {
-        val result = mutableListOf<Pair<LocalDate, Int>>()
-        for (year in minBSYear..maxBSYear) {
-            val adDate = toADInternal(year, 1, 1) ?: continue
-            result.add(adDate to year)
-        }
-        return result.sortedBy { it.first }
     }
 
     val minBSYear: Int get() = BS_MONTH_DATA.keys.minOrNull() ?: 1970
@@ -452,12 +439,12 @@ object BikramSambatConverter {
     }
 
     private val NEPALI_DIGITS = charArrayOf('०', '१', '२', '३', '४', '५', '६', '७', '८', '९')
-    
+
     private val ENGLISH_TO_NEPALI_DIGIT = mapOf(
         '0' to '०', '1' to '१', '2' to '२', '3' to '३', '4' to '४',
         '5' to '५', '6' to '६', '7' to '७', '8' to '८', '9' to '९'
     )
-    
+
     private val NEPALI_TO_ENGLISH_DIGIT = mapOf(
         '०' to '0', '१' to '1', '२' to '2', '३' to '3', '४' to '4',
         '५' to '5', '६' to '6', '७' to '7', '८' to '8', '९' to '9'
@@ -466,7 +453,7 @@ object BikramSambatConverter {
     fun toNepaliNumerals(number: Int): String {
         if (number < 0) return "-${toNepaliNumerals(-number)}"
         if (number < 10) return NEPALI_DIGITS[number].toString()
-        
+
         val sb = StringBuilder()
         var n = number
         while (n > 0) {
@@ -548,7 +535,7 @@ object BikramSambatConverter {
 
     fun addMonths(bsDate: BSDate, months: Int): BSDate? {
         if (months == 0) return bsDate
-        
+
         var year = bsDate.year
         var month = bsDate.month
         var day = bsDate.day
@@ -635,7 +622,7 @@ object BikramSambatConverter {
         if (year !in minBSYear..maxBSYear) return null
         val cache = yearCache[year] ?: return null
         val totalDays = getDaysInYear(year) ?: return null
-        
+
         if (dayOfYear < 1 || dayOfYear > totalDays) return null
 
         val monthStarts = cache.monthStartDays
