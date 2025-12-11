@@ -86,7 +86,7 @@ fun HomeTab(
         return
     }
 
-    val implementedFeatures = remember { InsightFeature.implementedFeatures }
+    val allFeatures = remember { InsightFeature.entries.toList() }
     val comingSoonFeatures = remember { InsightFeature.comingSoonFeatures }
 
     LazyColumn(
@@ -107,33 +107,36 @@ fun HomeTab(
             )
         }
 
-        item(key = "grid_implemented") {
+        item(key = "grid_all_features") {
             FeatureGrid(
-                features = implementedFeatures,
+                features = allFeatures,
                 onFeatureClick = onFeatureClick,
                 isDisabled = false
             )
         }
 
-        item(key = "header_coming_soon") {
-            SectionHeader(
-                textKey = StringKey.HOME_COMING_SOON,
-                isMuted = true,
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    top = 24.dp,
-                    end = 16.dp,
-                    bottom = 12.dp
+        // Only show coming soon section if there are pending features
+        if (comingSoonFeatures.isNotEmpty()) {
+            item(key = "header_coming_soon") {
+                SectionHeader(
+                    textKey = StringKey.HOME_COMING_SOON,
+                    isMuted = true,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        top = 24.dp,
+                        end = 16.dp,
+                        bottom = 12.dp
+                    )
                 )
-            )
-        }
+            }
 
-        item(key = "grid_coming_soon") {
-            FeatureGrid(
-                features = comingSoonFeatures,
-                onFeatureClick = {},
-                isDisabled = true
-            )
+            item(key = "grid_coming_soon") {
+                FeatureGrid(
+                    features = comingSoonFeatures,
+                    onFeatureClick = {},
+                    isDisabled = true
+                )
+            }
         }
 
         item(key = "bottom_spacer") {
@@ -441,21 +444,21 @@ enum class InsightFeature(
         descriptionKey = StringKey.FEATURE_SYNASTRY_DESC,
         icon = Icons.Outlined.CompareArrows,
         color = AppTheme.LifeAreaFinance,
-        isImplemented = false
+        isImplemented = true
     ),
     NAKSHATRA_ANALYSIS(
         titleKey = StringKey.FEATURE_NAKSHATRAS,
         descriptionKey = StringKey.FEATURE_NAKSHATRAS_DESC,
         icon = Icons.Outlined.Stars,
         color = AppTheme.AccentGold,
-        isImplemented = false
+        isImplemented = true
     ),
     SHADBALA(
         titleKey = StringKey.FEATURE_SHADBALA,
         descriptionKey = StringKey.FEATURE_SHADBALA_DESC,
         icon = Icons.Outlined.Speed,
         color = AppTheme.SuccessColor,
-        isImplemented = false
+        isImplemented = true
     );
 
     /**

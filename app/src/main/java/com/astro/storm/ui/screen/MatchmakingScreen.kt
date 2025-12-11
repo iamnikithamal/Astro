@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.astro.storm.data.local.ChartEntity
+import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
@@ -61,7 +61,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchmakingScreen(
-    savedCharts: List<ChartEntity>,
+    savedCharts: List<SavedChart>,
     viewModel: ChartViewModel,
     onBack: () -> Unit
 ) {
@@ -398,7 +398,7 @@ fun MatchmakingScreen(
 
 @Composable
 private fun EnhancedProfileSelectionSection(
-    savedCharts: List<ChartEntity>,
+    savedCharts: List<SavedChart>,
     selectedBrideId: Long?,
     selectedGroomId: Long?,
     brideChart: VedicChart?,
@@ -2414,7 +2414,7 @@ private fun EnhancedProfileSelectorBottomSheet(
     title: String,
     icon: ImageVector,
     accentColor: Color,
-    charts: List<ChartEntity>,
+    charts: List<SavedChart>,
     selectedId: Long?,
     excludeId: Long?,
     onSelect: (Long) -> Unit,

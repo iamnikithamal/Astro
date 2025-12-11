@@ -57,6 +57,7 @@ object AshtakavargaCalculator {
         Planet.VENUS, Planet.MERCURY, Planet.MOON
     )
     private const val KAKSHA_ASCENDANT = "Ascendant"
+    private const val KAKSHA_SIZE_DEGREES = 3.75 // 30° / 8 kakshas = 3.75° per kaksha
 
     /**
      * Bindu allocation rules from BPHS
@@ -494,32 +495,23 @@ object AshtakavargaCalculator {
 
     /**
      * Calculate Kaksha position for a given longitude
+     * @param longitude The longitude to calculate kaksha position for
+     * @param chart The VedicChart (used only if preCalculatedAnalysis is null)
+     * @param preCalculatedAnalysis Optional pre-calculated analysis to avoid redundant computation
      */
     fun calculateKakshaPosition(
         longitude: Double,
-        chart: VedicChart
+        chart: VedicChart,
+        preCalculatedAnalysis: AshtakavargaAnalysis? = null
     ): KakshaPosition {
         val normalizedLong = com.astro.storm.util.AstrologicalUtils.normalizeLongitude(longitude)
         val sign = ZodiacSign.fromLongitude(normalizedLong)
         val degreeInSign = normalizedLong % 30.0
 
-        // Each Kaksha is 3.75° (30° / 8)
-        val kakshaSize = 3.75
-        if (kakshaSize <= 0) {
-            // Handle division by zero or invalid kakshaSize
-            // You might want to log an error or return a default/error state
-            return KakshaPosition(
-                sign = sign,
-                kakshaNumber = 0,
-                kakshaLord = "Error",
-                degreeStart = 0.0,
-                degreeEnd = 0.0,
-                isBeneficial = false
-            )
-        }
-        val kakshaNumber = ((degreeInSign / kakshaSize).toInt() + 1).coerceIn(1, 8)
-        val degreeStart = (kakshaNumber - 1) * 3.75
-        val degreeEnd = kakshaNumber * 3.75
+        // Each Kaksha is exactly 3.75° (30° / 8) - this is a fixed constant in Vedic astrology
+        val kakshaNumber = ((degreeInSign / KAKSHA_SIZE_DEGREES).toInt() + 1).coerceIn(1, 8)
+        val degreeStart = (kakshaNumber - 1) * KAKSHA_SIZE_DEGREES
+        val degreeEnd = kakshaNumber * KAKSHA_SIZE_DEGREES
 
         val kakshaLord = if (kakshaNumber <= 7) {
             KAKSHA_LORDS[kakshaNumber - 1].displayName
@@ -527,8 +519,8 @@ object AshtakavargaCalculator {
             KAKSHA_ASCENDANT
         }
 
-        // Check if the Kaksha lord is benefic for this sign
-        val analysis = calculateAshtakavarga(chart)
+        // Use pre-calculated analysis if available, otherwise calculate (lazy evaluation)
+        val analysis = preCalculatedAnalysis ?: calculateAshtakavarga(chart)
         val isBeneficial = if (kakshaNumber <= 7) {
             val lordPlanet = KAKSHA_LORDS[kakshaNumber - 1]
             val bavForLord = analysis.bhinnashtakavarga[lordPlanet]

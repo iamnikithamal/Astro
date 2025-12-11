@@ -17,11 +17,14 @@ import com.astro.storm.ui.screen.ChartInputScreen
 import com.astro.storm.ui.screen.DashasScreen
 import com.astro.storm.ui.screen.MatchmakingScreen
 import com.astro.storm.ui.screen.MuhurtaScreen
+import com.astro.storm.ui.screen.NakshatraScreen
 import com.astro.storm.ui.screen.PanchangaScreen
 import com.astro.storm.ui.screen.PlanetsScreen
 import com.astro.storm.ui.screen.PrashnaScreen
 import com.astro.storm.ui.screen.ProfileEditScreen
 import com.astro.storm.ui.screen.RemediesScreen
+import com.astro.storm.ui.screen.ShadbalaScreen
+import com.astro.storm.ui.screen.SynastryScreen
 import com.astro.storm.ui.screen.TransitsScreen
 import com.astro.storm.ui.screen.VarshaphalaScreen
 import com.astro.storm.ui.screen.YogasScreen
@@ -51,6 +54,15 @@ sealed class Screen(val route: String) {
         fun createRoute(chartId: Long) = "varshaphala/$chartId"
     }
     object Prashna : Screen("prashna")
+
+    // New advanced feature screens
+    object Synastry : Screen("synastry")
+    object Nakshatra : Screen("nakshatra/{chartId}") {
+        fun createRoute(chartId: Long) = "nakshatra/$chartId"
+    }
+    object Shadbala : Screen("shadbala/{chartId}") {
+        fun createRoute(chartId: Long) = "shadbala/$chartId"
+    }
 
     // Individual chart analysis screens
     object BirthChart : Screen("birth_chart/{chartId}") {
@@ -186,6 +198,19 @@ fun AstroStormNavigation(
                         navController.navigate(Screen.ProfileEdit.createRoute(chartId))
                     }
                 },
+                onNavigateToSynastry = {
+                    navController.navigate(Screen.Synastry.route)
+                },
+                onNavigateToNakshatra = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Nakshatra.createRoute(chartId))
+                    }
+                },
+                onNavigateToShadbala = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Shadbala.createRoute(chartId))
+                    }
+                },
                 onExportChart = { format ->
                     currentChart?.let { chart ->
                         when (format) {
@@ -252,25 +277,7 @@ fun AstroStormNavigation(
         // Matchmaking screen
         composable(Screen.Matchmaking.route) {
             MatchmakingScreen(
-                savedCharts = savedCharts.map { savedChart ->
-                    com.astro.storm.data.local.ChartEntity(
-                        id = savedChart.id,
-                        name = savedChart.name,
-                        dateTime = savedChart.dateTime,
-                        latitude = 0.0,
-                        longitude = 0.0,
-                        timezone = "",
-                        location = savedChart.location,
-                        julianDay = 0.0,
-                        ayanamsa = 0.0,
-                        ayanamsaName = "",
-                        ascendant = 0.0,
-                        midheaven = 0.0,
-                        planetPositionsJson = "",
-                        houseCuspsJson = "",
-                        houseSystem = ""
-                    )
-                },
+                savedCharts = savedCharts,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )
@@ -482,6 +489,53 @@ fun AstroStormNavigation(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onSaveComplete = { navController.popBackStack() }
+            )
+        }
+
+        // Synastry (Chart Comparison) screen
+        composable(Screen.Synastry.route) {
+            SynastryScreen(
+                savedCharts = savedCharts,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Nakshatra Analysis screen
+        composable(
+            route = Screen.Nakshatra.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            NakshatraScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Shadbala Analysis screen
+        composable(
+            route = Screen.Shadbala.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            ShadbalaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
             )
         }
     }

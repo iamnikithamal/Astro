@@ -63,6 +63,9 @@ fun MainScreen(
     onNavigateToAshtakavarga: () -> Unit = {},
     onNavigateToPanchanga: () -> Unit = {},
     onNavigateToProfileEdit: () -> Unit = {},
+    onNavigateToSynastry: () -> Unit = {},
+    onNavigateToNakshatra: () -> Unit = {},
+    onNavigateToShadbala: () -> Unit = {},
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -177,6 +180,7 @@ fun MainScreen(
                                         InsightFeature.MATCHMAKING -> onNavigateToMatchmaking()
                                         InsightFeature.MUHURTA -> onNavigateToMuhurta()
                                         InsightFeature.PRASHNA -> onNavigateToPrashna()
+                                        InsightFeature.CHART_COMPARISON -> onNavigateToSynastry()
                                         // Features that require a chart - navigate to individual screens
                                         InsightFeature.FULL_CHART -> if (currentChart != null) onNavigateToBirthChart()
                                         InsightFeature.PLANETS -> if (currentChart != null) onNavigateToPlanets()
@@ -187,6 +191,8 @@ fun MainScreen(
                                         InsightFeature.PANCHANGA -> if (currentChart != null) onNavigateToPanchanga()
                                         InsightFeature.REMEDIES -> if (currentChart != null) onNavigateToRemedies()
                                         InsightFeature.VARSHAPHALA -> if (currentChart != null) onNavigateToVarshaphala()
+                                        InsightFeature.NAKSHATRA_ANALYSIS -> if (currentChart != null) onNavigateToNakshatra()
+                                        InsightFeature.SHADBALA -> if (currentChart != null) onNavigateToShadbala()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }

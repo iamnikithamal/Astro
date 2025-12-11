@@ -57,15 +57,21 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadSavedCharts() {
-        viewModelScope.launch {
+        viewModelScope.launch(singleThreadContext) {
             repository.getAllCharts().collect { charts ->
                 _savedCharts.value = charts
-                if (_selectedChartId.value == null) {
+                // Use compareAndSet pattern to avoid race condition
+                val currentSelected = _selectedChartId.value
+                if (currentSelected == null) {
                     val lastSelectedId = prefs.getLong("last_selected_chart_id", -1)
-                    if (lastSelectedId != -1L && charts.any { it.id == lastSelectedId }) {
-                        loadChart(lastSelectedId)
-                    } else if (charts.isNotEmpty()) {
-                        loadChart(charts.first().id)
+                    val targetChartId = when {
+                        lastSelectedId != -1L && charts.any { it.id == lastSelectedId } -> lastSelectedId
+                        charts.isNotEmpty() -> charts.first().id
+                        else -> null
+                    }
+                    // Only load if still not selected (double-check pattern)
+                    if (targetChartId != null && _selectedChartId.value == null) {
+                        loadChart(targetChartId)
                     }
                 }
             }

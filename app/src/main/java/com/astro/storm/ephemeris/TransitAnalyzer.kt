@@ -556,8 +556,10 @@ class TransitAnalyzer(private val context: Context) {
         transitAspects: List<TransitAspect>,
         ashtakavargaScores: Map<Planet, AshtakavargaCalculator.TransitScore>
     ): OverallTransitAssessment {
-        // Score from Gochara
-        val gocharaScore = gocharaResults.map { it.effect.score }.average() * 20
+        // Score from Gochara (handle empty list case to avoid NaN)
+        val gocharaScore = if (gocharaResults.isNotEmpty()) {
+            gocharaResults.map { it.effect.score }.average() * 20
+        } else 50.0
 
         // Score from strong aspects
         val aspectScore = if (transitAspects.isNotEmpty()) {

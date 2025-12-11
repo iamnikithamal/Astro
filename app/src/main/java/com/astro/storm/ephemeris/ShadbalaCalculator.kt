@@ -327,8 +327,10 @@ object ShadbalaCalculator {
         }
 
         val lunarElongation: Double by lazy {
-            val moonLong = moonPosition?.longitude ?: 0.0
-            val sunLong = sunPosition?.longitude ?: 0.0
+            val moonLong = moonPosition?.longitude
+                ?: throw IllegalStateException("Moon position required for Shadbala calculation")
+            val sunLong = sunPosition?.longitude
+                ?: throw IllegalStateException("Sun position required for Shadbala calculation")
             normalizeDegree(moonLong - sunLong)
         }
 

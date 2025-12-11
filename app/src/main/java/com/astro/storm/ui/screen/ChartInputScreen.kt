@@ -326,8 +326,8 @@ fun ChartInputScreen(
 }
 
 private fun validateInput(latitude: String, longitude: String): String? {
-    val lat = latitude.toDoubleOrNull()
-    val lon = longitude.toDoubleOrNull()
+    val lat = latitude.trim().toDoubleOrNull()
+    val lon = longitude.trim().toDoubleOrNull()
 
     return when {
         lat == null || lon == null -> "Please enter valid latitude and longitude"
@@ -338,8 +338,8 @@ private fun validateInput(latitude: String, longitude: String): String? {
 }
 
 private fun validateInputLocalized(latitude: String, longitude: String): StringKey? {
-    val lat = latitude.toDoubleOrNull()
-    val lon = longitude.toDoubleOrNull()
+    val lat = latitude.trim().toDoubleOrNull()
+    val lon = longitude.trim().toDoubleOrNull()
 
     return when {
         lat == null || lon == null -> StringKey.ERROR_INVALID_COORDS

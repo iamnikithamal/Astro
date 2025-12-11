@@ -1963,7 +1963,9 @@ class VarshaphalaCalculator(context: Context) {
         val negativeAspects = tajikaAspects.count { !it.type.isPositive && it.strength.weight >= 0.6 }
         rating += (positiveAspects * 0.1f - negativeAspects * 0.1f).coerceIn(-0.5f, 0.5f)
 
-        val averageHouseRating = housePredictions.map { it.rating }.average().toFloat()
+        val averageHouseRating = if (housePredictions.isNotEmpty()) {
+            housePredictions.map { it.rating }.average().toFloat()
+        } else 3.0f
         rating += (averageHouseRating - 3.0f) * 0.3f
 
         val beneficsAngular = chart.planetPositions.count { (planet, pos) ->

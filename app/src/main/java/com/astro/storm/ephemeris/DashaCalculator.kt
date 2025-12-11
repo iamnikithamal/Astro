@@ -633,6 +633,10 @@ object DashaCalculator {
             throw IllegalArgumentException("Invalid starting dasha lord: $startingDashaLord")
         }
 
+        require(balanceOfFirstDashaBd >= BigDecimal.ZERO) {
+            "Balance of first dasha must be non-negative, got: $balanceOfFirstDashaBd"
+        }
+
         val firstDashaDays = yearsToRoundedDays(balanceOfFirstDashaBd)
         val firstDashaEndDate = currentStartDate.plusDays(firstDashaDays)
         val isFirstActive = !targetDate.isBefore(currentStartDate) && !targetDate.isAfter(firstDashaEndDate)
