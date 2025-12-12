@@ -63,10 +63,14 @@ object MatchmakingCalculator {
         val rating = CompatibilityRating.fromScore(totalPoints, nadiScore, bhakootScore)
 
         // Delegate to ManglikDoshaCalculator for Manglik analysis
-        val brideManglik = ManglikDoshaCalculator.calculateManglikDosha(brideChart)
-        val groomManglik = ManglikDoshaCalculator.calculateManglikDosha(groomChart)
-        val manglikCompatibilityAnalysis = ManglikDoshaCalculator.checkManglikCompatibility(brideManglik, groomManglik)
+        val brideManglikEphemeris = ManglikDoshaCalculator.calculateManglikDosha(brideChart)
+        val groomManglikEphemeris = ManglikDoshaCalculator.calculateManglikDosha(groomChart)
+        val manglikCompatibilityAnalysis = ManglikDoshaCalculator.checkManglikCompatibility(brideManglikEphemeris, groomManglikEphemeris)
         val manglikCompatibility = manglikCompatibilityAnalysis.recommendation
+
+        // Convert to data model ManglikAnalysis for MatchmakingResult
+        val brideManglik = convertEphemerisToDataModel(brideManglikEphemeris, "Bride")
+        val groomManglik = convertEphemerisToDataModel(groomManglikEphemeris, "Groom")
 
         // Calculate additional factors
         val additionalFactors = calculateAdditionalFactors(brideNakshatra, groomNakshatra, language)
@@ -672,5 +676,60 @@ object MatchmakingCalculator {
             else ->
                 StringResources.get(StringKey.SCORE_POOR, language)
         }
+    }
+
+    // ============================================
+    // CONVERSION UTILITIES
+    // ============================================
+
+    /**
+     * Convert ephemeris ManglikAnalysis to data model ManglikAnalysis
+     */
+    private fun convertEphemerisToDataModel(
+        ephemerisAnalysis: ManglikDoshaCalculator.ManglikAnalysis,
+        person: String
+    ): com.astro.storm.data.model.ManglikAnalysis {
+        // Map the ephemeris level to data model dosha
+        val dosha = when (ephemerisAnalysis.effectiveLevel) {
+            ManglikDoshaCalculator.ManglikLevel.NONE -> ManglikDosha.NONE
+            ManglikDoshaCalculator.ManglikLevel.MILD -> ManglikDosha.PARTIAL
+            ManglikDoshaCalculator.ManglikLevel.PARTIAL -> ManglikDosha.PARTIAL
+            ManglikDoshaCalculator.ManglikLevel.FULL -> ManglikDosha.FULL
+            ManglikDoshaCalculator.ManglikLevel.SEVERE -> ManglikDosha.DOUBLE
+        }
+
+        // Collect factors and cancellations
+        val factors = mutableListOf<String>()
+        if (ephemerisAnalysis.analysisFromLagna.isManglik) {
+            factors.add("Mars in ${ephemerisAnalysis.analysisFromLagna.marsHouse}${VedicAstrologyUtils.getOrdinalSuffix(ephemerisAnalysis.analysisFromLagna.marsHouse)} house from Lagna")
+        }
+        if (ephemerisAnalysis.analysisFromMoon.isManglik) {
+            factors.add("Mars in ${ephemerisAnalysis.analysisFromMoon.marsHouse}${VedicAstrologyUtils.getOrdinalSuffix(ephemerisAnalysis.analysisFromMoon.marsHouse)} house from Moon")
+        }
+        if (ephemerisAnalysis.analysisFromVenus.isManglik) {
+            factors.add("Mars in ${ephemerisAnalysis.analysisFromVenus.marsHouse}${VedicAstrologyUtils.getOrdinalSuffix(ephemerisAnalysis.analysisFromVenus.marsHouse)} house from Venus")
+        }
+
+        val cancellations = ephemerisAnalysis.cancellationFactors.map { it.titleKey.name }
+
+        return com.astro.storm.data.model.ManglikAnalysis(
+            person = person,
+            dosha = dosha,
+            marsHouse = ephemerisAnalysis.analysisFromLagna.marsHouse,
+            marsHouseFromMoon = ephemerisAnalysis.analysisFromMoon.marsHouse,
+            marsHouseFromVenus = ephemerisAnalysis.analysisFromVenus.marsHouse,
+            marsDegreeInHouse = ephemerisAnalysis.marsPosition?.longitude?.let {
+                val houseStart = it - (it.toInt() % 30)
+                (it - houseStart) % 30
+            } ?: 0.0,
+            isRetrograde = false, // Add proper retrograde check if available
+            factors = factors,
+            cancellations = cancellations,
+            effectiveDosha = dosha,
+            intensity = ephemerisAnalysis.remainingIntensityAfterCancellations.toInt(),
+            fromLagna = ephemerisAnalysis.analysisFromLagna.isManglik,
+            fromMoon = ephemerisAnalysis.analysisFromMoon.isManglik,
+            fromVenus = ephemerisAnalysis.analysisFromVenus.isManglik
+        )
     }
 }
