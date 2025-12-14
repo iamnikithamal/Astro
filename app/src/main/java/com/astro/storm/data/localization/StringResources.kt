@@ -210,6 +210,72 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     FEATURE_SHADBALA("Shadbala", "षड्बल"),
     FEATURE_SHADBALA_DESC("Six-fold strength", "छवटा बलहरू"),
 
+    // Advanced Calculator Features
+    FEATURE_SHODASHVARGA("Shodashvarga", "षोडशवर्ग"),
+    FEATURE_SHODASHVARGA_DESC("16-divisional chart strength", "१६-विभाजन कुण्डली बल"),
+
+    FEATURE_YOGINI_DASHA("Yogini Dasha", "योगिनी दशा"),
+    FEATURE_YOGINI_DASHA_DESC("36-year nakshatra dasha", "३६-वर्षे नक्षत्र दशा"),
+
+    FEATURE_ARGALA("Argala", "अर्गला"),
+    FEATURE_ARGALA_DESC("Jaimini intervention analysis", "जैमिनी हस्तक्षेप विश्लेषण"),
+
+    FEATURE_CHARA_DASHA("Chara Dasha", "चर दशा"),
+    FEATURE_CHARA_DASHA_DESC("Jaimini sign-based dasha", "जैमिनी राशि-आधारित दशा"),
+
+    FEATURE_BHRIGU_BINDU("Bhrigu Bindu", "भृगु बिन्दु"),
+    FEATURE_BHRIGU_BINDU_DESC("Karmic destiny point", "कार्मिक भाग्य बिन्दु"),
+
+    FEATURE_PREDICTIONS("Predictions", "भविष्यवाणी"),
+    FEATURE_PREDICTIONS_DESC("Comprehensive life analysis", "व्यापक जीवन विश्लेषण"),
+
+    // Predictions Screen - Tabs
+    PREDICTIONS_TAB_OVERVIEW("Overview", "सारांश"),
+    PREDICTIONS_TAB_LIFE_AREAS("Life Areas", "जीवन क्षेत्रहरू"),
+    PREDICTIONS_TAB_TIMING("Timing", "समय"),
+    PREDICTIONS_TAB_REMEDIES("Remedies", "उपाय"),
+
+    // Predictions Screen - Section Headers
+    PREDICTIONS_YOUR_LIFE_PATH("Your Life Path", "तपाईंको जीवन मार्ग"),
+    PREDICTIONS_KEY_STRENGTHS("Key Strengths", "मुख्य शक्तिहरू"),
+    PREDICTIONS_SPIRITUAL_PATH("Spiritual Path", "आध्यात्मिक मार्ग"),
+    PREDICTIONS_CURRENT_PERIOD("Current Period", "वर्तमान अवधि"),
+    PREDICTIONS_ACTIVE_TRANSITS("Active Transits", "सक्रिय गोचर"),
+    PREDICTIONS_ACTIVE_YOGAS("Active Yogas", "सक्रिय योगहरू"),
+    PREDICTIONS_OPPORTUNITIES("Opportunities", "अवसरहरू"),
+    PREDICTIONS_CURRENT_CHALLENGES("Current Challenges", "वर्तमान चुनौतीहरू"),
+    PREDICTIONS_LIFE_AREAS_GLANCE("Life Areas at a Glance", "एक नजरमा जीवन क्षेत्रहरू"),
+    PREDICTIONS_FAVORABLE_PERIODS("Favorable Periods", "अनुकूल अवधिहरू"),
+    PREDICTIONS_CAUTION_PERIODS("Periods Needing Caution", "सावधानी चाहिने अवधिहरू"),
+    PREDICTIONS_IMPORTANT_DATES("Important Dates", "महत्त्वपूर्ण मितिहरू"),
+    PREDICTIONS_REMEDIAL_SUGGESTIONS("Remedial Suggestions", "उपचारात्मक सुझावहरू"),
+
+    // Predictions Screen - States
+    PREDICTIONS_NO_CHART_SELECTED("No Chart Selected", "कुनै कुण्डली छानिएको छैन"),
+    PREDICTIONS_SELECT_CHART_MESSAGE("Please select a birth chart to view predictions", "कृपया भविष्यवाणी हेर्न जन्म कुण्डली छान्नुहोस्"),
+    PREDICTIONS_CALCULATING("Calculating Predictions...", "भविष्यवाणी गणना गर्दै..."),
+    PREDICTIONS_ERROR_LOADING("Error Loading Predictions", "भविष्यवाणी लोड गर्न त्रुटि"),
+    PREDICTIONS_CALC_FAILED("Failed to calculate predictions", "भविष्यवाणी गणना गर्न असफल"),
+
+    // Predictions Screen - Life Area Labels
+    PREDICTIONS_CAREER_PROFESSION("Career & Profession", "क्यारियर र पेशा"),
+    PREDICTIONS_FINANCE_WEALTH("Finance & Wealth", "वित्त र सम्पत्ति"),
+    PREDICTIONS_RELATIONSHIPS_MARRIAGE("Relationships & Marriage", "सम्बन्ध र विवाह"),
+    PREDICTIONS_HEALTH_WELLBEING("Health & Wellbeing", "स्वास्थ्य र कल्याण"),
+    PREDICTIONS_EDUCATION_LEARNING("Education & Learning", "शिक्षा र सिकाइ"),
+    PREDICTIONS_FAMILY_HOME("Family & Home", "परिवार र घर"),
+
+    // Predictions Screen - Other Labels
+    PREDICTIONS_SHORT_TERM("Short-term (3-6 months)", "अल्पकालीन (३-६ महिना)"),
+    PREDICTIONS_MEDIUM_TERM("Medium-term (6-12 months)", "मध्यमकालीन (६-१२ महिना)"),
+    PREDICTIONS_LONG_TERM("Long-term (1-2 years)", "दीर्घकालीन (१-२ वर्ष)"),
+    PREDICTIONS_BEST_FOR("Best for", "को लागि उत्तम"),
+    PREDICTIONS_CAUTION_FOR("Caution for", "को लागि सावधानी"),
+    PREDICTIONS_ENERGY_LEVEL("Energy Level", "ऊर्जा स्तर"),
+    PREDICTIONS_DAYS_LEFT("days left", "दिन बाँकी"),
+    PREDICTIONS_MONTHS("months", "महिना"),
+    PREDICTIONS_GO_BACK("Go Back", "फर्कनुहोस्"),
+
     // ============================================
     // EMPTY/ERROR STATES
     // ============================================
@@ -1643,13 +1709,114 @@ enum class StringKeyMatch(override val en: String, override val ne: String) : St
     GUNA_DESC_NOT_AVAILABLE("Detailed description not available for this Guna.", "यस गुणको विस्तृत विवरण उपलब्ध छैन।"),
 
     // ============================================
-    // MATCHMAKING - SCORE INTERPRETATIONS
+    // MATCHMAKING - DETAILED GUNA INTERPRETATIONS
+    // ============================================
+    // Varna Detailed
+    VARNA_DETAILED_COMPATIBLE("This creates excellent spiritual harmony with natural respect flowing from bride to groom. Partners will have compatible life philosophies, values, and approaches to dharma. The groom's natural leadership in spiritual matters will be appreciated.", "यसले दुलहीबाट दुलाहातिर प्राकृतिक सम्मान प्रवाहसहित उत्कृष्ट आध्यात्मिक सामञ्जस्य सिर्जना गर्दछ। साझेदारहरूको जीवन दर्शन, मूल्यहरू र धर्मप्रति दृष्टिकोण मिल्नेछ। आध्यात्मिक विषयहरूमा दुलाहाको प्राकृतिक नेतृत्व सराहना गरिनेछ।"),
+    VARNA_DETAILED_INCOMPATIBLE("This may create ego conflicts and power struggles. The bride may feel she has to compromise her values or suppress her intellect. Both partners need conscious effort to respect each other's perspectives and maintain balance.", "यसले अहंकार द्वन्द्व र शक्ति संघर्ष सिर्जना गर्न सक्छ। दुलहीले आफ्ना मूल्यहरूमा सम्झौता गर्नु परोस् वा आफ्नो बुद्धि दमन गर्नुपर्ला जस्तो महसुस गर्न सक्छिन्। दुवै साझेदारहरूले एकअर्काको दृष्टिकोणलाई सम्मान गर्न र सन्तुलन कायम राख्न सचेत प्रयास चाहिन्छ।"),
+
+    // Vashya Detailed
+    VASHYA_REMEDY_LOW("Remedy: Worship Lord Shiva and Goddess Parvati together on Mondays. Practice mutual respect and avoid trying to dominate each other. Strengthen Venus through Friday fasts and donations of white items.", "उपाय: सोमबारमा भगवान शिव र देवी पार्वतीको सँगै पूजा गर्नुहोस्। पारस्परिक सम्मान अभ्यास गर्नुहोस् र एकअर्कालाई हावी गर्न नगर्नुहोस्। शुक्रबार व्रत र सेतो वस्तुहरूको दानद्वारा शुक्रलाई बलियो बनाउनुहोस्।"),
+
+    // Tara Detailed
+    TARA_REMEDY_LOW("Remedy: Perform Nakshatra Shanti puja for both birth stars. Donate black sesame, iron, and blue cloth on Saturdays. Chant Maha Mrityunjaya Mantra 108 times daily for 40 days to neutralize destiny obstacles.", "उपाय: दुवै जन्म नक्षत्रको लागि नक्षत्र शान्ति पूजा गर्नुहोस्। शनिबारमा कालो तिल, फलाम र नीलो कपडा दान गर्नुहोस्। भाग्य बाधाहरू निष्क्रिय गर्न ४० दिन दैनिक १०८ पटक महा मृत्युञ्जय मन्त्र जाप गर्नुहोस्।"),
+
+    // Yoni Detailed
+    YONI_REMEDY_LOW("Remedy: Worship Kamadeva (God of Love) on Fridays. Offer jasmine flowers, rose water, and sandalwood. Practice physical affection and conscious intimacy. Strengthen Venus by wearing diamond or white sapphire after proper consultation.", "उपाय: शुक्रबारमा कामदेव (प्रेमको देवता) पूजा गर्नुहोस्। जुईको फूल, गुलाबको पानी र चन्दन चढाउनुहोस्। शारीरिक स्नेह र सचेत अन्तरंगता अभ्यास गर्नुहोस्। उचित परामर्श पछि हीरा वा सेतो नीलम लगाएर शुक्रलाई बलियो बनाउनुहोस्।"),
+
+    // Graha Maitri Detailed
+    GRAHA_MAITRI_REMEDY_LOW("Remedy: Meditate together daily for at least 15 minutes. Practice active listening and clear communication. Strengthen Mercury by chanting Budh mantra on Wednesdays, donating green items, and wearing emerald after consultation.", "उपाय: दैनिक कम्तिमा १५ मिनेट सँगै ध्यान गर्नुहोस्। सक्रिय सुनाइ र स्पष्ट सञ्चार अभ्यास गर्नुहोस्। बुधबारमा बुध मन्त्र जाप गरेर, हरियो वस्तुहरू दान गरेर र परामर्श पछि पन्ना लगाएर बुधलाई बलियो बनाउनुहोस्।"),
+
+    // Gana Detailed
+    GANA_REMEDY_LOW("Remedy: Chant Ganapati Atharvasheersham daily for 41 days. Perform joint Ganesh puja every month. Practice patience, tolerance, and conscious communication to bridge temperamental differences. Couples counseling may be beneficial.", "उपाय: ४१ दिन दैनिक गणपति अथर्वशीर्षम् जाप गर्नुहोस्। प्रत्येक महिना संयुक्त गणेश पूजा गर्नुहोस्। स्वभावगत भिन्नताहरू पाट्न धैर्य, सहनशीलता र सचेत सञ्चार अभ्यास गर्नुहोस्। जोडी परामर्श लाभदायक हुन सक्छ।"),
+
+    // Bhakoot Detailed
+    BHAKOOT_REMEDY_LOW("Remedy: Perform Graha Shanti puja for Moon sign lords of both partners. Chant Vishnu Sahasranama on Thursdays for 21 weeks. Donate white items, rice, and silver on Mondays. Financial planning together is essential.", "उपाय: दुवै साझेदारको चन्द्र राशि स्वामीको ग्रह शान्ति पूजा गर्नुहोस्। २१ हप्ता बिहीबारमा विष्णु सहस्रनाम जाप गर्नुहोस्। सोमबारमा सेता वस्तुहरू, चामल र चाँदी दान गर्नुहोस्। सँगै वित्तीय योजना आवश्यक छ।"),
+
+    // Nadi Detailed
+    NADI_REMEDY_LOW("Remedy: This is critical - consult qualified astrologer immediately. Perform Maha Mrityunjaya Jaap (108 times daily for 40 days). Donate grains, gold, or cow on auspicious day. Worship Lord Shiva and Goddess Parvati together on Mondays. Consider Kumbh Vivah if dosha is severe.", "उपाय: यो महत्त्वपूर्ण छ - तुरुन्त योग्य ज्योतिषीसँग परामर्श गर्नुहोस्। महा मृत्युञ्जय जाप गर्नुहोस् (४० दिन दैनिक १०८ पटक)। शुभ दिनमा अन्न, सुन वा गाई दान गर्नुहोस्। सोमबारमा भगवान शिव र देवी पार्वतीको सँगै पूजा गर्नुहोस्। दोष गम्भीर भएमा कुम्भ विवाह विचार गर्नुहोस्।"),
+
+    // ============================================
+    // MATCHMAKING - EXPANDED GUNA ANALYSIS
+    // ============================================
+    // Varna Expanded
+    VARNA_IMPORTANCE("Varna represents the spiritual evolution and work nature of the couple. It measures ego compatibility and mutual respect in the relationship.", "वर्णले जोडीको आध्यात्मिक विकास र कार्य प्रकृति प्रतिनिधित्व गर्दछ। यसले सम्बन्धमा अहंकार अनुकूलता र पारस्परिक सम्मान मापन गर्दछ।"),
+    VARNA_BRAHMIN_NATURE("Brahmin (Fire signs): Knowledge seekers, intellectual, teaching orientation, spiritual inclinations", "ब्राह्मण (अग्नि राशि): ज्ञान खोज्ने, बौद्धिक, शिक्षण अभिमुखीकरण, आध्यात्मिक झुकाव"),
+    VARNA_KSHATRIYA_NATURE("Kshatriya (Earth signs): Leaders, protectors, administrative skills, power-oriented", "क्षत्रिय (पृथ्वी राशि): नेता, रक्षक, प्रशासनिक कौशल, शक्ति-उन्मुख"),
+    VARNA_VAISHYA_NATURE("Vaishya (Air signs): Business minded, commerce, communication, wealth creation", "वैश्य (वायु राशि): व्यापार मानसिकता, वाणिज्य, सञ्चार, धन सिर्जना"),
+    VARNA_SHUDRA_NATURE("Shudra (Water signs): Service orientation, emotional depth, nurturing, supportive", "शूद्र (जल राशि): सेवा अभिमुखीकरण, भावनात्मक गहिराई, पालन-पोषण, सहयोगी"),
+
+    // Vashya Expanded
+    VASHYA_IMPORTANCE("Vashya indicates natural attraction, influence capacity, and control dynamics. It shows who holds sway in decision-making and emotional matters.", "वश्यले प्राकृतिक आकर्षण, प्रभाव क्षमता र नियन्त्रण गतिशीलता संकेत गर्दछ। यसले निर्णय लिने र भावनात्मक मामिलाहरूमा कसले प्रभाव राख्छ भनेर देखाउँछ।"),
+    VASHYA_POWER_BALANCE("Balanced Vashya creates equal partnership. Imbalance may lead to dominance issues but can work if both partners accept their natural roles.", "सन्तुलित वश्यले समान साझेदारी सिर्जना गर्दछ। असन्तुलनले प्रभुत्व समस्या ल्याउन सक्छ तर दुवै साझेदारहरूले आफ्नो प्राकृतिक भूमिका स्वीकार गरे काम गर्न सक्छ।"),
+
+    // Tara Expanded
+    TARA_IMPORTANCE("Tara analyzes birth star compatibility to determine destiny harmony. It predicts how well the couple's life paths align and support each other.", "तारा भाग्य सामञ्जस्य निर्धारण गर्न जन्म तारा अनुकूलता विश्लेषण गर्दछ। यसले जोडीको जीवन मार्गहरू कत्तिको राम्रोसँग मिल्छन् र एकअर्कालाई समर्थन गर्छन् भनेर भविष्यवाणी गर्दछ।"),
+    TARA_CATEGORIES_EXPLAINED("Nakshatras are grouped in sets of 9 from each person's birth star. Janma, Vipat, and Vadha taras are inauspicious; Sampat, Kshema, Sadhana, and Mitra taras are auspicious.", "नक्षत्रहरू प्रत्येक व्यक्तिको जन्म ताराबाट ९ को सेटमा समूहीकृत गरिन्छ। जन्म, विपत् र वध तारा अशुभ हुन्; सम्पत्, क्षेम, साधना र मित्र तारा शुभ हुन्।"),
+
+    // Yoni Expanded
+    YONI_IMPORTANCE("Yoni represents physical, sexual, and biological compatibility. It's based on animal nature of birth nakshatras and indicates instinctual harmony.", "योनिले शारीरिक, यौन र जैविक अनुकूलता प्रतिनिधित्व गर्दछ। यो जन्म नक्षत्रको पशु प्रकृतिमा आधारित छ र सहज सामञ्जस्य संकेत गर्दछ।"),
+    YONI_RELATIONSHIPS_EXPLAINED("Same yoni = Perfect (4 points). Friendly yonis = Very Good (3-4 points). Neutral = Moderate (2 points). Enemy yonis = Poor (0-1 points).", "उही योनि = उत्तम (४ अंक)। मित्र योनि = धेरै राम्रो (३-४ अंक)। तटस्थ = मध्यम (२ अंक)। शत्रु योनि = कमजोर (०-१ अंक)।"),
+
+    // Graha Maitri Expanded
+    GRAHA_MAITRI_IMPORTANCE("Graha Maitri examines mental compatibility through planetary friendship of Moon sign lords. It indicates intellectual rapport and communication ease.", "ग्रह मैत्रीले चन्द्र राशि स्वामीहरूको ग्रह मित्रताद्वारा मानसिक अनुकूलता जाँच गर्दछ। यसले बौद्धिक सम्बन्ध र सञ्चार सहजता संकेत गर्दछ।"),
+    GRAHA_MAITRI_LEVELS("Same lord/Friends = 5 points. One friend + one neutral = 4 points. Both neutral = 3 points. One enemy = 1-2 points. Both enemies = 0.5 points.", "उही स्वामी/मित्र = ५ अंक। एक मित्र + एक तटस्थ = ४ अंक। दुवै तटस्थ = ३ अंक। एक शत्रु = १-२ अंक। दुवै शत्रु = ०.५ अंक।"),
+
+    // Gana Expanded
+    GANA_IMPORTANCE("Gana measures behavioral temperament and nature. It indicates how partners will behave in conflicts and daily life situations.", "गणले व्यवहारिक स्वभाव र प्रकृति मापन गर्दछ। यसले साझेदारहरूले द्वन्द्व र दैनिक जीवन परिस्थितिहरूमा कसरी व्यवहार गर्छन् भनेर संकेत गर्दछ।"),
+    GANA_COMPATIBILITY_DETAILS("Deva-Deva = 6 points (best). Manushya-Manushya = 6 points. Rakshasa-Rakshasa = 6 points. Deva-Manushya = 5 points. Manushya-Rakshasa = 2 points. Deva-Rakshasa = 0 points (worst).", "देव-देव = ६ अंक (उत्तम)। मनुष्य-मनुष्य = ६ अंक। राक्षस-राक्षस = ६ अंक। देव-मनुष्य = ५ अंक। मनुष्य-राक्षस = २ अंक। देव-राक्षस = ० अंक (सबैभन्दा खराब)।"),
+
+    // Bhakoot Expanded
+    BHAKOOT_IMPORTANCE("Bhakoot assesses emotional love, family welfare, and financial prosperity. It's based on sign positions and is crucial for long-term happiness.", "भकुटले भावनात्मक प्रेम, पारिवारिक कल्याण र आर्थिक समृद्धि मूल्याङ्कन गर्दछ। यो राशि स्थितिहरूमा आधारित छ र दीर्घकालीन खुशीको लागि महत्त्वपूर्ण छ।"),
+    BHAKOOT_DOSHA_TYPES("No dosha = 7 points. 2-12 position (Dhan-Vyaya dosha) = Financial concerns. 6-8 position (Shadashtak dosha) = Health and separation concerns (most serious).", "कुनै दोष छैन = ७ अंक। २-१२ स्थिति (धन-व्यय दोष) = आर्थिक चिन्ता। ६-८ स्थिति (षडाष्टक दोष) = स्वास्थ्य र विच्छेद चिन्ता (सबैभन्दा गम्भीर)।"),
+
+    // Nadi Expanded
+    NADI_IMPORTANCE("Nadi is the MOST IMPORTANT guna (8 points) indicating genetic compatibility, health, and progeny. Same Nadi can cause serious health and conception issues.", "नाडी सबैभन्दा महत्त्वपूर्ण गुण (८ अंक) हो जसले आनुवंशिक अनुकूलता, स्वास्थ्य र सन्तान संकेत गर्दछ। उही नाडीले गम्भीर स्वास्थ्य र गर्भधारण समस्या ल्याउन सक्छ।"),
+    NADI_TYPES_EXPLAINED("Adi (Vata): Wind element, nervous system, movement. Madhya (Pitta): Fire element, digestion, metabolism. Antya (Kapha): Water element, structure, lubrication. Same Nadi = physiological incompatibility.", "आदि (वात): वायु तत्व, स्नायु प्रणाली, गति। मध्य (पित्त): अग्नि तत्व, पाचन, चयापचय। अन्त्य (कफ): जल तत्व, संरचना, स्नेहन। उही नाडी = शारीरिक असंगतता।"),
+    NADI_ZERO_EXPLANATION("Zero points indicates Same Nadi without cancellation - this is the most serious dosha in matchmaking. Immediate astrological consultation and extensive remedies are mandatory.", "शून्य अंकले रद्द बिना उही नाडी संकेत गर्दछ - यो मिलानमा सबैभन्दा गम्भीर दोष हो। तत्काल ज्योतिषीय परामर्श र व्यापक उपायहरू अनिवार्य छन्।"),
+
+    // ============================================
+    // MATCHMAKING - SCORE INTERPRETATIONS & RELATIONSHIP GUIDANCE
     // ============================================
     SCORE_EXCELLENT("Excellent match! Score above 28 indicates highly favorable compatibility across all dimensions.", "उत्कृष्ट मिलान! २८ माथिको अंकले सबै आयामहरूमा अत्यन्त अनुकूल अनुकूलता संकेत गर्दछ।"),
+    SCORE_EXCELLENT_GUIDANCE("Your compatibility across spiritual, mental, physical, and temperamental dimensions is outstanding. You share compatible values, communication styles, and life goals. This union has the blessings of celestial alignments. Focus on maintaining open communication and mutual respect to nurture this harmonious connection throughout your married life.", "तपाईंको आध्यात्मिक, मानसिक, शारीरिक र स्वभावगत आयामहरूमा अनुकूलता उत्कृष्ट छ। तपाईं अनुकूल मूल्यहरू, सञ्चार शैली र जीवन लक्ष्यहरू साझा गर्नुहुन्छ। यस संघमा आकाशीय संरेखणको आशीर्वाद छ। आफ्नो वैवाहिक जीवनभर यो सामञ्जस्यपूर्ण सम्बन्धलाई पोषण गर्न खुला सञ्चार र पारस्परिक सम्मान कायम राख्नमा ध्यान दिनुहोस्।"),
+
     SCORE_GOOD("Good match. Score of 21-27 suggests strong compatibility with minor areas to work on.", "राम्रो मिलान। २१-२७ को अंकले काम गर्नुपर्ने सानातिना क्षेत्रहरूसहित बलियो अनुकूलता सुझाव दिन्छ।"),
+    SCORE_GOOD_GUIDANCE("You have strong overall compatibility with good harmony in most areas. While there are some minor differences, these can be easily managed through mutual understanding and effort. The relationship has solid foundations for a successful marriage. Focus on conscious communication, especially in areas where gunas scored lower. Regular discussions about expectations and compromise will strengthen your bond.", "तपाईं धेरै क्षेत्रहरूमा राम्रो सामञ्जस्यसहित बलियो समग्र अनुकूलता राख्नुहुन्छ। यद्यपि केही सानातिना भिन्नताहरू छन्, यी पारस्परिक बुझाइ र प्रयासद्वारा सजिलैसँग व्यवस्थापन गर्न सकिन्छ। सम्बन्धमा सफल विवाहको लागि ठोस आधारहरू छन्। सचेत सञ्चारमा ध्यान दिनुहोस्, विशेष गरी ती क्षेत्रहरूमा जहाँ गुणहरूले कम अंक पाएको छ। अपेक्षाहरू र सम्झौताको बारेमा नियमित छलफलले तपाईंको बन्धनलाई बलियो बनाउनेछ।"),
+
     SCORE_AVERAGE("Average compatibility. Score of 18-20 requires attention to problem areas and remedies.", "औसत अनुकूलता। १८-२० को अंकले समस्या क्षेत्रहरू र उपायहरूमा ध्यान आवश्यक पर्छ।"),
+    SCORE_AVERAGE_GUIDANCE("Your compatibility is moderate with several areas requiring conscious effort and adjustment. While the match is acceptable, success depends on both partners' willingness to work through differences. Identify specific problem areas (especially low-scoring gunas) and actively address them. Consider performing recommended Vedic remedies to strengthen weak areas. Pre-marital counseling is strongly advised to establish communication patterns and conflict resolution strategies. With dedication and mutual respect, this relationship can thrive.", "तपाईंको अनुकूलता सचेत प्रयास र समायोजन आवश्यक पर्ने धेरै क्षेत्रहरूसहित मध्यम छ। मिलान स्वीकार्य भए पनि, सफलता दुवै साझेदारहरूको भिन्नताहरू समाधान गर्ने इच्छामा निर्भर गर्दछ। विशेष समस्या क्षेत्रहरू (विशेष गरी कम अंक पाएका गुणहरू) पहिचान गर्नुहोस् र सक्रिय रूपमा सम्बोधन गर्नुहोस्। कमजोर क्षेत्रहरूलाई बलियो बनाउन सिफारिस गरिएका वैदिक उपायहरू गर्ने विचार गर्नुहोस्। सञ्चार ढाँचा र द्वन्द्व समाधान रणनीतिहरू स्थापना गर्न विवाह-पूर्व परामर्श दृढतापूर्वक सल्लाह दिइन्छ। समर्पण र पारस्परिक सम्मानका साथ, यो सम्बन्ध फस्टाउन सक्छ।"),
+
     SCORE_BELOW_AVERAGE("Below average compatibility. Score of 14-17 indicates significant challenges requiring serious consideration.", "औसतमुनि अनुकूलता। १४-१७ को अंकले गम्भीर विचार आवश्यक पर्ने महत्त्वपूर्ण चुनौतीहरू संकेत गर्दछ।"),
+    SCORE_BELOW_AVERAGE_GUIDANCE("Your compatibility score indicates notable challenges across multiple dimensions. This match faces significant obstacles that require serious consideration before proceeding. Multiple gunas showing low scores suggest fundamental differences in temperament, values, or life approaches. Extensive Vedic remedies are essential - consult a qualified Vedic astrologer for a comprehensive remedy plan. Professional couples counseling is strongly recommended. Both partners must be willing to make substantial adjustments and compromises. Carefully evaluate whether both are prepared for the level of conscious effort required to build a harmonious relationship.", "तपाईंको अनुकूलता अंकले विभिन्न आयामहरूमा उल्लेखनीय चुनौतीहरू संकेत गर्दछ। यो मिलानले अगाडि बढ्नु अघि गम्भीर विचार आवश्यक पर्ने महत्त्वपूर्ण बाधाहरूको सामना गर्दछ। धेरै गुणहरूले कम अंक देखाउनुले स्वभाव, मूल्यहरू वा जीवन दृष्टिकोणमा आधारभूत भिन्नताहरू सुझाव दिन्छ। व्यापक वैदिक उपायहरू आवश्यक छन् - व्यापक उपाय योजनाको लागि योग्य वैदिक ज्योतिषीसँग परामर्श गर्नुहोस्। पेशेवर जोडी परामर्श दृढतापूर्वक सिफारिस गरिएको छ। दुवै साझेदारहरू पर्याप्त समायोजन र सम्झौता गर्न इच्छुक हुनुपर्छ। सामञ्जस्यपूर्ण सम्बन्ध निर्माण गर्न आवश्यक सचेत प्रयासको स्तरको लागि दुवै तयार छन् कि छैनन् भनेर सावधानीपूर्वक मूल्याङ्कन गर्नुहोस्।"),
+
     SCORE_POOR("Poor compatibility. Score below 14 suggests major challenges. Marriage not recommended without extensive remedies.", "कमजोर अनुकूलता। १४ मुनिको अंकले प्रमुख चुनौतीहरू सुझाव दिन्छ। व्यापक उपायहरू बिना विवाह सिफारिस गरिएको छैन।"),
+    SCORE_POOR_GUIDANCE("This match shows poor compatibility with fundamental incompatibilities across critical areas. Traditional Vedic astrology does not recommend proceeding with this marriage without addressing severe issues. The low score suggests conflicts in temperament, values, physical harmony, and mental compatibility. If you choose to proceed despite this assessment, the following are absolutely essential: 1) Consult multiple qualified Vedic astrologers for comprehensive remedy plans 2) Perform all recommended pujas, homas, and remedial measures diligently 3) Undergo extensive pre-marital and ongoing couples counseling 4) Both partners must have extraordinary commitment to conscious relationship work 5) Prepare for ongoing challenges requiring patience, tolerance, and spiritual growth. Consider whether alternative matches might offer better foundations for marital happiness.", "यो मिलानले महत्त्वपूर्ण क्षेत्रहरूमा आधारभूत असंगतताहरूसहित कमजोर अनुकूलता देखाउँछ। परम्परागत वैदिक ज्योतिष गम्भीर समस्याहरू सम्बोधन नगरी यस विवाहसँग अगाडि बढ्न सिफारिस गर्दैन। कम अंकले स्वभाव, मूल्यहरू, शारीरिक सामञ्जस्य र मानसिक अनुकूलतामा द्वन्द्व सुझाव दिन्छ। यदि तपाईं यस मूल्याङ्कनको बावजुद अगाडि बढ्न रोज्नुहुन्छ भने, निम्न कुराहरू एकदमै आवश्यक छन्: १) व्यापक उपाय योजनाको लागि धेरै योग्य वैदिक ज्योतिषीहरूसँग परामर्श गर्नुहोस् २) सबै सिफारिस गरिएका पूजा, होम र उपचारात्मक उपायहरू लगनशीलताका साथ गर्नुहोस् ३) व्यापक विवाह-पूर्व र निरन्तर जोडी परामर्श लिनुहोस् ४) दुवै साझेदारहरूसँग सचेत सम्बन्ध कार्यको लागि असाधारण प्रतिबद्धता हुनुपर्छ ५) धैर्य, सहनशीलता र आध्यात्मिक विकास आवश्यक पर्ने निरन्तर चुनौतीहरूको लागि तयार रहनुहोस्। वैकल्पिक मिलानहरूले वैवाहिक खुशीको लागि राम्रो आधारहरू प्रदान गर्न सक्छन् कि भनेर विचार गर्नुहोस्।"),
+
+    // ============================================
+    // MATCHMAKING - DOSHA CANCELLATION EXPLANATIONS
+    // ============================================
+    DOSHA_CANCEL_EXPLAINED("Dosha Cancellation Factors Explained", "दोष रद्द कारकहरू व्याख्या"),
+    NADI_CANCEL_EXPLANATION("Nadi Dosha can be cancelled in several specific scenarios according to classical Vedic texts. These cancellations are based on deeper astrological principles that override the superficial Nadi match.", "नाडी दोष शास्त्रीय वैदिक ग्रन्थहरू अनुसार धेरै विशिष्ट परिस्थितिहरूमा रद्द गर्न सकिन्छ। यी रद्दहरू गहन ज्योतिषीय सिद्धान्तहरूमा आधारित छन् जसले सतही नाडी मिलानलाई ओभरराइड गर्दछ।"),
+    BHAKOOT_CANCEL_EXPLANATION("Bhakoot Dosha cancellation occurs when deeper planetary relationships indicate harmony. Even though Moon signs are in challenging positions, the underlying planetary friendships or same lords can neutralize the dosha effects.", "भकुट दोष रद्द गहन ग्रह सम्बन्धहरूले सामञ्जस्य संकेत गर्दा हुन्छ। यद्यपि चन्द्र राशिहरू चुनौतीपूर्ण स्थानमा छन्, अन्तर्निहित ग्रह मित्रता वा उही स्वामीहरूले दोष प्रभावहरू निष्क्रिय पार्न सक्छन्।"),
+    MANGLIK_CANCEL_EXPLANATION("Manglik Dosha can be cancelled through various factors: both partners being Manglik (mutual cancellation), Mars in certain houses (1st, 4th, 7th, 8th, 12th from specific references), Mars being in own sign or exalted, age over 28 years (Mars matures), or presence of benefic aspects. These factors indicate that Mars energy is channeled constructively.", "मांगलिक दोष विभिन्न कारकहरूद्वारा रद्द गर्न सकिन्छ: दुवै साझेदार मांगलिक हुनु (पारस्परिक रद्द), मंगल निश्चित भावहरूमा (विशेष सन्दर्भबाट १, ४, ७, ८, १२), मंगल आफ्नै राशि वा उच्चमा हुनु, २८ वर्ष भन्दा माथिको उमेर (मंगल परिपक्व हुन्छ), वा शुभ दृष्टिहरूको उपस्थिति। यी कारकहरूले संकेत गर्दछन् कि मंगल ऊर्जा रचनात्मक रूपमा च्यानल गरिएको छ।"),
+
+    // ============================================
+    // MATCHMAKING - COMPATIBILITY RECOMMENDATIONS
+    // ============================================
+    COMPAT_RECOMMEND_MARRIAGE_TIMING("Recommended Marriage Timing", "सिफारिस गरिएको विवाह समय"),
+    COMPAT_TIMING_IMMEDIATE("Marriage can proceed without delay. Choose an auspicious muhurta during favorable planetary transits for both charts.", "विवाह ढिलाइ बिना अगाडि बढ्न सक्छ। दुवै कुण्डलीको लागि अनुकूल ग्रह गोचरको समयमा शुभ मुहूर्त छान्नुहोस्।"),
+    COMPAT_TIMING_AFTER_REMEDIES("Proceed after completing essential remedies (minimum 40-90 days). This allows remedial measures to strengthen weak areas before marriage.", "आवश्यक उपायहरू पूरा गरेपछि अगाडि बढ्नुहोस् (न्यूनतम ४०-९० दिन)। यसले विवाह अघि कमजोर क्षेत्रहरूलाई बलियो बनाउन उपचारात्मक उपायहरूलाई अनुमति दिन्छ।"),
+    COMPAT_TIMING_EXTENDED_REMEDIES("Delay marriage for 6-12 months while performing comprehensive remedies. Use this time for counseling and conscious preparation.", "व्यापक उपायहरू गर्दै ६-१२ महिना विवाहमा ढिलाइ गर्नुहोस्। परामर्श र सचेत तयारीको लागि यो समय प्रयोग गर्नुहोस्।"),
+    COMPAT_TIMING_RECONSIDER("Seriously reconsider this match. If proceeding, delay minimum 1 year with extensive remedies, counseling, and spiritual preparation.", "यस मिलानलाई गम्भीरतापूर्वक पुनर्विचार गर्नुहोस्। अगाडि बढ्दै हुनुहुन्छ भने, व्यापक उपाय, परामर्श र आध्यात्मिक तयारीसहित न्यूनतम १ वर्ष ढिलाइ गर्नुहोस्।"),
+
+    COMPAT_RECOMMEND_RELATIONSHIP_FOCUS("Relationship Focus Areas", "सम्बन्ध फोकस क्षेत्रहरू"),
+    COMPAT_FOCUS_SPIRITUAL("Spiritual Growth Together: Practice joint meditation, visit temples together, study spiritual texts, maintain shared spiritual practices.", "सँगै आध्यात्मिक विकास: संयुक्त ध्यान अभ्यास गर्नुहोस्, सँगै मन्दिरहरू भ्रमण गर्नुहोस्, आध्यात्मिक ग्रन्थहरू अध्ययन गर्नुहोस्, साझा आध्यात्मिक अभ्यासहरू कायम राख्नुहोस्।"),
+    COMPAT_FOCUS_COMMUNICATION("Mental & Communication: Schedule regular check-ins, practice active listening, express appreciation daily, address conflicts calmly.", "मानसिक र सञ्चार: नियमित जाँच-पडताल तालिका बनाउनुहोस्, सक्रिय सुनाइ अभ्यास गर्नुहोस्, दैनिक प्रशंसा व्यक्त गर्नुहोस्, द्वन्द्वहरूलाई शान्तपूर्वक सम्बोधन गर्नुहोस्।"),
+    COMPAT_FOCUS_PHYSICAL("Physical Harmony: Prioritize physical affection, maintain health together, respect boundaries, create intimate connection rituals.", "शारीरिक सामञ्जस्य: शारीरिक स्नेहलाई प्राथमिकता दिनुहोस्, सँगै स्वास्थ्य कायम राख्नुहोस्, सीमाहरूको सम्मान गर्नुहोस्, अन्तरंग सम्बन्ध अनुष्ठानहरू सिर्जना गर्नुहोस्।"),
+    COMPAT_FOCUS_TEMPERAMENT("Temperamental Balance: Understand personality differences, practice patience, compromise consciously, celebrate individual strengths.", "स्वभावगत सन्तुलन: व्यक्तित्व भिन्नताहरू बुझ्नुहोस्, धैर्य अभ्यास गर्नुहोस्, सचेत रूपमा सम्झौता गर्नुहोस्, व्यक्तिगत शक्तिहरू मनाउनुहोस्।"),
+    COMPAT_FOCUS_FINANCIAL("Financial Harmony: Create joint financial plans, discuss money values openly, set shared goals, respect spending differences.", "आर्थिक सामञ्जस्य: संयुक्त वित्तीय योजनाहरू बनाउनुहोस्, पैसा मूल्यहरू खुलेर छलफल गर्नुहोस्, साझा लक्ष्यहरू सेट गर्नुहोस्, खर्च भिन्नताहरूलाई सम्मान गर्नुहोस्।"),
+    COMPAT_FOCUS_HEALTH("Health & Progeny: Maintain healthy lifestyles, support each other's wellness, prepare mindfully for parenthood.", "स्वास्थ्य र सन्तान: स्वस्थ जीवनशैली कायम राख्नुहोस्, एकअर्काको कल्याणलाई समर्थन गर्नुहोस्, मातृत्व/पितृत्वको लागि सावधानीपूर्वक तयारी गर्नुहोस्।"),
 
     // ============================================
     // YOGA CALCULATOR - CATEGORIES & STRENGTH

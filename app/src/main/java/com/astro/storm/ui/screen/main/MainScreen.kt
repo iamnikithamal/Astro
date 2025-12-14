@@ -66,6 +66,12 @@ fun MainScreen(
     onNavigateToSynastry: () -> Unit = {},
     onNavigateToNakshatra: () -> Unit = {},
     onNavigateToShadbala: () -> Unit = {},
+    onNavigateToShodashvarga: () -> Unit = {},
+    onNavigateToYoginiDasha: () -> Unit = {},
+    onNavigateToArgala: () -> Unit = {},
+    onNavigateToCharaDasha: () -> Unit = {},
+    onNavigateToBhriguBindu: () -> Unit = {},
+    onNavigateToPredictions: () -> Unit = {},
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -193,6 +199,12 @@ fun MainScreen(
                                         InsightFeature.VARSHAPHALA -> if (currentChart != null) onNavigateToVarshaphala()
                                         InsightFeature.NAKSHATRA_ANALYSIS -> if (currentChart != null) onNavigateToNakshatra()
                                         InsightFeature.SHADBALA -> if (currentChart != null) onNavigateToShadbala()
+                                        InsightFeature.SHODASHVARGA -> if (currentChart != null) onNavigateToShodashvarga()
+                                        InsightFeature.YOGINI_DASHA -> if (currentChart != null) onNavigateToYoginiDasha()
+                                        InsightFeature.ARGALA -> if (currentChart != null) onNavigateToArgala()
+                                        InsightFeature.CHARA_DASHA -> if (currentChart != null) onNavigateToCharaDasha()
+                                        InsightFeature.BHRIGU_BINDU -> if (currentChart != null) onNavigateToBhriguBindu()
+                                        InsightFeature.PREDICTIONS -> if (currentChart != null) onNavigateToPredictions()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }

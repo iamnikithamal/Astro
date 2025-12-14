@@ -66,14 +66,20 @@ object GunaMilanCalculator {
 
         val points = if (groomVarna.value >= brideVarna.value) MatchmakingConstants.MAX_VARNA else 0.0
 
-        val analysis = if (points > 0) {
-            StringResources.get(StringKeyMatch.VARNA_COMPATIBLE, language)
-                .replace("{groom}", groomVarna.getLocalizedName(language))
-                .replace("{bride}", brideVarna.getLocalizedName(language))
-        } else {
-            StringResources.get(StringKeyMatch.VARNA_INCOMPATIBLE, language)
-                .replace("{bride}", brideVarna.getLocalizedName(language))
-                .replace("{groom}", groomVarna.getLocalizedName(language))
+        val analysis = buildString {
+            if (points > 0) {
+                append(StringResources.get(StringKeyMatch.VARNA_COMPATIBLE, language)
+                    .replace("{groom}", groomVarna.getLocalizedName(language))
+                    .replace("{bride}", brideVarna.getLocalizedName(language)))
+                append(" ")
+                append(StringResources.get(StringKeyMatch.VARNA_DETAILED_COMPATIBLE, language))
+            } else {
+                append(StringResources.get(StringKeyMatch.VARNA_INCOMPATIBLE, language)
+                    .replace("{bride}", brideVarna.getLocalizedName(language))
+                    .replace("{groom}", groomVarna.getLocalizedName(language)))
+                append(" ")
+                append(StringResources.get(StringKeyMatch.VARNA_DETAILED_INCOMPATIBLE, language))
+            }
         }
 
         return GunaAnalysis(

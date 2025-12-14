@@ -10,8 +10,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.astro.storm.data.model.VedicChart
+import com.astro.storm.ui.screen.ArgalaScreen
 import com.astro.storm.ui.screen.AshtakavargaScreen
+import com.astro.storm.ui.screen.BhriguBinduScreen
 import com.astro.storm.ui.screen.BirthChartScreen
+import com.astro.storm.ui.screen.CharaDashaScreen
 import com.astro.storm.ui.screen.ChartAnalysisScreen
 import com.astro.storm.ui.screen.ChartInputScreen
 import com.astro.storm.ui.screen.DashasScreen
@@ -21,13 +24,16 @@ import com.astro.storm.ui.screen.NakshatraScreen
 import com.astro.storm.ui.screen.PanchangaScreen
 import com.astro.storm.ui.screen.PlanetsScreen
 import com.astro.storm.ui.screen.PrashnaScreen
+import com.astro.storm.ui.screen.PredictionsScreen
 import com.astro.storm.ui.screen.ProfileEditScreen
 import com.astro.storm.ui.screen.RemediesScreen
 import com.astro.storm.ui.screen.ShadbalaScreen
+import com.astro.storm.ui.screen.ShodashvargaScreen
 import com.astro.storm.ui.screen.SynastryScreen
 import com.astro.storm.ui.screen.TransitsScreen
 import com.astro.storm.ui.screen.VarshaphalaScreen
 import com.astro.storm.ui.screen.YogasScreen
+import com.astro.storm.ui.screen.YoginiDashaScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
@@ -88,6 +94,26 @@ sealed class Screen(val route: String) {
     }
     object ProfileEdit : Screen("profile_edit/{chartId}") {
         fun createRoute(chartId: Long) = "profile_edit/$chartId"
+    }
+
+    // Advanced Calculator Screens
+    object Shodashvarga : Screen("shodashvarga/{chartId}") {
+        fun createRoute(chartId: Long) = "shodashvarga/$chartId"
+    }
+    object YoginiDasha : Screen("yogini_dasha/{chartId}") {
+        fun createRoute(chartId: Long) = "yogini_dasha/$chartId"
+    }
+    object Argala : Screen("argala/{chartId}") {
+        fun createRoute(chartId: Long) = "argala/$chartId"
+    }
+    object CharaDasha : Screen("chara_dasha/{chartId}") {
+        fun createRoute(chartId: Long) = "chara_dasha/$chartId"
+    }
+    object BhriguBindu : Screen("bhrigu_bindu/{chartId}") {
+        fun createRoute(chartId: Long) = "bhrigu_bindu/$chartId"
+    }
+    object Predictions : Screen("predictions/{chartId}") {
+        fun createRoute(chartId: Long) = "predictions/$chartId"
     }
 }
 
@@ -209,6 +235,36 @@ fun AstroStormNavigation(
                 onNavigateToShadbala = {
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.Shadbala.createRoute(chartId))
+                    }
+                },
+                onNavigateToShodashvarga = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Shodashvarga.createRoute(chartId))
+                    }
+                },
+                onNavigateToYoginiDasha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.YoginiDasha.createRoute(chartId))
+                    }
+                },
+                onNavigateToArgala = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Argala.createRoute(chartId))
+                    }
+                },
+                onNavigateToCharaDasha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.CharaDasha.createRoute(chartId))
+                    }
+                },
+                onNavigateToBhriguBindu = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.BhriguBindu.createRoute(chartId))
+                    }
+                },
+                onNavigateToPredictions = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Predictions.createRoute(chartId))
                     }
                 },
                 onExportChart = { format ->
@@ -534,6 +590,120 @@ fun AstroStormNavigation(
             }
 
             ShadbalaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Shodashvarga (16-divisional charts) screen
+        composable(
+            route = Screen.Shodashvarga.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            ShodashvargaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Yogini Dasha screen
+        composable(
+            route = Screen.YoginiDasha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            YoginiDashaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Argala (Jaimini Intervention) screen
+        composable(
+            route = Screen.Argala.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            ArgalaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Chara Dasha (Jaimini Sign-based) screen
+        composable(
+            route = Screen.CharaDasha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            CharaDashaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Bhrigu Bindu (Karmic Destiny Point) screen
+        composable(
+            route = Screen.BhriguBindu.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            BhriguBinduScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Predictions (Comprehensive Life Analysis) screen
+        composable(
+            route = Screen.Predictions.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            PredictionsScreen(
                 chart = currentChart,
                 onBack = { navController.popBackStack() }
             )

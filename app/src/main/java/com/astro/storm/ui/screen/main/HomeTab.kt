@@ -459,6 +459,48 @@ enum class InsightFeature(
         icon = Icons.Outlined.Speed,
         color = AppTheme.SuccessColor,
         isImplemented = true
+    ),
+    SHODASHVARGA(
+        titleKey = StringKey.FEATURE_SHODASHVARGA,
+        descriptionKey = StringKey.FEATURE_SHODASHVARGA_DESC,
+        icon = Icons.Outlined.GridView,
+        color = AppTheme.AccentGold,
+        isImplemented = true
+    ),
+    YOGINI_DASHA(
+        titleKey = StringKey.FEATURE_YOGINI_DASHA,
+        descriptionKey = StringKey.FEATURE_YOGINI_DASHA_DESC,
+        icon = Icons.Outlined.Timeline,
+        color = AppTheme.LifeAreaLove,
+        isImplemented = true
+    ),
+    ARGALA(
+        titleKey = StringKey.FEATURE_ARGALA,
+        descriptionKey = StringKey.FEATURE_ARGALA_DESC,
+        icon = Icons.Outlined.CompareArrows,
+        color = AppTheme.AccentTeal,
+        isImplemented = true
+    ),
+    CHARA_DASHA(
+        titleKey = StringKey.FEATURE_CHARA_DASHA,
+        descriptionKey = StringKey.FEATURE_CHARA_DASHA_DESC,
+        icon = Icons.Outlined.Sync,
+        color = AppTheme.LifeAreaSpiritual,
+        isImplemented = true
+    ),
+    BHRIGU_BINDU(
+        titleKey = StringKey.FEATURE_BHRIGU_BINDU,
+        descriptionKey = StringKey.FEATURE_BHRIGU_BINDU_DESC,
+        icon = Icons.Outlined.Stars,
+        color = AppTheme.WarningColor,
+        isImplemented = true
+    ),
+    PREDICTIONS(
+        titleKey = StringKey.FEATURE_PREDICTIONS,
+        descriptionKey = StringKey.FEATURE_PREDICTIONS_DESC,
+        icon = Icons.Outlined.AutoAwesome,
+        color = AppTheme.AccentPrimary,
+        isImplemented = true
     );
 
     /**
