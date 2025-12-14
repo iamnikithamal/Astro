@@ -256,7 +256,7 @@ enum class LifeArea(val stringKey: StringKey, val icon: ImageVector) {
     HEALTH(StringKey.PREDICTIONS_HEALTH_WELLBEING, Icons.Outlined.FavoriteBorder),
     EDUCATION(StringKey.PREDICTIONS_EDUCATION_LEARNING, Icons.Outlined.School),
     FAMILY(StringKey.PREDICTIONS_FAMILY_HOME, Icons.Outlined.Home),
-    SPIRITUAL(StringKey.LIFE_AREA_SPIRITUAL, Icons.Outlined.Star);
+    SPIRITUAL(StringKey.LIFE_AREA_SPIRITUALITY, Icons.Outlined.Star);
 
     fun getLocalizedName(language: Language): String = StringResources.get(stringKey, language)
 }
@@ -801,7 +801,7 @@ private fun ChallengesOpportunitiesCard(data: ChallengesOpportunities) {
             if (data.opportunities.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Outlined.LightbulbOutline,
+                        Icons.Outlined.Lightbulb,
                         contentDescription = null,
                         tint = AppTheme.SuccessColor,
                         modifier = Modifier.size(20.dp)

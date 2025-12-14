@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.stringResource
@@ -80,8 +81,8 @@ fun ArgalaScreen(
 
     val tabs = listOf(
         stringResource(StringKeyDosha.ARGALA_ABOUT),
-        stringResource(StringKey.FEATURE_HOUSES),
-        stringResource(StringKey.FEATURE_PLANETS)
+        stringResource(StringKeyAnalysis.TAB_HOUSES),
+        stringResource(StringKeyAnalysis.TAB_PLANETS)
     )
 
     // Calculate Argala

@@ -2317,7 +2317,32 @@ enum class StringKeyMatch(override val en: String, override val ne: String) : St
     ACTION_VIEW_DETAILS("View details", "विवरणहरू हेर्नुहोस्"),
     ACTION_VIEW_FULLSCREEN("View fullscreen", "पूर्ण स्क्रिनमा हेर्नुहोस्"),
     ACTION_NEW_QUESTION("New question", "नयाँ प्रश्न"),
-    ACTION_SEARCH("Search", "खोज्नुहोस्");
+    ACTION_SEARCH("Search", "खोज्नुहोस्"),
+
+    // ============================================
+    // MISC - ADDITIONAL STRINGS FOR DASHA SCREENS
+    // ============================================
+    MISC_DAYS_LEFT("days left", "दिन बाँकी"),
+    MISC_MONTHS("months", "महिना"),
+    MISC_CURRENT("Current", "वर्तमान"),
+    MISC_YEARS("years", "वर्ष"),
+    DASHA_NO_CURRENT_PERIOD("No current period active", "कुनै वर्तमान अवधि सक्रिय छैन"),
+    DASHA_LEVEL_ANTARDASHAS("Antardashas", "अन्तर्दशाहरू"),
+
+    // ============================================
+    // INTERPRETATION - CHARA DASHA
+    // ============================================
+    INTERPRETATION_TITLE("Interpretation", "व्याख्या"),
+    INTERPRETATION_GENERAL("General Effects", "सामान्य प्रभावहरू"),
+    INTERPRETATION_LORD_EFFECTS("Lord Effects", "स्वामी प्रभावहरू"),
+    INTERPRETATION_FAVORABLE("Favorable Areas", "अनुकूल क्षेत्रहरू"),
+    INTERPRETATION_CHALLENGES("Challenges", "चुनौतीहरू"),
+    INTERPRETATION_RECOMMENDATIONS("Recommendations", "सिफारिसहरू"),
+
+    // ============================================
+    // DASHA RECOMMENDATIONS
+    // ============================================
+    DASHA_RECOMMENDATIONS("Recommendations", "सिफारिसहरू");
 }
 
 /**

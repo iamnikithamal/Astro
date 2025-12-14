@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
-import com.astro.storm.data.localization.StringResources
+import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
@@ -69,7 +69,7 @@ fun ShodashvargaScreen(
 ) {
     if (chart == null) {
         EmptyChartScreen(
-            title = stringResource(StringResources.SHODASHVARGA_TITLE),
+            title = stringResource(StringKeyDosha.SHODASHVARGA_TITLE),
             message = stringResource(StringKey.NO_PROFILE_MESSAGE),
             onBack = onBack
         )
@@ -84,10 +84,10 @@ fun ShodashvargaScreen(
     var shodashvargaAnalysis by remember { mutableStateOf<ShodashvargaAnalysis?>(null) }
 
     val tabs = listOf(
-        stringResource(StringResources.SHADBALA_OVERVIEW),
-        stringResource(StringResources.VARGA_POSITIONS),
-        stringResource(StringResources.VIMSOPAKA_BALA),
-        stringResource(StringResources.VARGOTTAMA_TITLE)
+        stringResource(StringKeyDosha.SHADBALA_OVERVIEW),
+        stringResource(StringKeyDosha.VARGA_POSITIONS),
+        stringResource(StringKeyDosha.VIMSOPAKA_BALA),
+        stringResource(StringKeyDosha.VARGOTTAMA_TITLE)
     )
 
     // Calculate Shodashvarga
@@ -115,7 +115,7 @@ fun ShodashvargaScreen(
                 title = {
                     Column {
                         Text(
-                            stringResource(StringResources.SHODASHVARGA_TITLE),
+                            stringResource(StringKeyDosha.SHODASHVARGA_TITLE),
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary,
                             fontSize = 18.sp
@@ -140,7 +140,7 @@ fun ShodashvargaScreen(
                     IconButton(onClick = { showInfoDialog = true }) {
                         Icon(
                             Icons.Outlined.Info,
-                            contentDescription = stringResource(StringResources.SHODASHVARGA_ABOUT),
+                            contentDescription = stringResource(StringKeyDosha.SHODASHVARGA_ABOUT),
                             tint = AppTheme.TextPrimary
                         )
                     }
@@ -302,7 +302,7 @@ private fun OverviewTab(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    stringResource(StringResources.AVERAGE_STRENGTH),
+                    stringResource(StringKeyDosha.AVERAGE_STRENGTH),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -358,17 +358,17 @@ private fun OverviewTab(
                     }
 
                     StrengthCountBadge(
-                        label = stringResource(StringResources.STRENGTH_EXCELLENT),
+                        label = stringResource(StringKeyDosha.STRENGTH_EXCELLENT),
                         count = excellent,
                         color = AppTheme.SuccessColor
                     )
                     StrengthCountBadge(
-                        label = stringResource(StringResources.STRENGTH_GOOD),
+                        label = stringResource(StringKeyDosha.STRENGTH_GOOD),
                         count = good,
                         color = AppTheme.AccentPrimary
                     )
                     StrengthCountBadge(
-                        label = stringResource(StringResources.STRENGTH_WEAK),
+                        label = stringResource(StringKeyDosha.STRENGTH_WEAK),
                         count = weak,
                         color = AppTheme.WarningColor
                     )
@@ -382,7 +382,7 @@ private fun OverviewTab(
         Row(modifier = Modifier.fillMaxWidth()) {
             analysis.overallAssessment.strongestPlanet?.let { strongest ->
                 StrongestWeakestCard(
-                    title = stringResource(StringResources.STRONGEST_PLANET),
+                    title = stringResource(StringKeyDosha.STRONGEST_PLANET),
                     planet = strongest,
                     strength = analysis.planetStrengths[strongest],
                     isStrong = true,
@@ -393,7 +393,7 @@ private fun OverviewTab(
             Spacer(modifier = Modifier.width(12.dp))
             analysis.overallAssessment.weakestPlanet?.let { weakest ->
                 StrongestWeakestCard(
-                    title = stringResource(StringResources.WEAKEST_PLANET),
+                    title = stringResource(StringKeyDosha.WEAKEST_PLANET),
                     planet = weakest,
                     strength = analysis.planetStrengths[weakest],
                     isStrong = false,
@@ -422,7 +422,7 @@ private fun OverviewTab(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            stringResource(StringResources.KEY_INSIGHTS),
+                            stringResource(StringKeyDosha.KEY_INSIGHTS),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
@@ -461,7 +461,7 @@ private fun OverviewTab(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    stringResource(StringResources.SHODASHVARGA_BALA),
+                    stringResource(StringKeyDosha.SHODASHVARGA_BALA),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -752,7 +752,7 @@ private fun PlanetDetailCard(
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            stringResource(StringResources.SHODASHVARGA_SUBTITLE),
+                            stringResource(StringKeyDosha.SHODASHVARGA_SUBTITLE),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.TextMuted
                         )
@@ -781,7 +781,7 @@ private fun PlanetDetailCard(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     StrengthMetric(
-                        label = stringResource(StringResources.SHADVARGA_BALA),
+                        label = stringResource(StringKeyDosha.SHADVARGA_BALA),
                         value = strength.shadvargaBala,
                         maxValue = 6.0
                     )
@@ -790,7 +790,7 @@ private fun PlanetDetailCard(
                         color = AppTheme.BorderColor
                     )
                     StrengthMetric(
-                        label = stringResource(StringResources.DASHAVARGA_BALA),
+                        label = stringResource(StringKeyDosha.DASHAVARGA_BALA),
                         value = strength.dashavargaBala,
                         maxValue = 10.0
                     )
@@ -799,7 +799,7 @@ private fun PlanetDetailCard(
                         color = AppTheme.BorderColor
                     )
                     StrengthMetric(
-                        label = stringResource(StringResources.SHODASHVARGA_BALA),
+                        label = stringResource(StringKeyDosha.SHODASHVARGA_BALA),
                         value = strength.shodashvargaBala,
                         maxValue = 16.0,
                         isPrimary = true
@@ -871,7 +871,7 @@ private fun PlanetDetailCard(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    stringResource(StringResources.VARGA_POSITIONS),
+                    stringResource(StringKeyDosha.VARGA_POSITIONS),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -1050,7 +1050,7 @@ private fun VimsopakaTab(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        stringResource(StringResources.VIMSOPAKA_BALA),
+                        stringResource(StringKeyDosha.VIMSOPAKA_BALA),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
@@ -1145,17 +1145,17 @@ private fun VimsopakaCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 VimsopakaSchemeColumn(
-                    label = stringResource(StringResources.VIMSOPAKA_POORVA),
+                    label = stringResource(StringKeyDosha.VIMSOPAKA_POORVA),
                     value = strength.vimsopakaBalaPoorva,
                     modifier = Modifier.weight(1f)
                 )
                 VimsopakaSchemeColumn(
-                    label = stringResource(StringResources.VIMSOPAKA_MADHYA),
+                    label = stringResource(StringKeyDosha.VIMSOPAKA_MADHYA),
                     value = strength.vimsopakaBalaMadhya,
                     modifier = Modifier.weight(1f)
                 )
                 VimsopakaSchemeColumn(
-                    label = stringResource(StringResources.VIMSOPAKA_PARA),
+                    label = stringResource(StringKeyDosha.VIMSOPAKA_PARA),
                     value = strength.vimsopakaBalaPara,
                     modifier = Modifier.weight(1f),
                     isPrimary = true
@@ -1234,7 +1234,7 @@ private fun VargottamaTab(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        stringResource(StringResources.VARGOTTAMA_TITLE),
+                        stringResource(StringKeyDosha.VARGOTTAMA_TITLE),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
@@ -1244,7 +1244,7 @@ private fun VargottamaTab(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    stringResource(StringResources.VARGOTTAMA_DESC),
+                    stringResource(StringKeyDosha.VARGOTTAMA_DESC),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.TextMuted,
                     lineHeight = 18.sp
@@ -1404,7 +1404,7 @@ private fun ShodashvargaInfoDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = {
             Text(
-                stringResource(StringResources.SHODASHVARGA_ABOUT),
+                stringResource(StringKeyDosha.SHODASHVARGA_ABOUT),
                 fontWeight = FontWeight.Bold,
                 color = AppTheme.TextPrimary
             )
@@ -1413,7 +1413,7 @@ private fun ShodashvargaInfoDialog(onDismiss: () -> Unit) {
             LazyColumn {
                 item {
                     Text(
-                        stringResource(StringResources.SHODASHVARGA_ABOUT_DESC),
+                        stringResource(StringKeyDosha.SHODASHVARGA_ABOUT_DESC),
                         style = MaterialTheme.typography.bodyMedium,
                         color = AppTheme.TextSecondary
                     )
@@ -1510,24 +1510,24 @@ private fun getDignityColor(dignity: VargaDignity): Color {
 
 private fun getLocalizedStrengthGrade(grade: StrengthGrade, language: Language): String {
     return when (grade) {
-        StrengthGrade.EXCELLENT -> StringResources.get(StringResources.STRENGTH_EXCELLENT, language)
-        StrengthGrade.GOOD -> StringResources.get(StringResources.STRENGTH_GOOD, language)
-        StrengthGrade.AVERAGE -> StringResources.get(StringResources.STRENGTH_AVERAGE, language)
-        StrengthGrade.WEAK -> StringResources.get(StringResources.STRENGTH_WEAK, language)
-        StrengthGrade.VERY_WEAK -> StringResources.get(StringResources.STRENGTH_VERY_WEAK, language)
+        StrengthGrade.EXCELLENT -> StringResources.get(StringKeyDosha.STRENGTH_EXCELLENT, language)
+        StrengthGrade.GOOD -> StringResources.get(StringKeyDosha.STRENGTH_GOOD, language)
+        StrengthGrade.AVERAGE -> StringResources.get(StringKeyDosha.STRENGTH_AVERAGE, language)
+        StrengthGrade.WEAK -> StringResources.get(StringKeyDosha.STRENGTH_WEAK, language)
+        StrengthGrade.VERY_WEAK -> StringResources.get(StringKeyDosha.STRENGTH_VERY_WEAK, language)
     }
 }
 
 private fun getLocalizedDignity(dignity: VargaDignity, language: Language): String {
     return when (dignity) {
-        VargaDignity.EXALTED -> StringResources.get(StringResources.DIGNITY_EXALTED, language)
-        VargaDignity.MOOLATRIKONA -> StringResources.get(StringResources.DIGNITY_MOOLATRIKONA, language)
-        VargaDignity.OWN_SIGN -> StringResources.get(StringResources.DIGNITY_OWN_SIGN, language)
-        VargaDignity.GREAT_FRIEND -> StringResources.get(StringResources.DIGNITY_GREAT_FRIEND, language)
-        VargaDignity.FRIEND -> StringResources.get(StringResources.DIGNITY_FRIEND, language)
-        VargaDignity.NEUTRAL -> StringResources.get(StringResources.DIGNITY_NEUTRAL, language)
-        VargaDignity.ENEMY -> StringResources.get(StringResources.DIGNITY_ENEMY, language)
-        VargaDignity.GREAT_ENEMY -> StringResources.get(StringResources.DIGNITY_GREAT_ENEMY, language)
-        VargaDignity.DEBILITATED -> StringResources.get(StringResources.DIGNITY_DEBILITATED, language)
+        VargaDignity.EXALTED -> StringResources.get(StringKeyDosha.DIGNITY_EXALTED, language)
+        VargaDignity.MOOLATRIKONA -> StringResources.get(StringKeyDosha.DIGNITY_MOOLATRIKONA, language)
+        VargaDignity.OWN_SIGN -> StringResources.get(StringKeyDosha.DIGNITY_OWN_SIGN, language)
+        VargaDignity.GREAT_FRIEND -> StringResources.get(StringKeyDosha.DIGNITY_GREAT_FRIEND, language)
+        VargaDignity.FRIEND -> StringResources.get(StringKeyDosha.DIGNITY_FRIEND, language)
+        VargaDignity.NEUTRAL -> StringResources.get(StringKeyDosha.DIGNITY_NEUTRAL, language)
+        VargaDignity.ENEMY -> StringResources.get(StringKeyDosha.DIGNITY_ENEMY, language)
+        VargaDignity.GREAT_ENEMY -> StringResources.get(StringKeyDosha.DIGNITY_GREAT_ENEMY, language)
+        VargaDignity.DEBILITATED -> StringResources.get(StringKeyDosha.DIGNITY_DEBILITATED, language)
     }
 }
