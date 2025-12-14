@@ -92,8 +92,8 @@ fun BhriguBinduScreen(
     var expandedLifeArea by remember { mutableStateOf<LifeArea?>(null) }
 
     val tabs = listOf(
-        stringResource(StringKeyAnalysis.TAB_OVERVIEW),
-        stringResource(StringKeyAnalysis.TAB_ANALYSIS),
+        stringResource(StringKey.TAB_OVERVIEW),
+        stringResource(StringKey.TAB_ANALYSIS),
         stringResource(StringKeyDosha.BHRIGU_BINDU_TRANSITS),
         stringResource(StringKeyDosha.BHRIGU_BINDU_REMEDIES)
     )

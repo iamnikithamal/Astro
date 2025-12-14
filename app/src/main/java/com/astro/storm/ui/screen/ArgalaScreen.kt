@@ -81,8 +81,8 @@ fun ArgalaScreen(
 
     val tabs = listOf(
         stringResource(StringKeyDosha.ARGALA_ABOUT),
-        stringResource(StringKeyAnalysis.TAB_HOUSES),
-        stringResource(StringKeyAnalysis.TAB_PLANETS)
+        stringResource(StringKey.TAB_HOUSES),
+        stringResource(StringKey.TAB_PLANETS)
     )
 
     // Calculate Argala

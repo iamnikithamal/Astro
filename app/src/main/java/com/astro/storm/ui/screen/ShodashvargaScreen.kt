@@ -31,6 +31,7 @@ import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
