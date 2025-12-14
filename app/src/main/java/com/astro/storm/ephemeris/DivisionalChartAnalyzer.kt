@@ -1284,6 +1284,8 @@ object DivisionalChartAnalyzer {
                     insights.add("Family known for dharma or profession")
                 it.house in listOf(5, 11) ->
                     insights.add("Family with creative or financial success")
+                else ->
+                    insights.add("Family lineage characteristics depend on other factors")
             }
         }
 

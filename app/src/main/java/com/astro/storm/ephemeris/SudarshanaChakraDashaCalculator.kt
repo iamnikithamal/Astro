@@ -256,14 +256,14 @@ object SudarshanaChakraDashaCalculator {
         val lordPosition = chart.planetPositions.find { it.planet == lord }
         val effects = mutableListOf<String>()
 
-        effects.add("${sign.displayName} activated - ${sign.element.name.lowercase()} element emphasized")
+        effects.add("${sign.displayName} activated - ${sign.element.lowercase()} element emphasized")
 
-        when (sign.modality) {
-            com.astro.storm.data.model.Modality.CARDINAL ->
+        when (sign.quality) {
+            com.astro.storm.data.model.Quality.CARDINAL ->
                 effects.add("Movable sign - new initiatives and changes favored")
-            com.astro.storm.data.model.Modality.FIXED ->
+            com.astro.storm.data.model.Quality.FIXED ->
                 effects.add("Fixed sign - stability and consolidation emphasized")
-            com.astro.storm.data.model.Modality.MUTABLE ->
+            com.astro.storm.data.model.Quality.MUTABLE ->
                 effects.add("Dual sign - adaptability and flexibility needed")
         }
 
@@ -275,6 +275,8 @@ object SudarshanaChakraDashaCalculator {
                 effects.add("Sign lord is exalted - strong positive results")
             } else if (AstrologicalConstants.isDebilitated(lord, pos.sign)) {
                 effects.add("Sign lord is debilitated - extra efforts needed")
+            } else {
+                effects.add("Sign lord is in normal dignity")
             }
         }
 

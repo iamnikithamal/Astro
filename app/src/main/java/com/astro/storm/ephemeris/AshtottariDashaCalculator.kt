@@ -6,6 +6,7 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import com.astro.storm.ephemeris.DashaCalculator.Mahadasha
 
 /**
  * Ashtottari Dasha Calculator
@@ -129,10 +130,10 @@ object AshtottariDashaCalculator {
         val moonPosition = chart.planetPositions.find { it.planet == Planet.MOON }
             ?: throw IllegalArgumentException("Moon position required")
 
-        val moonNakshatra = Nakshatra.fromLongitude(moonPosition.longitude)
+        val (moonNakshatra, moonNakshatraIndex) = Nakshatra.fromLongitude(moonPosition.longitude)
         val moonProgressInNakshatra = (moonPosition.longitude % (360.0 / 27.0)) / (360.0 / 27.0)
 
-        val startingLord = NAKSHATRA_LORD_ASHTOTTARI[moonNakshatra]
+        val startingLord = NAKSHATRA_LORD_ASHTOTTARI[moonNakshatra] as? Planet
             ?: Planet.SUN
 
         val startingPeriod = ASHTOTTARI_PERIODS[startingLord] ?: 6.0
@@ -535,7 +536,7 @@ object AshtottariDashaCalculator {
      */
     fun compareWithVimsottari(
         chart: VedicChart,
-        vimsottariResult: DashaPeriod
+        vimsottariResult: DashaCalculator.Mahadasha
     ): DashaComparison {
         val ashtottariResult = calculateAshtottariDasha(chart)
 
