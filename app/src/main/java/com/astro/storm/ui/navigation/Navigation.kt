@@ -408,8 +408,13 @@ fun AstroStormNavigation(
 
             BirthChartScreen(
                 chart = currentChart,
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() }
+                chartRenderer = viewModel.chartRenderer,
+                onBack = { navController.popBackStack() },
+                onCopyToClipboard = {
+                    currentChart?.let {
+                        viewModel.copyChartToClipboard(it)
+                    }
+                }
             )
         }
 

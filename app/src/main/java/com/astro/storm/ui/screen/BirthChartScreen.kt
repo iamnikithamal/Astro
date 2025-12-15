@@ -72,12 +72,16 @@ import com.astro.storm.ui.viewmodel.ChartViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+// Performance Optimization: Pass specific, stable parameters instead of the entire ViewModel.
+// This makes the Composable's inputs more stable, allowing Compose to skip
+// unnecessary recompositions more effectively.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BirthChartScreen(
     chart: VedicChart?,
-    viewModel: ChartViewModel,
-    onBack: () -> Unit
+    chartRenderer: ChartRenderer,
+    onBack: () -> Unit,
+    onCopyToClipboard: () -> Unit
 ) {
     if (chart == null) {
         EmptyChartScreen(
@@ -89,7 +93,6 @@ fun BirthChartScreen(
     }
 
     val hapticFeedback = LocalHapticFeedback.current
-    val chartRenderer = viewModel.chartRenderer
     val ascendantLabel = stringResource(StringKey.CHART_ASCENDANT)
 
     var showFullScreenChart by remember { mutableStateOf(false) }
@@ -152,7 +155,7 @@ fun BirthChartScreen(
                 },
                 onCopyToClipboard = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.copyChartToClipboard(chart)
+                    onCopyToClipboard()
                 }
             )
         }
