@@ -62,18 +62,11 @@ fun LocationSearchField(
     onLocationSelected: (location: String, latitude: Double, longitude: Double) -> Unit,
     modifier: Modifier = Modifier,
     label: String = stringResource(StringKey.LOCATION_SEARCH),
-    placeholder: String = stringResource(StringKey.LOCATION_PLACEHOLDER)
+    placeholder: String = stringResource(StringKey.LOCATION_PLACEHOLDER),
+    searchState: LocationSearchState = rememberLocationSearchState()
 ) {
     val focusManager = LocalFocusManager.current
-
-    var searchResults by remember { mutableStateOf<List<GeocodingService.GeocodingResult>>(emptyList()) }
-    var isSearching by remember { mutableStateOf(false) }
-    var showResults by remember { mutableStateOf(false) }
-    var errorType by remember { mutableStateOf(SearchErrorType.NONE) }
-    var networkErrorMessage by remember { mutableStateOf<String?>(null) }
-    var hasFocus by remember { mutableStateOf(false) }
-
-    val searchQueryFlow = remember { MutableStateFlow("") }
+    var hasFocus by remember { mutableState of(false) }
 
     // Pre-fetch localized error strings for display
     val rateLimitText = stringResource(StringKey.ERROR_RATE_LIMIT)
@@ -81,59 +74,24 @@ fun LocationSearchField(
     val clearSearchText = stringResource(StringKey.LOCATION_CLEAR)
 
     // Compute the display error message from error type
-    val errorMessage = when (errorType) {
+    val errorMessage = when (searchState.errorType) {
         SearchErrorType.NONE -> null
-        SearchErrorType.NETWORK -> networkErrorMessage
+        SearchErrorType.NETWORK -> searchState.networkErrorMessage
         SearchErrorType.RATE_LIMIT -> rateLimitText
         SearchErrorType.GENERIC -> searchFailedText
     }
 
-    LaunchedEffect(value) {
-        searchQueryFlow.emit(value)
-    }
-
-    LaunchedEffect(Unit) {
-        searchQueryFlow
+    LaunchedEffect(searchState) {
+        snapshotFlow { value }
             .debounce(400)
             .distinctUntilChanged()
-            .filter { it.length >= 3 }
             .collectLatest { query ->
-                isSearching = true
-                errorType = SearchErrorType.NONE
-                networkErrorMessage = null
-
-                val result = GeocodingService.searchLocation(query, limit = 6)
-                result.onSuccess { results ->
-                    searchResults = results
-                    showResults = results.isNotEmpty() && hasFocus
-                }.onFailure { error ->
-                    when (error) {
-                        is GeocodingService.GeocodingError.NetworkError -> {
-                            errorType = SearchErrorType.NETWORK
-                            networkErrorMessage = error.message
-                        }
-                        is GeocodingService.GeocodingError.RateLimitExceeded -> {
-                            errorType = SearchErrorType.RATE_LIMIT
-                        }
-                        else -> {
-                            errorType = SearchErrorType.GENERIC
-                        }
-                    }
-                    searchResults = emptyList()
-                    showResults = false
+                if (query.length >= 3) {
+                    searchState.search(query)
+                } else {
+                    searchState.clear()
                 }
-
-                isSearching = false
             }
-    }
-
-    LaunchedEffect(value) {
-        if (value.length < 3) {
-            searchResults = emptyList()
-            showResults = false
-            errorType = SearchErrorType.NONE
-            networkErrorMessage = null
-        }
     }
 
     Column(modifier = modifier) {
@@ -155,7 +113,7 @@ fun LocationSearchField(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(end = 4.dp)
                 ) {
-                    AnimatedVisibility(visible = isSearching) {
+                    AnimatedVisibility(visible = searchState.isSearching) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .size(20.dp)
@@ -164,14 +122,11 @@ fun LocationSearchField(
                             strokeWidth = 2.dp
                         )
                     }
-                    AnimatedVisibility(visible = value.isNotEmpty() && !isSearching) {
+                    AnimatedVisibility(visible = value.isNotEmpty() && !searchState.isSearching) {
                         IconButton(
                             onClick = {
                                 onValueChange("")
-                                searchResults = emptyList()
-                                showResults = false
-                                errorType = SearchErrorType.NONE
-                                networkErrorMessage = null
+                                searchState.clear()
                             },
                             modifier = Modifier.size(36.dp)
                         ) {
@@ -189,9 +144,6 @@ fun LocationSearchField(
                 .fillMaxWidth()
                 .onFocusChanged { focusState: FocusState ->
                     hasFocus = focusState.isFocused
-                    if (focusState.isFocused && searchResults.isNotEmpty()) {
-                        showResults = true
-                    }
                 },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -221,7 +173,7 @@ fun LocationSearchField(
         }
 
         AnimatedVisibility(
-            visible = showResults && searchResults.isNotEmpty(),
+            visible = hasFocus && searchState.results.isNotEmpty(),
             enter = fadeIn() + slideInVertically { -it / 4 },
             exit = fadeOut() + slideOutVertically { -it / 4 }
         ) {
@@ -240,7 +192,7 @@ fun LocationSearchField(
                         .heightIn(max = 280.dp)
                 ) {
                     itemsIndexed(
-                        items = searchResults,
+                        items = searchState.results,
                         key = { index, result -> "${result.latitude}_${result.longitude}_$index" }
                     ) { index, result ->
                         LocationResultItem(
@@ -249,12 +201,12 @@ fun LocationSearchField(
                                 val formattedName = result.formattedShortName
                                 onValueChange(formattedName)
                                 onLocationSelected(formattedName, result.latitude, result.longitude)
-                                showResults = false
+                                searchState.clear()
                                 focusManager.clearFocus()
                             }
                         )
 
-                        if (index < searchResults.lastIndex) {
+                        if (index < searchState.results.lastIndex) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 thickness = 0.5.dp,
