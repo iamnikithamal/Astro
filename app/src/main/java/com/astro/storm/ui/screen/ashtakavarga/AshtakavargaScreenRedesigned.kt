@@ -421,7 +421,7 @@ private fun AshtakavargaSummaryCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { (strengthPercent / 100f).coerceIn(0f, 1f) },
+                        progress = { (strengthPercent / 100.0).toFloat().coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)

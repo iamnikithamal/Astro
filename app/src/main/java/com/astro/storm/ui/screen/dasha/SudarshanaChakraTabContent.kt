@@ -272,7 +272,7 @@ private fun SudarshanaCurrentYearCard(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             LinearProgressIndicator(
-                                progress = { (currentYearData.combinedStrength / 100f).coerceIn(0f, 1f) },
+                                progress = { (currentYearData.combinedStrength / 100.0).toFloat().coerceIn(0f, 1f) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(8.dp)
