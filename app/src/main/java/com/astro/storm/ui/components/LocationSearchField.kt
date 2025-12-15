@@ -294,6 +294,7 @@ private fun LocationResultItem(
     }
 }
 
+
 @Stable
 class LocationSearchState {
     var isSearching by mutableStateOf(false)

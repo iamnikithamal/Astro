@@ -1,6 +1,7 @@
 package com.astro.storm.ephemeris
 
 import android.content.Context
+import android.util.LruCache
 import android.util.Log
 import com.astro.storm.data.model.BirthData
 import com.astro.storm.data.model.HouseSystem
@@ -44,7 +45,7 @@ enum class AyanamsaType(
     FAGAN_BRADLEY(SweConst.SE_SIDM_FAGAN_BRADLEY, "Fagan-Bradley");
 }
 
-class SwissEphemerisEngine private constructor(
+class SwissEphemerisEngine internal constructor(
     private val swissEph: SwissEph,
     private val ephemerisPath: String,
     private val ayanamsaType: AyanamsaType,
@@ -65,6 +66,8 @@ class SwissEphemerisEngine private constructor(
     } else {
         BASE_CALC_FLAGS
     }
+
+    private val calculationCache = LruCache<String, VedicChart>(10)
 
     companion object {
         private const val TAG = "SwissEphemerisEngine"
@@ -97,14 +100,26 @@ class SwissEphemerisEngine private constructor(
         private val JPL_EPHEMERIS_PATTERN = Regex("^de\\d{3}[ls]?\\.eph$", RegexOption.IGNORE_CASE)
         private val SWISS_EPHEMERIS_PATTERN = Regex("^se.*\\.se1$", RegexOption.IGNORE_CASE)
 
+        @Volatile
+        private var instance: SwissEphemerisEngine? = null
+
         @JvmStatic
         @JvmOverloads
-        fun create(
+        fun getInstance(
+            context: Context,
+            ayanamsaType: AyanamsaType = AyanamsaType.LAHIRI
+        ): SwissEphemerisEngine =
+            instance ?: synchronized(this) {
+                instance ?: create(context.applicationContext, ayanamsaType).also {
+                    instance = it
+                }
+            }
+
+        private fun create(
             context: Context,
             ayanamsaType: AyanamsaType = AyanamsaType.LAHIRI
         ): SwissEphemerisEngine {
-            val appContext = context.applicationContext
-            val ephemerisDir = File(appContext.filesDir, EPHEMERIS_SUBDIR)
+            val ephemerisDir = File(context.filesDir, EPHEMERIS_SUBDIR)
 
             if (!ephemerisDir.exists() && !ephemerisDir.mkdirs()) {
                 throw EphemerisInitializationException(
@@ -112,7 +127,7 @@ class SwissEphemerisEngine private constructor(
                 )
             }
 
-            copyEphemerisFilesFromAssets(appContext, ephemerisDir)
+            copyEphemerisFilesFromAssets(context, ephemerisDir)
 
             val hasHighPrecision = hasHighPrecisionEphemeris(ephemerisDir)
             if (hasHighPrecision) {
@@ -220,9 +235,26 @@ class SwissEphemerisEngine private constructor(
         validateBirthData(birthData)
         ensureOpen()
 
-        return lock.write {
-            performChartCalculation(birthData, houseSystem)
+        val cacheKey = getCacheKey(birthData, houseSystem)
+        val cachedChart = calculationCache.get(cacheKey)
+        if (cachedChart != null) {
+            Log.d(TAG, "Chart cache hit for key: $cacheKey")
+            return cachedChart
         }
+
+        Log.d(TAG, "Chart cache miss for key: $cacheKey, calculating...")
+        return lock.write {
+            // Double-check cache inside lock to prevent race conditions
+            calculationCache.get(cacheKey)?.let { return@write it }
+
+            val newChart = performChartCalculation(birthData, houseSystem)
+            calculationCache.put(cacheKey, newChart)
+            newChart
+        }
+    }
+
+    private fun getCacheKey(birthData: BirthData, houseSystem: HouseSystem): String {
+        return "${birthData.dateTime}_${birthData.latitude}_${birthData.longitude}_${birthData.timezone}_${houseSystem.name}_$ayanamsaType"
     }
 
     fun calculatePlanetPosition(
