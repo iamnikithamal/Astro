@@ -179,12 +179,17 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
      * Copy chart plaintext to clipboard
      */
     fun copyChartToClipboard(chart: VedicChart) {
-        try {
-            val plaintext = ExportUtils.getChartPlaintext(chart)
-            ExportUtils.copyToClipboard(getApplication(), plaintext, "Vedic Chart Data")
-            _uiState.value = ChartUiState.Exported("Chart data copied to clipboard")
-        } catch (e: Exception) {
-            _uiState.value = ChartUiState.Error("Failed to copy: ${e.message}")
+        viewModelScope.launch(singleThreadContext) {
+            try {
+                // Heavy string formatting moved to a background thread
+                val plaintext = withContext(Dispatchers.Default) {
+                    ExportUtils.getChartPlaintext(chart)
+                }
+                ExportUtils.copyToClipboard(getApplication(), plaintext, "Vedic Chart Data")
+                _uiState.value = ChartUiState.Exported("Chart data copied to clipboard")
+            } catch (e: Exception) {
+                _uiState.value = ChartUiState.Error("Failed to copy: ${e.message}")
+            }
         }
     }
 

@@ -80,13 +80,13 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun isCacheValid(chart: VedicChart, today: LocalDate): Boolean {
-        val chartId = getChartId(chart)
-        val cached = cachedData ?: return false
-        return cachedChartId == chartId &&
-               cachedDate == today &&
-               cached.todayHoroscope != null &&
-               cached.weeklyHoroscope != null
+    private fun isCacheValid(chartId: String, today: LocalDate): Boolean {
+        return cachedData?.let {
+            cachedChartId == chartId &&
+            cachedDate == today &&
+            it.todayHoroscope != null &&
+            it.weeklyHoroscope != null
+        } ?: false
     }
 
     fun loadInsights(chart: VedicChart?) {
@@ -96,8 +96,9 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
         }
 
         val today = LocalDate.now()
+        val chartId = getChartId(chart)
 
-        if (isCacheValid(chart, today)) {
+        if (isCacheValid(chartId, today)) {
             cachedData?.let {
                 _uiState.value = InsightsUiState.Success(it)
                 return
@@ -111,35 +112,23 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
 
             try {
                 val errors = ConcurrentLinkedQueue<InsightError>()
-                val chartId = getChartId(chart)
 
-                val (dashaTimeline, todayHoroscope) = loadEssentialData(chart, today, errors)
+                val loadedData = loadInsightsData(chart, today, errors)
 
                 ensureActive()
 
-                if (todayHoroscope == null && dashaTimeline == null) {
+                if (loadedData.todayHoroscope == null && loadedData.dashaTimeline == null) {
                     _uiState.value = InsightsUiState.Error("Failed to load essential insights. Please try again.")
                     return@launch
                 }
 
-                val initialData = InsightsData(
+                val finalData = InsightsData(
                     chart = chart,
-                    dashaTimeline = dashaTimeline,
-                    planetaryInfluences = todayHoroscope?.planetaryInfluences ?: emptyList(),
-                    todayHoroscope = todayHoroscope,
-                    tomorrowHoroscope = null,
-                    weeklyHoroscope = null,
-                    errors = errors.toList()
-                )
-                _uiState.value = InsightsUiState.Success(initialData)
-
-                val (tomorrowHoroscope, weeklyHoroscope) = loadSecondaryData(chart, today, errors)
-
-                ensureActive()
-
-                val finalData = initialData.copy(
-                    tomorrowHoroscope = tomorrowHoroscope,
-                    weeklyHoroscope = weeklyHoroscope,
+                    dashaTimeline = loadedData.dashaTimeline,
+                    planetaryInfluences = loadedData.todayHoroscope?.planetaryInfluences ?: emptyList(),
+                    todayHoroscope = loadedData.todayHoroscope,
+                    tomorrowHoroscope = loadedData.tomorrowHoroscope,
+                    weeklyHoroscope = loadedData.weeklyHoroscope,
                     errors = errors.toList()
                 )
 
@@ -158,19 +147,25 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private suspend fun loadEssentialData(
+    private data class LoadedInsights(
+        val dashaTimeline: DashaCalculator.DashaTimeline?,
+        val todayHoroscope: HoroscopeCalculator.DailyHoroscope?,
+        val tomorrowHoroscope: HoroscopeCalculator.DailyHoroscope?,
+        val weeklyHoroscope: HoroscopeCalculator.WeeklyHoroscope?
+    )
+
+    private suspend fun loadInsightsData(
         chart: VedicChart,
         today: LocalDate,
         errors: ConcurrentLinkedQueue<InsightError>
-    ): Pair<DashaCalculator.DashaTimeline?, HoroscopeCalculator.DailyHoroscope?> {
+    ): LoadedInsights {
         return withContext(Dispatchers.Default) {
             coroutineScope {
                 val dashaDeferred = async {
                     try {
                         DashaCalculator.calculateDashaTimeline(chart)
-                    } catch (e: CancellationException) {
-                        throw e
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Log.e(TAG, "Dasha calculation failed", e)
                         errors.add(InsightError(InsightErrorType.DASHA, "Dasha calculation failed: ${e.message}"))
                         null
@@ -180,33 +175,19 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
                 val todayDeferred = async {
                     try {
                         horoscopeCalculator.calculateDailyHoroscope(chart, today)
-                    } catch (e: CancellationException) {
-                        throw e
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Log.e(TAG, "Today's horoscope calculation failed", e)
                         errors.add(InsightError(InsightErrorType.TODAY_HOROSCOPE, "Today's horoscope failed: ${e.message}"))
                         null
                     }
                 }
 
-                Pair(dashaDeferred.await(), todayDeferred.await())
-            }
-        }
-    }
-
-    private suspend fun loadSecondaryData(
-        chart: VedicChart,
-        today: LocalDate,
-        errors: ConcurrentLinkedQueue<InsightError>
-    ): Pair<HoroscopeCalculator.DailyHoroscope?, HoroscopeCalculator.WeeklyHoroscope?> {
-        return withContext(Dispatchers.Default) {
-            supervisorScope {
                 val tomorrowDeferred = async {
                     try {
                         horoscopeCalculator.calculateDailyHoroscope(chart, today.plusDays(1))
-                    } catch (e: CancellationException) {
-                        throw e
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Log.e(TAG, "Tomorrow's horoscope calculation failed", e)
                         errors.add(InsightError(InsightErrorType.TOMORROW_HOROSCOPE, "Tomorrow's horoscope failed"))
                         null
@@ -216,16 +197,20 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
                 val weeklyDeferred = async {
                     try {
                         horoscopeCalculator.calculateWeeklyHoroscope(chart, today)
-                    } catch (e: CancellationException) {
-                        throw e
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Log.e(TAG, "Weekly horoscope calculation failed", e)
                         errors.add(InsightError(InsightErrorType.WEEKLY_HOROSCOPE, "Weekly horoscope failed"))
                         null
                     }
                 }
 
-                Pair(tomorrowDeferred.await(), weeklyDeferred.await())
+                LoadedInsights(
+                    dashaTimeline = dashaDeferred.await(),
+                    todayHoroscope = todayDeferred.await(),
+                    tomorrowHoroscope = tomorrowDeferred.await(),
+                    weeklyHoroscope = weeklyDeferred.await()
+                )
             }
         }
     }
