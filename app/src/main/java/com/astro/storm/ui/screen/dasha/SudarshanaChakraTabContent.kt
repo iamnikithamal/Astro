@@ -63,7 +63,8 @@ import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.model.ZodiacSign
-import com.astro.storm.ephemeris.SudarshanaChakraDashaCalculator
+import com.astro.storm.ephemeris.SudarshanaTimeline
+import com.astro.storm.ephemeris.YearlyAnalysis
 import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import com.astro.storm.ui.theme.AppTheme
 import java.time.LocalDate
@@ -80,7 +81,7 @@ import java.time.format.DateTimeFormatter
  */
 @Composable
 fun SudarshanaChakraTabContent(
-    timeline: SudarshanaChakraDashaCalculator.SudarshanaTimeline
+    timeline: SudarshanaTimeline
 ) {
     var showInfoExpanded by rememberSaveable { mutableStateOf(false) }
     var expandedYears by rememberSaveable { mutableStateOf(setOf<Int>()) }
@@ -160,7 +161,7 @@ fun SudarshanaChakraTabContent(
 
 @Composable
 private fun SudarshanaCurrentYearCard(
-    timeline: SudarshanaChakraDashaCalculator.SudarshanaTimeline
+    timeline: SudarshanaTimeline
 ) {
     val currentYear = LocalDate.now().year
     val currentYearData = timeline.yearlyAnalysis.find { it.year == currentYear }
@@ -407,7 +408,7 @@ private fun ReferencePointCard(
 
 @Composable
 private fun SudarshanaTripleReferenceCard(
-    timeline: SudarshanaChakraDashaCalculator.SudarshanaTimeline
+    timeline: SudarshanaTimeline
 ) {
     val language = LocalLanguage.current
 
@@ -687,7 +688,7 @@ private fun PerspectiveInfoRow(
 
 @Composable
 private fun SudarshanaYearCard(
-    yearData: SudarshanaChakraDashaCalculator.YearlyAnalysis,
+    yearData: YearlyAnalysis,
     isCurrent: Boolean,
     isExpanded: Boolean,
     onToggleExpand: (Boolean) -> Unit

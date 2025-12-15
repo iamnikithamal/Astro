@@ -386,14 +386,14 @@ private fun TodaySummaryCard(
             ) {
                 PanchangaQuickItem(
                     label = "Tithi",
-                    value = panchanga.tithi.displayName,
+                    value = panchanga.tithi.tithi.displayName,
                     icon = Icons.Outlined.DarkMode,
                     color = AppTheme.LifeAreaLove,
                     modifier = Modifier.weight(1f)
                 )
                 PanchangaQuickItem(
                     label = "Nakshatra",
-                    value = panchanga.nakshatra.displayName,
+                    value = panchanga.nakshatra.nakshatra.displayName,
                     icon = Icons.Outlined.Star,
                     color = AppTheme.AccentGold,
                     modifier = Modifier.weight(1f)
@@ -408,14 +408,14 @@ private fun TodaySummaryCard(
             ) {
                 PanchangaQuickItem(
                     label = "Yoga",
-                    value = panchanga.yoga,
+                    value = panchanga.yoga.yoga.displayName,
                     icon = Icons.Outlined.LightMode,
                     color = AppTheme.AccentTeal,
                     modifier = Modifier.weight(1f)
                 )
                 PanchangaQuickItem(
                     label = "Karana",
-                    value = panchanga.karana,
+                    value = panchanga.karana.karana.displayName,
                     icon = Icons.Outlined.Schedule,
                     color = AppTheme.LifeAreaSpiritual,
                     modifier = Modifier.weight(1f)
@@ -493,8 +493,8 @@ private fun FiveLimbsCard(
                 number = 1,
                 name = "Tithi",
                 sanskrit = "तिथि",
-                value = panchanga.tithi.displayName,
-                description = "Lunar day (${panchanga.tithi.paksha})",
+                value = panchanga.tithi.tithi.displayName,
+                description = "Lunar day (${panchanga.paksha.displayName})",
                 color = AppTheme.LifeAreaLove
             )
 
@@ -505,7 +505,7 @@ private fun FiveLimbsCard(
                 number = 2,
                 name = "Vara",
                 sanskrit = "वार",
-                value = panchanga.vara,
+                value = panchanga.vara.displayName,
                 description = "Weekday, ruled by specific planet",
                 color = AppTheme.AccentPrimary
             )
@@ -517,8 +517,8 @@ private fun FiveLimbsCard(
                 number = 3,
                 name = "Nakshatra",
                 sanskrit = "नक्षत्र",
-                value = panchanga.nakshatra.displayName,
-                description = "Lunar mansion (Pada ${panchanga.nakshatraPada})",
+                value = panchanga.nakshatra.nakshatra.displayName,
+                description = "Lunar mansion (Pada ${panchanga.nakshatra.pada})",
                 color = AppTheme.AccentGold
             )
 
@@ -529,7 +529,7 @@ private fun FiveLimbsCard(
                 number = 4,
                 name = "Yoga",
                 sanskrit = "योग",
-                value = panchanga.yoga,
+                value = panchanga.yoga.yoga.displayName,
                 description = "Auspicious combination",
                 color = AppTheme.AccentTeal
             )
@@ -541,7 +541,7 @@ private fun FiveLimbsCard(
                 number = 5,
                 name = "Karana",
                 sanskrit = "करण",
-                value = panchanga.karana,
+                value = panchanga.karana.karana.displayName,
                 description = "Half of a tithi",
                 color = AppTheme.LifeAreaSpiritual
             )
@@ -637,10 +637,10 @@ private fun AuspiciousTimingCard(
                 modifier = Modifier.padding(bottom = 14.dp)
             )
 
-            // Rahu Kaal
+            // Rahu Kaal - calculated from sunrise/sunset
             TimingRow(
                 label = "Rahu Kaal",
-                value = panchanga.rahuKaal ?: "Not available",
+                value = "Calculate based on day",
                 isInauspicious = true
             )
 
@@ -649,7 +649,7 @@ private fun AuspiciousTimingCard(
             // Yamagandam
             TimingRow(
                 label = "Yamagandam",
-                value = panchanga.yamagandam ?: "Not available",
+                value = "Calculate based on day",
                 isInauspicious = true
             )
 
@@ -658,7 +658,7 @@ private fun AuspiciousTimingCard(
             // Gulika Kaal
             TimingRow(
                 label = "Gulika Kaal",
-                value = panchanga.gulikaKaal ?: "Not available",
+                value = "Calculate based on day",
                 isInauspicious = true
             )
 
@@ -667,7 +667,7 @@ private fun AuspiciousTimingCard(
             // Abhijit Muhurta
             TimingRow(
                 label = "Abhijit Muhurta",
-                value = panchanga.abhijitMuhurta ?: "Not available",
+                value = "Midday hour",
                 isInauspicious = false
             )
         }
@@ -770,9 +770,9 @@ private fun SunMoonCard(
                             color = AppTheme.PlanetSun
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        SunMoonTimeRow(label = "Rise", time = panchanga.sunRise ?: "N/A")
+                        SunMoonTimeRow(label = "Rise", time = panchanga.sunrise)
                         Spacer(modifier = Modifier.height(4.dp))
-                        SunMoonTimeRow(label = "Set", time = panchanga.sunSet ?: "N/A")
+                        SunMoonTimeRow(label = "Set", time = panchanga.sunset)
                     }
                 }
 
@@ -800,9 +800,9 @@ private fun SunMoonCard(
                             color = AppTheme.LifeAreaLove
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        SunMoonTimeRow(label = "Rise", time = panchanga.moonRise ?: "N/A")
+                        SunMoonTimeRow(label = "Rise", time = "N/A")
                         Spacer(modifier = Modifier.height(4.dp))
-                        SunMoonTimeRow(label = "Set", time = panchanga.moonSet ?: "N/A")
+                        SunMoonTimeRow(label = "Set", time = "N/A")
                     }
                 }
             }
@@ -975,7 +975,7 @@ private fun BirthSummaryCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${panchanga.vara} - ${panchanga.tithi.displayName}",
+                        text = "${panchanga.vara.displayName} - ${panchanga.tithi.tithi.displayName}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = AppTheme.AccentGold
@@ -1058,8 +1058,8 @@ private fun PanchangaElementsContent(
                 description = "The lunar day, calculated based on the angular distance between the Sun and Moon. Each tithi represents 12 degrees of lunar motion. There are 30 tithis in a lunar month, divided into Shukla (waxing) and Krishna (waning) Paksha.",
                 significance = "Determines the nature of activities suitable for the day. Some tithis like Purnima (full moon) and Amavasya (new moon) have special significance.",
                 color = AppTheme.LifeAreaLove,
-                currentValue = todayPanchanga?.tithi?.displayName,
-                birthValue = birthPanchanga?.tithi?.displayName
+                currentValue = todayPanchanga?.tithi?.tithi?.displayName,
+                birthValue = birthPanchanga?.tithi?.tithi?.displayName
             )
         }
 
@@ -1071,8 +1071,8 @@ private fun PanchangaElementsContent(
                 description = "The weekday, each ruled by a specific planet. The planetary ruler influences the nature and appropriate activities for that day.",
                 significance = "Each vara has specific activities that are considered favorable. For example, Sunday is good for authority matters, Monday for emotional work.",
                 color = AppTheme.AccentPrimary,
-                currentValue = todayPanchanga?.vara,
-                birthValue = birthPanchanga?.vara
+                currentValue = todayPanchanga?.vara?.displayName,
+                birthValue = birthPanchanga?.vara?.displayName
             )
         }
 
@@ -1084,8 +1084,8 @@ private fun PanchangaElementsContent(
                 description = "The lunar mansion where the Moon resides. There are 27 nakshatras, each spanning 13°20' of the zodiac. Each nakshatra has a ruling deity and planet.",
                 significance = "Birth nakshatra determines personality traits and compatibility. Moon's nakshatra is crucial for muhurta selection.",
                 color = AppTheme.AccentGold,
-                currentValue = todayPanchanga?.nakshatra?.displayName,
-                birthValue = birthPanchanga?.nakshatra?.displayName
+                currentValue = todayPanchanga?.nakshatra?.nakshatra?.displayName,
+                birthValue = birthPanchanga?.nakshatra?.nakshatra?.displayName
             )
         }
 
@@ -1097,8 +1097,8 @@ private fun PanchangaElementsContent(
                 description = "Calculated from the combined longitudes of Sun and Moon. There are 27 yogas, each with specific qualities ranging from highly auspicious to inauspicious.",
                 significance = "Yogas indicate the general nature of results from activities undertaken. Siddha, Amrita, and Shubha yogas are highly favorable.",
                 color = AppTheme.AccentTeal,
-                currentValue = todayPanchanga?.yoga,
-                birthValue = birthPanchanga?.yoga
+                currentValue = todayPanchanga?.yoga?.yoga?.displayName,
+                birthValue = birthPanchanga?.yoga?.yoga?.displayName
             )
         }
 
@@ -1110,8 +1110,8 @@ private fun PanchangaElementsContent(
                 description = "Half of a tithi, there are 11 karanas total. Seven are movable and four are fixed. Each karana has its own nature and suitable activities.",
                 significance = "Karanas fine-tune the effects of tithis. Movable karanas recur throughout the month while fixed ones appear only once.",
                 color = AppTheme.LifeAreaSpiritual,
-                currentValue = todayPanchanga?.karana,
-                birthValue = birthPanchanga?.karana
+                currentValue = todayPanchanga?.karana?.karana?.displayName,
+                birthValue = birthPanchanga?.karana?.karana?.displayName
             )
         }
 
@@ -1386,10 +1386,10 @@ private fun PanchangaInfoDialog(onDismiss: () -> Unit) {
 
 private fun getBirthDayInterpretation(panchanga: PanchangaData): String {
     return buildString {
-        append("Born on ${panchanga.vara}, under the ${panchanga.nakshatra.displayName} nakshatra ")
-        append("during ${panchanga.tithi.displayName} tithi. ")
-        append("\n\nThe ${panchanga.yoga} yoga was active, indicating ")
-        when (panchanga.yoga.lowercase()) {
+        append("Born on ${panchanga.vara.displayName}, under the ${panchanga.nakshatra.nakshatra.displayName} nakshatra ")
+        append("during ${panchanga.tithi.tithi.displayName} tithi. ")
+        append("\n\nThe ${panchanga.yoga.yoga.displayName} yoga was active, indicating ")
+        when (panchanga.yoga.yoga.displayName.lowercase()) {
             "vishkumbh", "atiganda", "shool", "vyaghata", "vajra", "paridh" ->
                 append("challenges to overcome but also strength building opportunities. ")
             "siddha", "shubha", "amrita", "sukarma" ->
@@ -1397,6 +1397,6 @@ private fun getBirthDayInterpretation(panchanga: PanchangaData): String {
             else ->
                 append("moderate influences that support balanced development. ")
         }
-        append("The ${panchanga.karana} karana further refines these birth energies.")
+        append("The ${panchanga.karana.karana.displayName} karana further refines these birth energies.")
     }
 }

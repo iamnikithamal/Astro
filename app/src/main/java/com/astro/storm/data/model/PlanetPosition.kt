@@ -18,6 +18,20 @@ data class PlanetPosition(
     val nakshatraPada: Int,
     val house: Int
 ) {
+    /** Formatted degree string (e.g., "12°34'56\"") */
+    val formattedDegree: String
+        get() {
+            val degreeInSign = longitude % 30.0
+            val deg = degreeInSign.toInt()
+            val min = ((degreeInSign - deg) * 60).toInt()
+            val sec = ((((degreeInSign - deg) * 60) - min) * 60).toInt()
+            return "${deg}° ${min}' ${sec}\""
+        }
+
+    /** Alias for house property for transit context */
+    val houseTransit: Int
+        get() = house
+
     fun toFormattedString(): String {
         val degreeInSign = longitude % 30.0
         val deg = degreeInSign.toInt()

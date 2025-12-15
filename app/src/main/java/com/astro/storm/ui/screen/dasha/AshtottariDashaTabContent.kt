@@ -60,11 +60,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.Planet
-import com.astro.storm.ephemeris.AshtottariDashaCalculator
+import com.astro.storm.ephemeris.AshtottariAntardasha
+import com.astro.storm.ephemeris.AshtottariMahadasha
+import com.astro.storm.ephemeris.AshtottariTimeline
 import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import com.astro.storm.ui.theme.AppTheme
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -79,7 +83,7 @@ import java.time.temporal.ChronoUnit
  */
 @Composable
 fun AshtottariDashaTabContent(
-    timeline: AshtottariDashaCalculator.AshtottariTimeline
+    timeline: AshtottariTimeline
 ) {
     val language = LocalLanguage.current
     var expandedMahadashaKeys by rememberSaveable { mutableStateOf(setOf<String>()) }
@@ -115,7 +119,7 @@ fun AshtottariDashaTabContent(
         // Mahadasha List
         items(
             items = timeline.mahadashas,
-            key = { md: AshtottariDashaCalculator.AshtottariMahadasha -> "ashtottari_md_${md.planet.symbol}_${md.startDate}" }
+            key = { md: AshtottariMahadasha -> "ashtottari_md_${md.planet.symbol}_${md.startDate}" }
         ) { mahadasha ->
             val mdKey = "${mahadasha.planet.symbol}_${mahadasha.startDate}"
             val isCurrent = mahadasha == timeline.currentMahadasha
@@ -143,7 +147,7 @@ fun AshtottariDashaTabContent(
 
 @Composable
 private fun AshtottariCurrentPeriodCard(
-    timeline: AshtottariDashaCalculator.AshtottariTimeline
+    timeline: AshtottariTimeline
 ) {
     val language = LocalLanguage.current
     val currentMD = timeline.currentMahadasha
@@ -199,7 +203,7 @@ private fun AshtottariCurrentPeriodCard(
                     )
                     if (currentMD != null && currentAD != null) {
                         Text(
-                            text = "${currentMD.planet.getLocalizedName(language)} - ${currentAD.planet.getLocalizedName(language)}",
+                            text = "${currentMD.planet.getLocalizedName(language)} - ${currentAD.antardashaLord.getLocalizedName(language)}",
                             fontSize = 12.sp,
                             color = AppTheme.TextMuted,
                             fontWeight = FontWeight.Medium
@@ -356,8 +360,8 @@ private fun AshtottariCurrentPeriodCard(
 private fun AshtottariPeriodRow(
     label: String,
     planet: Planet,
-    startDate: LocalDate,
-    endDate: LocalDate,
+    startDate: LocalDateTime,
+    endDate: LocalDateTime,
     progress: Float,
     isMain: Boolean
 ) {
@@ -602,10 +606,10 @@ private fun PeriodDurationRow(planet: Planet, years: Int) {
 
 @Composable
 private fun AshtottariTimelineCard(
-    timeline: AshtottariDashaCalculator.AshtottariTimeline
+    timeline: AshtottariTimeline
 ) {
     val language = LocalLanguage.current
-    val today = LocalDate.now()
+    val today = LocalDateTime.now()
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -743,8 +747,8 @@ private fun AshtottariTimelineCard(
 
 @Composable
 private fun AshtottariMahadashaCard(
-    mahadasha: AshtottariDashaCalculator.AshtottariMahadasha,
-    currentAntardasha: AshtottariDashaCalculator.AshtottariAntardasha?,
+    mahadasha: AshtottariMahadasha,
+    currentAntardasha: AshtottariAntardasha?,
     isCurrent: Boolean,
     isExpanded: Boolean,
     onToggleExpand: (Boolean) -> Unit
@@ -894,13 +898,13 @@ private fun AshtottariMahadashaCard(
 
 @Composable
 private fun AshtottariAntardashaRow(
-    antardasha: AshtottariDashaCalculator.AshtottariAntardasha,
+    antardasha: AshtottariAntardasha,
     mahadashaPlanet: Planet,
     isCurrent: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val planetColor = ChartDetailColors.getPlanetColor(antardasha.planet)
-    val today = LocalDate.now()
+    val planetColor = ChartDetailColors.getPlanetColor(antardasha.antardashaLord)
+    val today = LocalDateTime.now()
     val isPast = antardasha.endDate.isBefore(today)
     val language = LocalLanguage.current
 
@@ -932,7 +936,7 @@ private fun AshtottariAntardashaRow(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = antardasha.planet.symbol,
+                    text = antardasha.antardashaLord.symbol,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -942,7 +946,7 @@ private fun AshtottariAntardashaRow(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "${mahadashaPlanet.symbol}-${antardasha.planet.getLocalizedName(language)}",
+                        text = "${mahadashaPlanet.symbol}-${antardasha.antardashaLord.getLocalizedName(language)}",
                         fontSize = 13.sp,
                         fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                         color = when {
@@ -974,11 +978,11 @@ private fun AshtottariAntardashaRow(
     }
 }
 
-private fun formatDate(date: LocalDate): String {
+private fun formatDate(date: LocalDateTime): String {
     return date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
 }
 
-private fun formatShortDate(date: LocalDate): String {
+private fun formatShortDate(date: LocalDateTime): String {
     return date.format(DateTimeFormatter.ofPattern("MMM yyyy"))
 }
 

@@ -564,73 +564,6 @@ object AshtottariDashaCalculator {
         )
     }
 
-    /**
-     * Calculate Ashtottari Dasha for a chart
-     */
-    fun calculateAshtottariDasha(chart: VedicChart): AshtottariDashaResult {
-        val moonNakshatra = Nakshatra.fromLongitude(chart.planets[Planet.MOON]!!.longitude)
-        val startingLord = getStartingLord(moonNakshatra)
-
-        val mahadashas = generateMahadashas(chart.birthData.dateTime, startingLord)
-        val currentMahadasha = mahadashas.find { it.isCurrentlyRunning }
-
-        return AshtottariDashaResult(
-            applicability = AshtottariApplicability(
-                isApplicable = true,
-                reason = "Ashtottari Dasha applicable for this chart",
-                rahuFromLagnaLord = null
-            ),
-            moonNakshatra = moonNakshatra,
-            startingLord = startingLord,
-            balanceAtBirth = 0.0,
-            mahadashas = mahadashas,
-            currentMahadasha = currentMahadasha,
-            currentAntardasha = null,
-            interpretation = AshtottariInterpretation(
-                mahadashaEffects = emptyList(),
-                antardashaEffects = emptyList(),
-                combinedEffects = "Ashtottari Dasha analysis",
-                keyThemes = emptyList(),
-                recommendations = emptyList()
-            )
-        )
-    }
-
-    private fun generateMahadashas(birthDateTime: LocalDateTime, startingLord: Planet): List<AshtottariMahadasha> {
-        val mahadashas = mutableListOf<AshtottariMahadasha>()
-        var currentPlanet = startingLord
-        var currentStartDate = birthDateTime
-        val now = LocalDateTime.now()
-
-        for (i in 0 until 12) {
-            val periodYears = ASHTOTTARI_PERIODS[currentPlanet] ?: 12.0
-            val endDate = currentStartDate.plusYears(periodYears.toLong())
-
-            mahadashas.add(
-                AshtottariMahadasha(
-                    planet = currentPlanet,
-                    periodYears = periodYears,
-                    actualYears = periodYears,
-                    startDate = currentStartDate,
-                    endDate = endDate,
-                    isCurrentlyRunning = now.isAfter(currentStartDate) && now.isBefore(endDate)
-                )
-            )
-
-            currentStartDate = endDate
-            val currentIndex = ASHTOTTARI_SEQUENCE.indexOf(currentPlanet)
-            currentPlanet = ASHTOTTARI_SEQUENCE[(currentIndex + 1) % ASHTOTTARI_SEQUENCE.size]
-        }
-
-        return mahadashas
-    }
-
-    private fun getStartingLord(nakshatra: Nakshatra): Planet {
-        return when (nakshatra) {
-            Nakshatra.ASHWINI, Nakshatra.BHARANI, Nakshatra.KRITTIKA -> Planet.MOON
-            else -> Planet.MOON
-        }
-    }
 }
 
 // Data classes
@@ -659,7 +592,9 @@ data class AshtottariMahadasha(
     val actualYears: Double,
     val startDate: LocalDateTime,
     val endDate: LocalDateTime,
-    val isCurrentlyRunning: Boolean
+    val isCurrentlyRunning: Boolean,
+    val durationYears: Double = periodYears,
+    val antardashas: List<AshtottariAntardasha> = emptyList()
 )
 
 data class AshtottariAntardasha(
@@ -670,7 +605,21 @@ data class AshtottariAntardasha(
     val endDate: LocalDateTime,
     val relationship: PlanetRelationship,
     val isCurrentlyRunning: Boolean
-)
+) {
+    /** Alias for antardashaLord for easier access */
+    val planet: Planet get() = antardashaLord
+
+    /** Calculate the progress percentage through this antardasha */
+    fun getProgressPercent(): Double {
+        val now = LocalDateTime.now()
+        if (now.isBefore(startDate)) return 0.0
+        if (now.isAfter(endDate)) return 100.0
+
+        val totalDuration = java.time.Duration.between(startDate, endDate).toMillis().toDouble()
+        val elapsedDuration = java.time.Duration.between(startDate, now).toMillis().toDouble()
+        return if (totalDuration > 0) (elapsedDuration / totalDuration * 100).coerceIn(0.0, 100.0) else 0.0
+    }
+}
 
 data class AshtottariPratyantardasha(
     val mahadashaLord: Planet,
@@ -708,5 +657,8 @@ data class AshtottariTimeline(
     val startDate: LocalDateTime,
     val endDate: LocalDateTime,
     val applicability: AshtottariApplicability,
-    val interpretation: AshtottariInterpretation
+    val interpretation: AshtottariInterpretation,
+    val birthNakshatra: Nakshatra,
+    val birthNakshatraLord: Planet,
+    val birthNakshatraPada: Int
 )
