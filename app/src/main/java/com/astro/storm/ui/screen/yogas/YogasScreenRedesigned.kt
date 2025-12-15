@@ -112,7 +112,7 @@ fun YogasScreenRedesigned(
     val yogaAnalysis = remember(chart) {
         chart?.let {
             try {
-                YogaCalculator.analyzeYogas(it)
+                YogaCalculator.calculateYogas(it)
             } catch (e: Exception) {
                 null
             }
@@ -371,7 +371,7 @@ private fun YogasSummaryCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { (analysis.overallYogaStrength / 100f).coerceIn(0f, 1f) },
+                        progress = { (analysis.overallYogaStrength / 100.0).coerceIn(0.0, 1.0).toFloat() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)
@@ -796,7 +796,7 @@ private fun YogaCard(
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
-                                progress = { (yoga.strengthPercentage / 100f).coerceIn(0f, 1f) },
+                                progress = { (yoga.strengthPercentage / 100.0).coerceIn(0.0, 1.0).toFloat() },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(6.dp)

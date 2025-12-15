@@ -563,6 +563,7 @@ object AshtottariDashaCalculator {
             }
         )
     }
+
 }
 
 // Data classes
@@ -591,7 +592,9 @@ data class AshtottariMahadasha(
     val actualYears: Double,
     val startDate: LocalDateTime,
     val endDate: LocalDateTime,
-    val isCurrentlyRunning: Boolean
+    val isCurrentlyRunning: Boolean,
+    val durationYears: Double = periodYears,
+    val antardashas: List<AshtottariAntardasha> = emptyList()
 )
 
 data class AshtottariAntardasha(
@@ -602,7 +605,21 @@ data class AshtottariAntardasha(
     val endDate: LocalDateTime,
     val relationship: PlanetRelationship,
     val isCurrentlyRunning: Boolean
-)
+) {
+    /** Alias for antardashaLord for easier access */
+    val planet: Planet get() = antardashaLord
+
+    /** Calculate the progress percentage through this antardasha */
+    fun getProgressPercent(): Double {
+        val now = LocalDateTime.now()
+        if (now.isBefore(startDate)) return 0.0
+        if (now.isAfter(endDate)) return 100.0
+
+        val totalDuration = java.time.Duration.between(startDate, endDate).toMillis().toDouble()
+        val elapsedDuration = java.time.Duration.between(startDate, now).toMillis().toDouble()
+        return if (totalDuration > 0) (elapsedDuration / totalDuration * 100).coerceIn(0.0, 100.0) else 0.0
+    }
+}
 
 data class AshtottariPratyantardasha(
     val mahadashaLord: Planet,
@@ -630,4 +647,18 @@ data class DashaComparison(
     val inAgreement: Boolean,
     val analysis: String,
     val recommendation: String
+)
+
+data class AshtottariTimeline(
+    val mahadashas: List<AshtottariMahadasha>,
+    val currentMahadasha: AshtottariMahadasha?,
+    val currentAntardasha: AshtottariAntardasha?,
+    val natalChart: VedicChart,
+    val startDate: LocalDateTime,
+    val endDate: LocalDateTime,
+    val applicability: AshtottariApplicability,
+    val interpretation: AshtottariInterpretation,
+    val birthNakshatra: Nakshatra,
+    val birthNakshatraLord: Planet,
+    val birthNakshatraPada: Int
 )

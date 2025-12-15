@@ -48,8 +48,13 @@ import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.VedicChart
+import java.time.LocalDateTime
+import com.astro.storm.data.model.Nakshatra
+import com.astro.storm.data.model.Planet
 import com.astro.storm.ephemeris.AshtottariDashaCalculator
+import com.astro.storm.ephemeris.AshtottariTimeline
 import com.astro.storm.ephemeris.SudarshanaChakraDashaCalculator
+import com.astro.storm.ephemeris.SudarshanaTimeline
 import com.astro.storm.ui.components.common.ModernPillTabRow
 import com.astro.storm.ui.components.common.TabItem
 import com.astro.storm.ui.screen.chartdetail.tabs.DashasTabContent
@@ -136,10 +141,25 @@ fun DashaSystemsScreen(
     val ashtottariData = remember(chart) {
         chart?.let {
             try {
-                val calculator = AshtottariDashaCalculator(context)
-                calculator.use { calc ->
-                    calc.calculateAshtottariTimeline(it)
-                }
+                val result = AshtottariDashaCalculator.calculateAshtottariDasha(it)
+                val moonPosition = it.planetPositions.find { pos -> pos.planet == Planet.MOON }
+                val moonLongitude = moonPosition?.longitude ?: 0.0
+                val nakshatraResult = Nakshatra.fromLongitude(moonLongitude)
+                val birthNakshatra = nakshatraResult.first
+                val birthNakshatraPada = nakshatraResult.second
+                AshtottariTimeline(
+                    mahadashas = result.mahadashas,
+                    currentMahadasha = result.currentMahadasha,
+                    currentAntardasha = result.currentAntardasha,
+                    natalChart = it,
+                    startDate = LocalDateTime.now().minusYears(50),
+                    endDate = LocalDateTime.now().plusYears(50),
+                    applicability = result.applicability,
+                    interpretation = result.interpretation,
+                    birthNakshatra = birthNakshatra,
+                    birthNakshatraLord = result.startingLord,
+                    birthNakshatraPada = birthNakshatraPada
+                )
             } catch (e: Exception) {
                 null
             }
@@ -149,10 +169,12 @@ fun DashaSystemsScreen(
     val sudarshanaData = remember(chart) {
         chart?.let {
             try {
-                val calculator = SudarshanaChakraDashaCalculator(context)
-                calculator.use { calc ->
-                    calc.calculateSudarshanaTimeline(it)
-                }
+                val result = SudarshanaChakraDashaCalculator.calculateSudarshana(it)
+                SudarshanaTimeline(
+                    result = result,
+                    natalChart = it,
+                    currentAge = 30 // Default age - should be calculated from birth date
+                )
             } catch (e: Exception) {
                 null
             }
@@ -351,7 +373,7 @@ private fun VimsottariDashaContent(
 
 @Composable
 private fun AshtottariDashaContent(
-    data: AshtottariDashaCalculator.AshtottariTimeline?
+    data: AshtottariTimeline?
 ) {
     if (data == null) {
         EmptyContent(message = "Ashtottari Dasha calculation not available for this chart.")
@@ -363,7 +385,7 @@ private fun AshtottariDashaContent(
 
 @Composable
 private fun SudarshanaChakraContent(
-    data: SudarshanaChakraDashaCalculator.SudarshanaTimeline?
+    data: SudarshanaTimeline?
 ) {
     if (data == null) {
         EmptyContent(message = "Sudarshana Chakra calculation not available for this chart.")

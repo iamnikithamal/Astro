@@ -26,6 +26,13 @@ object SudarshanaChakraDashaCalculator {
     /**
      * Calculate Sudarshana Chakra Dasha for a given age/year
      */
+    fun calculateSudarshana(chart: VedicChart, targetAge: Int = 0): SudarshanaChakraResult {
+        return calculateSudarshanaChakra(chart, targetAge)
+    }
+
+    /**
+     * Calculate Sudarshana Chakra Dasha for a given age/year
+     */
     fun calculateSudarshanaChakra(chart: VedicChart, targetAge: Int = 0): SudarshanaChakraResult {
         val birthDateTime = chart.birthData.dateTime
         val currentAge = if (targetAge == 0) {
@@ -666,4 +673,59 @@ data class InternalChakraData(
     val moonSign: ZodiacSign,
     val sunHouse: Int,
     val sunSign: ZodiacSign
+)
+
+data class SudarshanaTimeline(
+    val result: SudarshanaChakraResult,
+    val natalChart: VedicChart,
+    val currentAge: Int
+) {
+    /** Convenience accessor for lagna sign */
+    val lagnaSign: ZodiacSign get() = result.lagnaReference
+
+    /** Convenience accessor for moon sign */
+    val moonSign: ZodiacSign get() = result.moonReference
+
+    /** Convenience accessor for sun sign */
+    val sunSign: ZodiacSign get() = result.sunReference
+
+    /** Generate yearly analysis for display */
+    val yearlyAnalysis: List<YearlyAnalysis> by lazy {
+        val birthYear = natalChart.birthData.dateTime.year
+        (0..100).mapNotNull { age ->
+            try {
+                val result = SudarshanaChakraDashaCalculator.calculateSudarshanaChakra(natalChart, age)
+                val houseFromLagna = ((age - 1).coerceAtLeast(0) % 12) + 1
+                val activeLagnaSign = ZodiacSign.entries[(lagnaSign.ordinal + houseFromLagna - 1) % 12]
+                val activeMoonSign = ZodiacSign.entries[(moonSign.ordinal + houseFromLagna - 1) % 12]
+                val activeSunSign = ZodiacSign.entries[(sunSign.ordinal + houseFromLagna - 1) % 12]
+
+                YearlyAnalysis(
+                    year = birthYear + age,
+                    age = age,
+                    lagnaSign = activeLagnaSign,
+                    moonSign = activeMoonSign,
+                    sunSign = activeSunSign,
+                    combinedStrength = result.synthesis.combinedStrengthScore,
+                    combinedEffects = result.synthesis.commonThemes + listOf(
+                        result.lagnaChakra.houseSignificance.description,
+                        result.chandraChakra.houseSignificance.description,
+                        result.suryaChakra.houseSignificance.description
+                    ).filter { it.isNotEmpty() }
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+}
+
+data class YearlyAnalysis(
+    val year: Int,
+    val age: Int,
+    val lagnaSign: ZodiacSign,
+    val moonSign: ZodiacSign,
+    val sunSign: ZodiacSign,
+    val combinedStrength: Double,
+    val combinedEffects: List<String>
 )
