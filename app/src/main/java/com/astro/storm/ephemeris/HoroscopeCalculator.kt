@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
 class HoroscopeCalculator(private val context: Context) : AutoCloseable {
 
     private val ephemerisEngine: SwissEphemerisEngine by lazy {
-        SwissEphemerisEngine.create(context)
+        SwissEphemerisEngine.getInstance(context)
     }
 
     private val transitCache = LRUCache<TransitCacheKey, VedicChart>(MAX_TRANSIT_CACHE_SIZE)

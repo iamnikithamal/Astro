@@ -18,7 +18,7 @@ class AstroStormApplication : Application() {
         // Initialize the ephemeris engine on app startup
         // This also handles copying the necessary ephemeris files
         try {
-            SwissEphemerisEngine.create(this)
+            SwissEphemerisEngine.getInstance(this)
         } catch (e: Exception) {
             Log.e("AstroStormApplication", "Failed to initialize SwissEphemerisEngine", e)
         }

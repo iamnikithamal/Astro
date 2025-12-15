@@ -28,7 +28,7 @@ import kotlin.math.abs
  */
 class TransitAnalyzer(private val context: Context) {
 
-    private val ephemerisEngine = SwissEphemerisEngine.create(context)
+    private val ephemerisEngine = SwissEphemerisEngine.getInstance(context)
 
     companion object {
         /**

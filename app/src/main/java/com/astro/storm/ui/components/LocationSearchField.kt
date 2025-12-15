@@ -66,7 +66,7 @@ fun LocationSearchField(
     searchState: LocationSearchState = rememberLocationSearchState()
 ) {
     val focusManager = LocalFocusManager.current
-    var hasFocus by remember { mutableState of(false) }
+    var hasFocus by remember { mutableStateOf(false) }
 
     // Pre-fetch localized error strings for display
     val rateLimitText = stringResource(StringKey.ERROR_RATE_LIMIT)
