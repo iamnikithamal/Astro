@@ -86,15 +86,23 @@ fun ChartTabContent(
     onPlanetClick: (PlanetPosition) -> Unit,
     onHouseClick: (Int) -> Unit
 ) {
-    val divisionalCharts = remember(chart) {
+    // Performance Optimization: Convert the list of divisional charts to a map for
+    // efficient O(1) lookups. This avoids repeated, slow O(n) searches when the
+    // user selects different chart types.
+    val divisionalChartsMap = remember(chart) {
         DivisionalChartCalculator.calculateAllDivisionalCharts(chart)
+            .associateBy { it.chartType.shortName }
     }
 
     var selectedChartType by rememberSaveable { mutableStateOf("D1") }
-    val expandedCardTitles = remember { mutableStateListOf<String>() }
 
-    val currentChartData = remember(selectedChartType, divisionalCharts) {
-        getChartDataForType(selectedChartType, divisionalCharts)
+    // Performance Optimization: Use rememberSaveable to preserve the expanded/collapsed
+    // state of UI cards across configuration changes (e.g., screen rotation). This
+    // provides a better user experience by maintaining the UI state.
+    val expandedCardTitles = rememberSaveable { mutableStateListOf<String>() }
+
+    val currentChartData = remember(selectedChartType, divisionalChartsMap) {
+        getChartDataForType(selectedChartType, divisionalChartsMap)
     }
 
     val chartInfo = getLocalizedChartInfo(selectedChartType)
@@ -182,25 +190,11 @@ fun ChartTabContent(
 
 private fun getChartDataForType(
     type: String,
-    divisionalCharts: List<DivisionalChartData>
+    divisionalChartsMap: Map<String, DivisionalChartData>
 ): DivisionalChartData? {
-    return when (type) {
-        "D1" -> null
-        "D2" -> divisionalCharts.find { it.chartType == DivisionalChartType.D2_HORA }
-        "D3" -> divisionalCharts.find { it.chartType == DivisionalChartType.D3_DREKKANA }
-        "D4" -> divisionalCharts.find { it.chartType == DivisionalChartType.D4_CHATURTHAMSA }
-        "D7" -> divisionalCharts.find { it.chartType == DivisionalChartType.D7_SAPTAMSA }
-        "D9" -> divisionalCharts.find { it.chartType == DivisionalChartType.D9_NAVAMSA }
-        "D10" -> divisionalCharts.find { it.chartType == DivisionalChartType.D10_DASAMSA }
-        "D12" -> divisionalCharts.find { it.chartType == DivisionalChartType.D12_DWADASAMSA }
-        "D16" -> divisionalCharts.find { it.chartType == DivisionalChartType.D16_SHODASAMSA }
-        "D20" -> divisionalCharts.find { it.chartType == DivisionalChartType.D20_VIMSAMSA }
-        "D24" -> divisionalCharts.find { it.chartType == DivisionalChartType.D24_CHATURVIMSAMSA }
-        "D27" -> divisionalCharts.find { it.chartType == DivisionalChartType.D27_SAPTAVIMSAMSA }
-        "D30" -> divisionalCharts.find { it.chartType == DivisionalChartType.D30_TRIMSAMSA }
-        "D60" -> divisionalCharts.find { it.chartType == DivisionalChartType.D60_SHASHTIAMSA }
-        else -> null
-    }
+    // Performance Optimization: Direct O(1) map lookup is significantly faster
+    // than the previous O(n) linear search (find).
+    return if (type == "D1") null else divisionalChartsMap[type]
 }
 
 /**
