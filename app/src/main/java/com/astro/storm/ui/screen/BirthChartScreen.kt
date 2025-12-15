@@ -89,7 +89,7 @@ fun BirthChartScreen(
     }
 
     val hapticFeedback = LocalHapticFeedback.current
-    val chartRenderer = remember { ChartRenderer() }
+    val chartRenderer = viewModel.chartRenderer
     val ascendantLabel = stringResource(StringKey.CHART_ASCENDANT)
 
     var showFullScreenChart by remember { mutableStateOf(false) }

@@ -31,7 +31,7 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ChartRepository
     private val ephemerisEngine: SwissEphemerisEngine
-    private val chartRenderer = ChartRenderer()
+    val chartRenderer = ChartRenderer()
     private val prefs = application.getSharedPreferences("chart_prefs", Context.MODE_PRIVATE)
     private val chartExporter: ChartExporter
 
