@@ -34,6 +34,12 @@ import com.astro.storm.ui.screen.TransitsScreen
 import com.astro.storm.ui.screen.VarshaphalaScreen
 import com.astro.storm.ui.screen.YogasScreen
 import com.astro.storm.ui.screen.YoginiDashaScreen
+import com.astro.storm.ui.screen.AshtottariDashaScreen
+import com.astro.storm.ui.screen.SudarshanaChakraScreen
+import com.astro.storm.ui.screen.MrityuBhagaScreen
+import com.astro.storm.ui.screen.LalKitabRemediesScreen
+import com.astro.storm.ui.screen.DivisionalChartsScreen
+import com.astro.storm.ui.screen.UpachayaTransitScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
@@ -114,6 +120,26 @@ sealed class Screen(val route: String) {
     }
     object Predictions : Screen("predictions/{chartId}") {
         fun createRoute(chartId: Long) = "predictions/$chartId"
+    }
+
+    // New Advanced Feature Screens
+    object AshtottariDasha : Screen("ashtottari_dasha/{chartId}") {
+        fun createRoute(chartId: Long) = "ashtottari_dasha/$chartId"
+    }
+    object SudarshanaChakra : Screen("sudarshana_chakra/{chartId}") {
+        fun createRoute(chartId: Long) = "sudarshana_chakra/$chartId"
+    }
+    object MrityuBhaga : Screen("mrityu_bhaga/{chartId}") {
+        fun createRoute(chartId: Long) = "mrityu_bhaga/$chartId"
+    }
+    object LalKitabRemedies : Screen("lal_kitab/{chartId}") {
+        fun createRoute(chartId: Long) = "lal_kitab/$chartId"
+    }
+    object DivisionalCharts : Screen("divisional_charts/{chartId}") {
+        fun createRoute(chartId: Long) = "divisional_charts/$chartId"
+    }
+    object UpachayaTransit : Screen("upachaya_transit/{chartId}") {
+        fun createRoute(chartId: Long) = "upachaya_transit/$chartId"
     }
 }
 
@@ -265,6 +291,36 @@ fun AstroStormNavigation(
                 onNavigateToPredictions = {
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.Predictions.createRoute(chartId))
+                    }
+                },
+                onNavigateToAshtottariDasha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.AshtottariDasha.createRoute(chartId))
+                    }
+                },
+                onNavigateToSudarshanaChakra = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.SudarshanaChakra.createRoute(chartId))
+                    }
+                },
+                onNavigateToMrityuBhaga = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.MrityuBhaga.createRoute(chartId))
+                    }
+                },
+                onNavigateToLalKitab = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.LalKitabRemedies.createRoute(chartId))
+                    }
+                },
+                onNavigateToDivisionalCharts = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.DivisionalCharts.createRoute(chartId))
+                    }
+                },
+                onNavigateToUpachayaTransit = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.UpachayaTransit.createRoute(chartId))
                     }
                 },
                 onExportChart = { format ->
@@ -716,6 +772,121 @@ fun AstroStormNavigation(
 
             PredictionsScreen(
                 chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Ashtottari Dasha screen
+        composable(
+            route = Screen.AshtottariDasha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            AshtottariDashaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Sudarshana Chakra Dasha screen
+        composable(
+            route = Screen.SudarshanaChakra.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            SudarshanaChakraScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Mrityu Bhaga Analysis screen
+        composable(
+            route = Screen.MrityuBhaga.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            MrityuBhagaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Lal Kitab Remedies screen
+        composable(
+            route = Screen.LalKitabRemedies.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            LalKitabRemediesScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Divisional Charts Analysis screen
+        composable(
+            route = Screen.DivisionalCharts.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            DivisionalChartsScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Upachaya Transit screen
+        composable(
+            route = Screen.UpachayaTransit.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            UpachayaTransitScreen(
+                chart = currentChart,
+                transitPositions = currentChart?.planetPositions ?: emptyList(),
                 onBack = { navController.popBackStack() }
             )
         }

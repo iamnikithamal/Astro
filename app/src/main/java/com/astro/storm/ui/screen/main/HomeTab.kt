@@ -501,6 +501,48 @@ enum class InsightFeature(
         icon = Icons.Outlined.AutoAwesome,
         color = AppTheme.AccentPrimary,
         isImplemented = true
+    ),
+    ASHTOTTARI_DASHA(
+        titleKey = StringKey.FEATURE_ASHTOTTARI_DASHA,
+        descriptionKey = StringKey.FEATURE_ASHTOTTARI_DASHA_DESC,
+        icon = Icons.Outlined.Timeline,
+        color = AppTheme.AccentGold,
+        isImplemented = true
+    ),
+    SUDARSHANA_CHAKRA(
+        titleKey = StringKey.FEATURE_SUDARSHANA_CHAKRA,
+        descriptionKey = StringKey.FEATURE_SUDARSHANA_CHAKRA_DESC,
+        icon = Icons.Outlined.Sync,
+        color = AppTheme.LifeAreaSpiritual,
+        isImplemented = true
+    ),
+    MRITYU_BHAGA(
+        titleKey = StringKey.FEATURE_MRITYU_BHAGA,
+        descriptionKey = StringKey.FEATURE_MRITYU_BHAGA_DESC,
+        icon = Icons.Outlined.BarChart,
+        color = AppTheme.WarningColor,
+        isImplemented = true
+    ),
+    LAL_KITAB(
+        titleKey = StringKey.FEATURE_LAL_KITAB,
+        descriptionKey = StringKey.FEATURE_LAL_KITAB_DESC,
+        icon = Icons.Outlined.Spa,
+        color = AppTheme.LifeAreaHealth,
+        isImplemented = true
+    ),
+    DIVISIONAL_CHARTS(
+        titleKey = StringKey.FEATURE_DIVISIONAL_CHARTS,
+        descriptionKey = StringKey.FEATURE_DIVISIONAL_CHARTS_DESC,
+        icon = Icons.Outlined.GridView,
+        color = AppTheme.AccentTeal,
+        isImplemented = true
+    ),
+    UPACHAYA_TRANSIT(
+        titleKey = StringKey.FEATURE_UPACHAYA_TRANSIT,
+        descriptionKey = StringKey.FEATURE_UPACHAYA_TRANSIT_DESC,
+        icon = Icons.Outlined.Stars,
+        color = AppTheme.SuccessColor,
+        isImplemented = true
     );
 
     /**

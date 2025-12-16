@@ -72,6 +72,12 @@ fun MainScreen(
     onNavigateToCharaDasha: () -> Unit = {},
     onNavigateToBhriguBindu: () -> Unit = {},
     onNavigateToPredictions: () -> Unit = {},
+    onNavigateToAshtottariDasha: () -> Unit = {},
+    onNavigateToSudarshanaChakra: () -> Unit = {},
+    onNavigateToMrityuBhaga: () -> Unit = {},
+    onNavigateToLalKitab: () -> Unit = {},
+    onNavigateToDivisionalCharts: () -> Unit = {},
+    onNavigateToUpachayaTransit: () -> Unit = {},
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -205,6 +211,12 @@ fun MainScreen(
                                         InsightFeature.CHARA_DASHA -> if (currentChart != null) onNavigateToCharaDasha()
                                         InsightFeature.BHRIGU_BINDU -> if (currentChart != null) onNavigateToBhriguBindu()
                                         InsightFeature.PREDICTIONS -> if (currentChart != null) onNavigateToPredictions()
+                                        InsightFeature.ASHTOTTARI_DASHA -> if (currentChart != null) onNavigateToAshtottariDasha()
+                                        InsightFeature.SUDARSHANA_CHAKRA -> if (currentChart != null) onNavigateToSudarshanaChakra()
+                                        InsightFeature.MRITYU_BHAGA -> if (currentChart != null) onNavigateToMrityuBhaga()
+                                        InsightFeature.LAL_KITAB -> if (currentChart != null) onNavigateToLalKitab()
+                                        InsightFeature.DIVISIONAL_CHARTS -> if (currentChart != null) onNavigateToDivisionalCharts()
+                                        InsightFeature.UPACHAYA_TRANSIT -> if (currentChart != null) onNavigateToUpachayaTransit()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }
