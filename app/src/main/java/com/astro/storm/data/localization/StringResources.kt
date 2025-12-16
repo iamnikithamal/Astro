@@ -936,7 +936,46 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     TRANSIT_TO_NATAL_ASPECTS("Transit to Natal Aspects", "गोचर-जन्म पहलुहरू"),
     TRANSIT_NO_ASPECTS("No transit aspects at this time", "यस समयमा कुनै गोचर पहलुहरू छैनन्"),
     TRANSIT_NO_DATA("No Transit Data", "कुनै गोचर डाटा छैन"),
-    TRANSIT_SELECT_CHART("Select a chart to view transits", "गोचरहरू हेर्न कुण्डली छान्नुहोस्");
+    TRANSIT_SELECT_CHART("Select a chart to view transits", "गोचरहरू हेर्न कुण्डली छान्नुहोस्"),
+
+    // ============================================
+    // ONBOARDING
+    // ============================================
+    ONBOARDING_WELCOME_TITLE("Welcome to AstroStorm", "AstroStorm मा स्वागत छ"),
+    ONBOARDING_WELCOME_SUBTITLE("Your personal Vedic astrology companion", "तपाईंको व्यक्तिगत वैदिक ज्योतिष साथी"),
+    ONBOARDING_WELCOME_DESC("Discover the ancient wisdom of Vedic astrology with precision calculations and personalized insights.", "सटीक गणना र व्यक्तिगत अन्तर्दृष्टिका साथ वैदिक ज्योतिषको प्राचीन ज्ञान पत्ता लगाउनुहोस्।"),
+
+    ONBOARDING_LANGUAGE_TITLE("Choose Your Language", "आफ्नो भाषा छान्नुहोस्"),
+    ONBOARDING_LANGUAGE_SUBTITLE("Select your preferred language", "आफ्नो मनपर्ने भाषा छान्नुहोस्"),
+    ONBOARDING_LANGUAGE_DESC("You can change this later in settings.", "तपाईं यसलाई पछि सेटिङ्समा परिवर्तन गर्न सक्नुहुन्छ।"),
+
+    ONBOARDING_THEME_TITLE("Choose Your Theme", "आफ्नो थिम छान्नुहोस्"),
+    ONBOARDING_THEME_SUBTITLE("Select your preferred appearance", "आफ्नो मनपर्ने रूप छान्नुहोस्"),
+    ONBOARDING_THEME_DESC("You can change this later in settings.", "तपाईं यसलाई पछि सेटिङ्समा परिवर्तन गर्न सक्नुहुन्छ।"),
+    ONBOARDING_THEME_LIGHT("Light", "उज्यालो"),
+    ONBOARDING_THEME_DARK("Dark", "अँध्यारो"),
+    ONBOARDING_THEME_SYSTEM("System", "प्रणाली"),
+
+    ONBOARDING_FEATURES_TITLE("Powerful Features", "शक्तिशाली सुविधाहरू"),
+    ONBOARDING_FEATURES_SUBTITLE("Everything you need for Vedic astrology", "वैदिक ज्योतिषको लागि तपाईंलाई चाहिने सबै"),
+
+    ONBOARDING_FEATURE_CHARTS("Birth Charts", "जन्म कुण्डली"),
+    ONBOARDING_FEATURE_CHARTS_DESC("Accurate Vedic birth chart calculations", "सटीक वैदिक जन्म कुण्डली गणना"),
+    ONBOARDING_FEATURE_DASHAS("Dashas", "दशाहरू"),
+    ONBOARDING_FEATURE_DASHAS_DESC("Complete planetary period analysis", "पूर्ण ग्रह अवधि विश्लेषण"),
+    ONBOARDING_FEATURE_TRANSITS("Transits", "गोचरहरू"),
+    ONBOARDING_FEATURE_TRANSITS_DESC("Real-time planetary movements", "वास्तविक-समय ग्रह गतिविधि"),
+    ONBOARDING_FEATURE_MATCHMAKING("Matchmaking", "कुण्डली मिलान"),
+    ONBOARDING_FEATURE_MATCHMAKING_DESC("Kundli Milan compatibility", "कुण्डली मिलान अनुकूलता"),
+
+    ONBOARDING_READY_TITLE("You're All Set!", "तपाईं तयार हुनुहुन्छ!"),
+    ONBOARDING_READY_SUBTITLE("Start exploring your cosmic journey", "आफ्नो ब्रह्माण्डीय यात्रा अन्वेषण गर्न सुरु गर्नुहोस्"),
+    ONBOARDING_READY_DESC("Create your first birth chart and discover personalized astrological insights.", "आफ्नो पहिलो जन्म कुण्डली बनाउनुहोस् र व्यक्तिगत ज्योतिषीय अन्तर्दृष्टिहरू पत्ता लगाउनुहोस्।"),
+
+    ONBOARDING_BTN_NEXT("Next", "अर्को"),
+    ONBOARDING_BTN_BACK("Back", "पछाडि"),
+    ONBOARDING_BTN_GET_STARTED("Get Started", "सुरु गर्नुहोस्"),
+    ONBOARDING_BTN_SKIP("Skip", "छोड्नुहोस्");
 
 }
 

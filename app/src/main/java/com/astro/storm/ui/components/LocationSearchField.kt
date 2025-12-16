@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,8 +82,20 @@ fun LocationSearchField(
         SearchErrorType.GENERIC -> searchFailedText
     }
 
-    LaunchedEffect(searchState) {
-        snapshotFlow { value }
+    // Use rememberUpdatedState to capture the latest value in the coroutine
+    val currentValue by rememberUpdatedState(value)
+
+    // MutableStateFlow to track search queries with proper debouncing
+    val searchQueryFlow = remember { MutableStateFlow("") }
+
+    // Update the flow whenever value changes
+    LaunchedEffect(value) {
+        searchQueryFlow.value = value
+    }
+
+    // Single LaunchedEffect to handle debounced search
+    LaunchedEffect(Unit) {
+        searchQueryFlow
             .debounce(400)
             .distinctUntilChanged()
             .collectLatest { query ->

@@ -49,19 +49,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-private object ChartInputTheme {
-    val ScreenBackground = Color(0xFF1C1410)
-    val CardBackground = Color(0xFF2A201A)
-    val AccentColor = Color(0xFFB8A99A)
-    val TextPrimary = Color(0xFFE8DFD6)
-    val TextSecondary = Color(0xFFB8A99A)
-    val BorderColor = Color(0xFF4A3F38)
-    val ChipBackground = Color(0xFF3D322B)
-    val ButtonBackground = Color(0xFFB8A99A)
-    val ButtonText = Color(0xFF1C1410)
-    val ErrorColor = Color(0xFFCF6679)
-}
+import com.astro.storm.ui.theme.LocalAppThemeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +62,7 @@ fun ChartInputScreen(
     val focusManager = LocalFocusManager.current
     val language = LocalLanguage.current
     val dateSystem = LocalDateSystem.current
+    val colors = LocalAppThemeColors.current
 
     var name by rememberSaveable { mutableStateOf("") }
     var selectedGender by rememberSaveable { mutableStateOf(Gender.OTHER) }
@@ -85,7 +74,6 @@ fun ChartInputScreen(
     var selectedMinute by rememberSaveable { mutableStateOf(0) }
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
-    var altitude by rememberSaveable { mutableStateOf("") }
     var selectedTimezone by rememberSaveable { mutableStateOf(ZoneId.systemDefault().id) }
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -109,7 +97,6 @@ fun ChartInputScreen(
 
     val latitudeFocusRequester = remember { FocusRequester() }
     val longitudeFocusRequester = remember { FocusRequester() }
-    val altitudeFocusRequester = remember { FocusRequester() }
 
 
     LaunchedEffect(Unit) {
@@ -144,7 +131,7 @@ fun ChartInputScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChartInputTheme.ScreenBackground)
+            .background(colors.ScreenBackground)
             .imePadding()
     ) {
         Column(
@@ -205,13 +192,10 @@ fun ChartInputScreen(
             CoordinatesSection(
                 latitude = latitude,
                 longitude = longitude,
-                altitude = altitude,
                 onLatitudeChange = { latitude = it },
                 onLongitudeChange = { longitude = it },
-                onAltitudeChange = { altitude = it },
                 latitudeFocusRequester = latitudeFocusRequester,
                 longitudeFocusRequester = longitudeFocusRequester,
-                altitudeFocusRequester = altitudeFocusRequester,
                 onDone = { focusManager.clearFocus() }
             )
 
@@ -230,8 +214,9 @@ fun ChartInputScreen(
                         return@GenerateButton
                     }
 
-                    val lat = latitude.toDouble()
-                    val lon = longitude.toDouble()
+                    // Use parseCoordinate to handle degree symbols and other formats
+                    val lat = parseCoordinate(latitude) ?: return@GenerateButton
+                    val lon = parseCoordinate(longitude) ?: return@GenerateButton
                     val dateTime = LocalDateTime.of(selectedDate, selectedTime)
 
                     val birthData = BirthData(
@@ -302,14 +287,14 @@ fun ChartInputScreen(
             title = {
                 Text(
                     stringResource(StringKey.ERROR_INPUT),
-                    color = ChartInputTheme.TextPrimary,
+                    color = colors.TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
             },
             text = {
                 Text(
                     errorKey?.let { stringResource(it) } ?: errorMessage,
-                    color = ChartInputTheme.TextSecondary
+                    color = colors.TextSecondary
                 )
             },
             confirmButton = {
@@ -317,18 +302,36 @@ fun ChartInputScreen(
                     showErrorDialog = false
                     errorKey = null
                 }) {
-                    Text(stringResource(StringKey.BTN_OK), color = ChartInputTheme.AccentColor)
+                    Text(stringResource(StringKey.BTN_OK), color = colors.AccentPrimary)
                 }
             },
-            containerColor = ChartInputTheme.CardBackground,
+            containerColor = colors.CardBackground,
             shape = RoundedCornerShape(20.dp)
         )
     }
 }
 
+/**
+ * Parse coordinate string, removing common symbols like degree (°), apostrophe ('), etc.
+ * Supports formats: "27.7", "27.7°", "27°42'", "-27.7", etc.
+ */
+private fun parseCoordinate(value: String): Double? {
+    // Remove common coordinate symbols and whitespace
+    val cleaned = value.trim()
+        .replace("°", "")
+        .replace("'", "")
+        .replace("\"", "")
+        .replace("′", "")  // Unicode prime
+        .replace("″", "")  // Unicode double prime
+        .replace(",", ".")  // Handle comma as decimal separator
+        .trim()
+
+    return cleaned.toDoubleOrNull()
+}
+
 private fun validateInput(latitude: String, longitude: String): String? {
-    val lat = latitude.trim().toDoubleOrNull()
-    val lon = longitude.trim().toDoubleOrNull()
+    val lat = parseCoordinate(latitude)
+    val lon = parseCoordinate(longitude)
 
     return when {
         lat == null || lon == null -> "Please enter valid latitude and longitude"
@@ -339,8 +342,8 @@ private fun validateInput(latitude: String, longitude: String): String? {
 }
 
 private fun validateInputLocalized(latitude: String, longitude: String): StringKey? {
-    val lat = latitude.trim().toDoubleOrNull()
-    val lon = longitude.trim().toDoubleOrNull()
+    val lat = parseCoordinate(latitude)
+    val lon = parseCoordinate(longitude)
 
     return when {
         lat == null || lon == null -> StringKey.ERROR_INVALID_COORDS
@@ -352,6 +355,7 @@ private fun validateInputLocalized(latitude: String, longitude: String): StringK
 
 @Composable
 private fun ChartInputHeader(onNavigateBack: () -> Unit) {
+    val colors = LocalAppThemeColors.current
     val goBackText = stringResource(StringKey.BTN_BACK)
     Row(
         modifier = Modifier
@@ -366,7 +370,7 @@ private fun ChartInputHeader(onNavigateBack: () -> Unit) {
             Icon(
                 imageVector = Icons.Outlined.ArrowBack,
                 contentDescription = null,
-                tint = ChartInputTheme.TextSecondary,
+                tint = colors.TextSecondary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -375,7 +379,7 @@ private fun ChartInputHeader(onNavigateBack: () -> Unit) {
             text = stringResource(StringKey.INPUT_NEW_CHART),
             fontSize = 22.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ChartInputTheme.TextPrimary,
+            color = colors.TextPrimary,
             letterSpacing = 0.3.sp
         )
     }
@@ -389,6 +393,7 @@ private fun IdentitySection(
     onGenderChange: (Gender) -> Unit,
     onFocusNext: () -> Unit
 ) {
+    val colors = LocalAppThemeColors.current
     val language = LocalLanguage.current
     Column {
         SectionTitle(stringResource(StringKey.INPUT_IDENTITY))
@@ -407,7 +412,7 @@ private fun IdentitySection(
         Text(
             text = stringResource(StringKey.INPUT_GENDER),
             fontSize = 14.sp,
-            color = ChartInputTheme.TextSecondary,
+            color = colors.TextSecondary,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -507,6 +512,7 @@ private fun DateSystemToggle(
     language: Language,
     onToggle: () -> Unit
 ) {
+    val colors = LocalAppThemeColors.current
     val adLabel = when (language) {
         Language.ENGLISH -> "AD"
         Language.NEPALI -> "ई.सं."
@@ -519,8 +525,8 @@ private fun DateSystemToggle(
     Surface(
         onClick = onToggle,
         shape = RoundedCornerShape(16.dp),
-        color = ChartInputTheme.ChipBackground,
-        border = BorderStroke(1.dp, ChartInputTheme.BorderColor)
+        color = colors.ChipBackground,
+        border = BorderStroke(1.dp, colors.BorderColor)
     ) {
         Row(
             modifier = Modifier.padding(2.dp),
@@ -529,14 +535,14 @@ private fun DateSystemToggle(
             // AD option
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = if (!useBSPicker) ChartInputTheme.AccentColor else Color.Transparent,
+                color = if (!useBSPicker) colors.AccentPrimary else Color.Transparent,
                 modifier = Modifier.padding(1.dp)
             ) {
                 Text(
                     text = adLabel,
                     fontSize = 12.sp,
                     fontWeight = if (!useBSPicker) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (!useBSPicker) ChartInputTheme.ButtonText else ChartInputTheme.TextSecondary,
+                    color = if (!useBSPicker) colors.ButtonText else colors.TextSecondary,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                 )
             }
@@ -544,14 +550,14 @@ private fun DateSystemToggle(
             // BS option
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = if (useBSPicker) ChartInputTheme.AccentColor else Color.Transparent,
+                color = if (useBSPicker) colors.AccentPrimary else Color.Transparent,
                 modifier = Modifier.padding(1.dp)
             ) {
                 Text(
                     text = bsLabel,
                     fontSize = 12.sp,
                     fontWeight = if (useBSPicker) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (useBSPicker) ChartInputTheme.ButtonText else ChartInputTheme.TextSecondary,
+                    color = if (useBSPicker) colors.ButtonText else colors.TextSecondary,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                 )
             }
@@ -563,13 +569,10 @@ private fun DateSystemToggle(
 private fun CoordinatesSection(
     latitude: String,
     longitude: String,
-    altitude: String,
     onLatitudeChange: (String) -> Unit,
     onLongitudeChange: (String) -> Unit,
-    onAltitudeChange: (String) -> Unit,
     latitudeFocusRequester: FocusRequester,
     longitudeFocusRequester: FocusRequester,
-    altitudeFocusRequester: FocusRequester,
     onDone: () -> Unit
 ) {
     Column {
@@ -605,27 +608,13 @@ private fun CoordinatesSection(
                     .focusRequester(longitudeFocusRequester),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onNext = { altitudeFocusRequester.requestFocus() }
+                    onDone = { onDone() }
                 )
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ChartOutlinedTextField(
-            value = altitude,
-            onValueChange = onAltitudeChange,
-            label = stringResource(StringKey.INPUT_ALTITUDE),
-            modifier = Modifier.focusRequester(altitudeFocusRequester),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = { onDone() })
-        )
     }
 }
 
@@ -634,6 +623,7 @@ private fun GenerateButton(
     isCalculating: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = LocalAppThemeColors.current
     val buttonContentDesc = stringResource(StringKey.BTN_GENERATE_SAVE)
     Button(
         onClick = onClick,
@@ -643,10 +633,10 @@ private fun GenerateButton(
             .semantics { contentDescription = buttonContentDesc },
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = ChartInputTheme.ButtonBackground,
-            contentColor = ChartInputTheme.ButtonText,
-            disabledContainerColor = ChartInputTheme.ButtonBackground.copy(alpha = 0.5f),
-            disabledContentColor = ChartInputTheme.ButtonText.copy(alpha = 0.5f)
+            containerColor = colors.ButtonBackground,
+            contentColor = colors.ButtonText,
+            disabledContainerColor = colors.ButtonBackground.copy(alpha = 0.5f),
+            disabledContentColor = colors.ButtonText.copy(alpha = 0.5f)
         ),
         enabled = !isCalculating
     ) {
@@ -654,7 +644,7 @@ private fun GenerateButton(
             if (calculating) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = ChartInputTheme.ButtonText,
+                    color = colors.ButtonText,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -686,6 +676,7 @@ private fun ChartDatePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
 ) {
+    val colors = LocalAppThemeColors.current
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
 
     DatePickerDialog(
@@ -696,34 +687,34 @@ private fun ChartDatePickerDialog(
                     datePickerState.selectedDateMillis?.let(onConfirm)
                 }
             ) {
-                Text(stringResource(StringKey.BTN_OK), color = ChartInputTheme.AccentColor)
+                Text(stringResource(StringKey.BTN_OK), color = colors.AccentPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(StringKey.BTN_CANCEL), color = ChartInputTheme.TextSecondary)
+                Text(stringResource(StringKey.BTN_CANCEL), color = colors.TextSecondary)
             }
         },
-        colors = DatePickerDefaults.colors(containerColor = ChartInputTheme.CardBackground)
+        colors = DatePickerDefaults.colors(containerColor = colors.CardBackground)
     ) {
         DatePicker(
             state = datePickerState,
             colors = DatePickerDefaults.colors(
-                containerColor = ChartInputTheme.CardBackground,
-                titleContentColor = ChartInputTheme.TextPrimary,
-                headlineContentColor = ChartInputTheme.TextPrimary,
-                weekdayContentColor = ChartInputTheme.TextSecondary,
-                subheadContentColor = ChartInputTheme.TextSecondary,
-                yearContentColor = ChartInputTheme.TextPrimary,
-                currentYearContentColor = ChartInputTheme.AccentColor,
-                selectedYearContentColor = ChartInputTheme.ButtonText,
-                selectedYearContainerColor = ChartInputTheme.AccentColor,
-                dayContentColor = ChartInputTheme.TextPrimary,
-                selectedDayContentColor = ChartInputTheme.ButtonText,
-                selectedDayContainerColor = ChartInputTheme.AccentColor,
-                todayContentColor = ChartInputTheme.AccentColor,
-                todayDateBorderColor = ChartInputTheme.AccentColor,
-                navigationContentColor = ChartInputTheme.TextSecondary
+                containerColor = colors.CardBackground,
+                titleContentColor = colors.TextPrimary,
+                headlineContentColor = colors.TextPrimary,
+                weekdayContentColor = colors.TextSecondary,
+                subheadContentColor = colors.TextSecondary,
+                yearContentColor = colors.TextPrimary,
+                currentYearContentColor = colors.AccentPrimary,
+                selectedYearContentColor = colors.ButtonText,
+                selectedYearContainerColor = colors.AccentPrimary,
+                dayContentColor = colors.TextPrimary,
+                selectedDayContentColor = colors.ButtonText,
+                selectedDayContainerColor = colors.AccentPrimary,
+                todayContentColor = colors.AccentPrimary,
+                todayDateBorderColor = colors.AccentPrimary,
+                navigationContentColor = colors.TextSecondary
             )
         )
     }
@@ -737,6 +728,7 @@ private fun ChartTimePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (hour: Int, minute: Int) -> Unit
 ) {
+    val colors = LocalAppThemeColors.current
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
@@ -746,7 +738,7 @@ private fun ChartTimePickerDialog(
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = ChartInputTheme.CardBackground,
+            color = colors.CardBackground,
             tonalElevation = 6.dp
         ) {
             Column(
@@ -755,7 +747,7 @@ private fun ChartTimePickerDialog(
             ) {
                 Text(
                     text = stringResource(StringKey.INPUT_SELECT_TIME),
-                    color = ChartInputTheme.TextSecondary,
+                    color = colors.TextSecondary,
                     fontSize = 14.sp,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -765,20 +757,20 @@ private fun ChartTimePickerDialog(
                 TimePicker(
                     state = timePickerState,
                     colors = TimePickerDefaults.colors(
-                        containerColor = ChartInputTheme.CardBackground,
-                        clockDialColor = ChartInputTheme.ChipBackground,
-                        clockDialSelectedContentColor = ChartInputTheme.ButtonText,
-                        clockDialUnselectedContentColor = ChartInputTheme.TextPrimary,
-                        selectorColor = ChartInputTheme.AccentColor,
-                        periodSelectorBorderColor = ChartInputTheme.BorderColor,
-                        periodSelectorSelectedContainerColor = ChartInputTheme.AccentColor,
-                        periodSelectorUnselectedContainerColor = ChartInputTheme.CardBackground,
-                        periodSelectorSelectedContentColor = ChartInputTheme.ButtonText,
-                        periodSelectorUnselectedContentColor = ChartInputTheme.TextSecondary,
-                        timeSelectorSelectedContainerColor = ChartInputTheme.AccentColor,
-                        timeSelectorUnselectedContainerColor = ChartInputTheme.ChipBackground,
-                        timeSelectorSelectedContentColor = ChartInputTheme.ButtonText,
-                        timeSelectorUnselectedContentColor = ChartInputTheme.TextPrimary
+                        containerColor = colors.CardBackground,
+                        clockDialColor = colors.ChipBackground,
+                        clockDialSelectedContentColor = colors.ButtonText,
+                        clockDialUnselectedContentColor = colors.TextPrimary,
+                        selectorColor = colors.AccentPrimary,
+                        periodSelectorBorderColor = colors.BorderColor,
+                        periodSelectorSelectedContainerColor = colors.AccentPrimary,
+                        periodSelectorUnselectedContainerColor = colors.CardBackground,
+                        periodSelectorSelectedContentColor = colors.ButtonText,
+                        periodSelectorUnselectedContentColor = colors.TextSecondary,
+                        timeSelectorSelectedContainerColor = colors.AccentPrimary,
+                        timeSelectorUnselectedContainerColor = colors.ChipBackground,
+                        timeSelectorSelectedContentColor = colors.ButtonText,
+                        timeSelectorUnselectedContentColor = colors.TextPrimary
                     )
                 )
 
@@ -789,13 +781,13 @@ private fun ChartTimePickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(stringResource(StringKey.BTN_CANCEL), color = ChartInputTheme.TextSecondary)
+                        Text(stringResource(StringKey.BTN_CANCEL), color = colors.TextSecondary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = { onConfirm(timePickerState.hour, timePickerState.minute) }
                     ) {
-                        Text(stringResource(StringKey.BTN_OK), color = ChartInputTheme.AccentColor)
+                        Text(stringResource(StringKey.BTN_OK), color = colors.AccentPrimary)
                     }
                 }
             }
@@ -805,11 +797,12 @@ private fun ChartTimePickerDialog(
 
 @Composable
 private fun SectionTitle(title: String) {
+    val colors = LocalAppThemeColors.current
     Text(
         text = title,
         fontSize = 16.sp,
         fontWeight = FontWeight.SemiBold,
-        color = ChartInputTheme.TextPrimary,
+        color = colors.TextPrimary,
         letterSpacing = 0.5.sp
     )
 }
@@ -823,10 +816,11 @@ private fun ChartOutlinedTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
+    val colors = LocalAppThemeColors.current
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = ChartInputTheme.TextSecondary, fontSize = 14.sp) },
+        label = { Text(label, color = colors.TextSecondary, fontSize = 14.sp) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
@@ -838,17 +832,20 @@ private fun ChartOutlinedTextField(
 }
 
 @Composable
-private fun chartTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = ChartInputTheme.TextPrimary,
-    unfocusedTextColor = ChartInputTheme.TextPrimary,
-    focusedBorderColor = ChartInputTheme.AccentColor,
-    unfocusedBorderColor = ChartInputTheme.BorderColor,
-    focusedLabelColor = ChartInputTheme.AccentColor,
-    unfocusedLabelColor = ChartInputTheme.TextSecondary,
-    cursorColor = ChartInputTheme.AccentColor,
-    focusedTrailingIconColor = ChartInputTheme.TextSecondary,
-    unfocusedTrailingIconColor = ChartInputTheme.TextSecondary
-)
+private fun chartTextFieldColors(): TextFieldColors {
+    val colors = LocalAppThemeColors.current
+    return OutlinedTextFieldDefaults.colors(
+        focusedTextColor = colors.TextPrimary,
+        unfocusedTextColor = colors.TextPrimary,
+        focusedBorderColor = colors.AccentPrimary,
+        unfocusedBorderColor = colors.BorderColor,
+        focusedLabelColor = colors.AccentPrimary,
+        unfocusedLabelColor = colors.TextSecondary,
+        cursorColor = colors.AccentPrimary,
+        focusedTrailingIconColor = colors.TextSecondary,
+        unfocusedTrailingIconColor = colors.TextSecondary
+    )
+}
 
 @Composable
 private fun DateTimeChip(
@@ -857,6 +854,7 @@ private fun DateTimeChip(
     modifier: Modifier = Modifier,
     contentDescription: String? = null
 ) {
+    val colors = LocalAppThemeColors.current
     Surface(
         onClick = onClick,
         modifier = modifier
@@ -867,8 +865,8 @@ private fun DateTimeChip(
                 } else Modifier
             ),
         shape = RoundedCornerShape(26.dp),
-        color = ChartInputTheme.ChipBackground,
-        border = BorderStroke(1.dp, ChartInputTheme.BorderColor)
+        color = colors.ChipBackground,
+        border = BorderStroke(1.dp, colors.BorderColor)
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -876,7 +874,7 @@ private fun DateTimeChip(
         ) {
             Text(
                 text = text,
-                color = ChartInputTheme.TextPrimary,
+                color = colors.TextPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -891,12 +889,13 @@ private fun GenderChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalAppThemeColors.current
     Surface(
         onClick = onClick,
         modifier = modifier.height(40.dp),
         shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) ChartInputTheme.AccentColor else ChartInputTheme.ChipBackground,
-        border = BorderStroke(1.dp, if (isSelected) ChartInputTheme.AccentColor else ChartInputTheme.BorderColor)
+        color = if (isSelected) colors.AccentPrimary else colors.ChipBackground,
+        border = BorderStroke(1.dp, if (isSelected) colors.AccentPrimary else colors.BorderColor)
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -904,7 +903,7 @@ private fun GenderChip(
         ) {
             Text(
                 text = text,
-                color = if (isSelected) ChartInputTheme.ButtonText else ChartInputTheme.TextPrimary,
+                color = if (isSelected) colors.ButtonText else colors.TextPrimary,
                 fontSize = 12.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )

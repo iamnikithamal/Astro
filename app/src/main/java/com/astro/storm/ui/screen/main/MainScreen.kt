@@ -86,6 +86,7 @@ fun MainScreen(
     var showProfileSwitcher by remember { mutableStateOf(false) }
     val profileSheetState = rememberModalBottomSheetState()
     val language = LocalLanguage.current
+    val colors = AppTheme.current
 
     // Observe UI state for export feedback
     val uiState by viewModel.uiState.collectAsState()
@@ -145,19 +146,19 @@ fun MainScreen(
                 Snackbar(
                     snackbarData = data,
                     containerColor = when (effectiveState) {
-                        is ChartUiState.Error -> AppTheme.ErrorColor
-                        is ChartUiState.Exported -> AppTheme.SuccessColor
-                        else -> AppTheme.CardBackground
+                        is ChartUiState.Error -> colors.ErrorColor
+                        is ChartUiState.Exported -> colors.SuccessColor
+                        else -> colors.CardBackground
                     },
                     contentColor = when (effectiveState) {
-                        is ChartUiState.Error, is ChartUiState.Exported -> AppTheme.TextPrimary
-                        else -> AppTheme.TextSecondary
+                        is ChartUiState.Error, is ChartUiState.Exported -> colors.TextPrimary
+                        else -> colors.TextSecondary
                     },
-                    actionColor = AppTheme.AccentPrimary
+                    actionColor = colors.AccentPrimary
                 )
             }
         },
-        containerColor = AppTheme.ScreenBackground,
+        containerColor = colors.ScreenBackground,
         topBar = {
             MainTopBar(
                 currentTab = selectedTab,
@@ -281,13 +282,14 @@ private fun MainTopBar(
     onProfileClick: () -> Unit
 ) {
     val language = LocalLanguage.current
+    val colors = AppTheme.current
     TopAppBar(
         title = {
             Text(
                 text = currentTab.getLocalizedTitle(language),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextPrimary
+                color = colors.TextPrimary
             )
         },
         actions = {
@@ -297,8 +299,8 @@ private fun MainTopBar(
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = AppTheme.ScreenBackground,
-            titleContentColor = AppTheme.TextPrimary
+            containerColor = colors.ScreenBackground,
+            titleContentColor = colors.TextPrimary
         )
     )
 }
@@ -309,9 +311,10 @@ private fun MainBottomNavigation(
     onTabSelected: (MainTab) -> Unit
 ) {
     val language = LocalLanguage.current
+    val colors = AppTheme.current
     NavigationBar(
-        containerColor = AppTheme.NavBarBackground,
-        contentColor = AppTheme.TextPrimary,
+        containerColor = colors.NavBarBackground,
+        contentColor = colors.TextPrimary,
         tonalElevation = 0.dp,
         modifier = Modifier
             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
@@ -338,11 +341,11 @@ private fun MainBottomNavigation(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = AppTheme.NavItemSelected,
-                    selectedTextColor = AppTheme.NavItemSelected,
-                    unselectedIconColor = AppTheme.NavItemUnselected,
-                    unselectedTextColor = AppTheme.NavItemUnselected,
-                    indicatorColor = AppTheme.NavIndicator
+                    selectedIconColor = colors.NavItemSelected,
+                    selectedTextColor = colors.NavItemSelected,
+                    unselectedIconColor = colors.NavItemUnselected,
+                    unselectedTextColor = colors.NavItemUnselected,
+                    indicatorColor = colors.NavIndicator
                 )
             )
         }

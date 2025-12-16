@@ -64,51 +64,100 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF4A5ABA),
+    // Primary colors - warm brown tones for Vedic astrology aesthetic
+    primary = Color(0xFF6B5D4D),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0E2FF),
-    onPrimaryContainer = Color(0xFF0F1649),
-    secondary = Color(0xFF8C4A42),
+    primaryContainer = Color(0xFFEDE7DF),
+    onPrimaryContainer = Color(0xFF2C2418),
+
+    // Secondary colors
+    secondary = Color(0xFF8B7355),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFFDAD6),
-    onSecondaryContainer = Color(0xFF3A0A06),
-    tertiary = Color(0xFF6F5D00),
+    secondaryContainer = Color(0xFFF5EDE5),
+    onSecondaryContainer = Color(0xFF3D322B),
+
+    // Tertiary colors - gold accents
+    tertiary = Color(0xFFB8860B),
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFF0C7),
-    onTertiaryContainer = Color(0xFF231B00),
-    background = Color(0xFFFBF8FF),
-    onBackground = Color(0xFF1B1B21),
-    surface = Color(0xFFFBF8FF),
-    onSurface = Color(0xFF1B1B21),
-    surfaceVariant = Color(0xFFE4E1EC),
-    onSurfaceVariant = Color(0xFF46464F)
+    tertiaryContainer = Color(0xFFFFF8E1),
+    onTertiaryContainer = Color(0xFF3D3215),
+
+    // Background & Surface - cream/warm white
+    background = Color(0xFFF5F2ED),
+    onBackground = Color(0xFF2C2418),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF2C2418),
+    surfaceVariant = Color(0xFFEDE7DF),
+    onSurfaceVariant = Color(0xFF5A4D3D),
+
+    // Outline
+    outline = Color(0xFFD4C8B8),
+    outlineVariant = Color(0xFFE8DFD6),
+
+    // Inverse
+    inverseSurface = Color(0xFF2C2418),
+    inverseOnSurface = Color(0xFFF5F2ED),
+    inversePrimary = Color(0xFFB8A99A),
+
+    // Error
+    error = Color(0xFFD32F2F),
+    onError = Color.White,
+    errorContainer = Color(0xFFFFEBEE),
+    onErrorContainer = Color(0xFF690005),
+
+    // Surface tints
+    surfaceTint = Color(0xFF6B5D4D),
+    scrim = Color(0x40000000)
 )
 
+/**
+ * Main theme composable for AstroStorm
+ *
+ * @param darkTheme Whether to use dark theme. If not specified, follows system preference.
+ * @param dynamicColor Whether to use dynamic color (Material You). Not currently used.
+ * @param content The content to render with this theme.
+ */
 @Composable
 fun AstroStormTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Always use dark theme for astronomy app - clean, professional look
-    val colorScheme = DarkColorScheme
+    // Select color scheme based on dark/light preference
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    // Select AppTheme colors based on dark/light preference
+    val appThemeColors = if (darkTheme) DarkAppThemeColors else LightAppThemeColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
+            // Use appropriate status bar color based on theme
+            window.statusBarColor = if (darkTheme) {
+                DarkAppThemeColors.ScreenBackground.toArgb()
+            } else {
+                LightAppThemeColors.ScreenBackground.toArgb()
+            }
+            window.navigationBarColor = if (darkTheme) {
+                DarkAppThemeColors.NavBarBackground.toArgb()
+            } else {
+                LightAppThemeColors.NavBarBackground.toArgb()
+            }
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = false
-                isAppearanceLightNavigationBars = false
+                // Light status bar icons for dark theme, dark icons for light theme
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
             }
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    // Provide both Material theme and custom AppTheme colors
+    ProvideAppThemeColors(colors = appThemeColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
