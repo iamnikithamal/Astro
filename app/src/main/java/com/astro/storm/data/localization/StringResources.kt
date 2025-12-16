@@ -911,7 +911,30 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     PROFILE_SELECT("Select Profile", "प्रोफाइल छान्नुहोस्"),
     PROFILE_CURRENT_A11Y("Current profile: %s. Tap to switch profiles", "हालको प्रोफाइल: %s। प्रोफाइलहरू बदल्न ट्याप गर्नुहोस्"),
     PROFILE_NO_SELECTED_A11Y("No profile selected. Tap to select a profile", "कुनै प्रोफाइल छानिएको छैन। प्रोफाइल छान्न ट्याप गर्नुहोस्"),
-    PROFILE_BIRTH_CHART("Birth chart", "जन्म कुण्डली");
+    PROFILE_BIRTH_CHART("Birth chart", "जन्म कुण्डली"),
+
+    // ============================================
+    // TRANSITS SCREEN
+    // ============================================
+    TRANSIT_CURRENT_MOVEMENTS("Current movements in %s", "%s मा हालको गति"),
+    TRANSIT_PLANET_POSITIONS("Current Positions", "हालको स्थितिहरू"),
+    TRANSIT_OVERVIEW("Transit Overview", "गोचर अवलोकन"),
+    TRANSIT_CURRENT_INFLUENCES("Current influences on your chart", "तपाईंको कुण्डलीमा हालको प्रभावहरू"),
+    TRANSIT_PLANETS_COUNT("Planets Transiting", "गोचरमा ग्रहहरू"),
+    TRANSIT_MAJOR_TRANSITS("Major Transits", "मुख्य गोचरहरू"),
+    TRANSIT_QUALITY_LABEL("Quality Score", "गुणस्तर स्कोर"),
+    TRANSIT_OVERALL_ASSESSMENT("Overall Assessment", "समग्र मूल्यांकन"),
+    TRANSIT_RETROGRADE_SYMBOL("Rx", "Rx"),
+    TRANSIT_HOUSE_LABEL("House", "भाव"),
+    TRANSIT_LABEL("Transit", "गोचर"),
+    TRANSIT_NATAL_LABEL("Natal", "जन्म"),
+    TRANSIT_NO_PLANETS_TRANSITING("No planets in this house", "यस भावमा कोनै ग्रह छैन"),
+    TRANSIT_UPCOMING("Upcoming Transits", "आगामी गोचरहरू"),
+    TRANSIT_NO_UPCOMING("No upcoming significant transits", "कुनै आगामी महत्त्वपूर्ण गोचरहरू छैनन्"),
+    TRANSIT_TO_NATAL_ASPECTS("Transit to Natal Aspects", "गोचर-जन्म पहलुहरू"),
+    TRANSIT_NO_ASPECTS("No transit aspects at this time", "यस समयमा कुनै गोचर पहलुहरू छैनन्"),
+    TRANSIT_NO_DATA("No Transit Data", "कुनै गोचर डाटा छैन"),
+    TRANSIT_SELECT_CHART("Select a chart to view transits", "गोचरहरू हेर्न कुण्डली छान्नुहोस्");
 
 }
 
