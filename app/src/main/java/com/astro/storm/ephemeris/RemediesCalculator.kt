@@ -279,10 +279,11 @@ object RemediesCalculator {
             ZodiacSign.LIBRA, 10.0,
             ZodiacSign.LEO, 0.0, 20.0
         ),
+        // Moon: Exalted at 3° Taurus, Moolatrikona 3°-27° Taurus per BPHS
         Planet.MOON to ExaltationDebilitationInfo(
             ZodiacSign.TAURUS, 3.0,
             ZodiacSign.SCORPIO, 3.0,
-            ZodiacSign.TAURUS, 3.0, 30.0
+            ZodiacSign.TAURUS, 3.0, 27.0
         ),
         Planet.MARS to ExaltationDebilitationInfo(
             ZodiacSign.CAPRICORN, 28.0,

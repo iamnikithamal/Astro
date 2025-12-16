@@ -37,7 +37,7 @@ object VedicAstrologyUtils {
      * Exaltation signs for each planet.
      * A planet in its exaltation sign is at its strongest state.
      *
-     * Classical references:
+     * Classical references (per BPHS - Brihat Parashara Hora Shastra):
      * - Sun: Aries (10 degrees - exact exaltation point)
      * - Moon: Taurus (3 degrees)
      * - Mars: Capricorn (28 degrees)
@@ -45,8 +45,11 @@ object VedicAstrologyUtils {
      * - Jupiter: Cancer (5 degrees)
      * - Venus: Pisces (27 degrees)
      * - Saturn: Libra (20 degrees)
-     * - Rahu: Gemini/Taurus (varies by tradition)
-     * - Ketu: Sagittarius/Scorpio (varies by tradition)
+     * - Rahu: Taurus (20 degrees) - Per BPHS tradition; some texts use Gemini
+     * - Ketu: Scorpio (20 degrees) - Per BPHS tradition; some texts use Sagittarius
+     *
+     * Note: This app follows the BPHS tradition for Rahu/Ketu exaltation/debilitation.
+     * Rahu and Ketu are always 180° apart, so their exaltation signs are also opposite.
      */
     private val exaltationSigns = mapOf(
         Planet.SUN to ZodiacSign.ARIES,
@@ -56,13 +59,15 @@ object VedicAstrologyUtils {
         Planet.JUPITER to ZodiacSign.CANCER,
         Planet.VENUS to ZodiacSign.PISCES,
         Planet.SATURN to ZodiacSign.LIBRA,
-        Planet.RAHU to ZodiacSign.GEMINI,    // Some texts use Taurus
-        Planet.KETU to ZodiacSign.SAGITTARIUS // Some texts use Scorpio
+        Planet.RAHU to ZodiacSign.TAURUS,    // BPHS tradition (20 degrees)
+        Planet.KETU to ZodiacSign.SCORPIO    // BPHS tradition (20 degrees)
     )
 
     /**
      * Debilitation signs for each planet (opposite of exaltation).
      * A planet in its debilitation sign is at its weakest state.
+     *
+     * Note: Rahu/Ketu debilitation follows BPHS tradition (opposite of exaltation signs).
      */
     private val debilitationSigns = mapOf(
         Planet.SUN to ZodiacSign.LIBRA,
@@ -72,8 +77,8 @@ object VedicAstrologyUtils {
         Planet.JUPITER to ZodiacSign.CAPRICORN,
         Planet.VENUS to ZodiacSign.VIRGO,
         Planet.SATURN to ZodiacSign.ARIES,
-        Planet.RAHU to ZodiacSign.SAGITTARIUS,
-        Planet.KETU to ZodiacSign.GEMINI
+        Planet.RAHU to ZodiacSign.SCORPIO,   // BPHS tradition (opposite of Taurus)
+        Planet.KETU to ZodiacSign.TAURUS     // BPHS tradition (opposite of Scorpio)
     )
 
     /**
@@ -86,11 +91,15 @@ object VedicAstrologyUtils {
     /**
      * Moolatrikona signs and degree ranges.
      * Using consolidated values from AstrologicalConstants for consistency.
-     * Moon's Moolatrikona is 4°-30° Taurus per BPHS Chapter 3.
+     *
+     * Per BPHS Chapter 3:
+     * - Moon's exaltation point is 3° Taurus
+     * - Moon's Moolatrikona is 3°-27° Taurus
+     * - Moon's own sign portion is 27°-30° Taurus (and all of Cancer)
      */
     private val moolatrikonaSigns = mapOf(
         Planet.SUN to MoolatrikonaRange(ZodiacSign.LEO, 0.0, 20.0),
-        Planet.MOON to MoolatrikonaRange(ZodiacSign.TAURUS, 4.0, 30.0),
+        Planet.MOON to MoolatrikonaRange(ZodiacSign.TAURUS, 3.0, 27.0),
         Planet.MARS to MoolatrikonaRange(ZodiacSign.ARIES, 0.0, 12.0),
         Planet.MERCURY to MoolatrikonaRange(ZodiacSign.VIRGO, 16.0, 20.0),
         Planet.JUPITER to MoolatrikonaRange(ZodiacSign.SAGITTARIUS, 0.0, 10.0),
@@ -306,6 +315,19 @@ object VedicAstrologyUtils {
     /**
      * Calculate Panchada (5-fold) relationship considering temporary friendship.
      * Temporary friendship is based on house positions in a chart.
+     *
+     * Per BPHS: Temporary friendship is determined by house distance:
+     * - Temporary Friends: Planets in houses 2, 3, 4, 10, 11, 12 from each other
+     * - Temporary Enemies: Planets in houses 5, 6, 7, 8, 9 from each other
+     * - Same house (distance 1) counts as temporary friend
+     *
+     * The 5-fold (Panchada) relationship combines natural + temporary:
+     * - Natural Friend + Temp Friend = Best Friend (Adhimitra)
+     * - Natural Friend + Temp Enemy = Neutral (Sama)
+     * - Natural Neutral + Temp Friend = Friend (Mitra)
+     * - Natural Neutral + Temp Enemy = Enemy (Shatru)
+     * - Natural Enemy + Temp Friend = Neutral (Sama)
+     * - Natural Enemy + Temp Enemy = Bitter Enemy (Adhishatru)
      */
     fun getComprehensiveRelationship(
         planet1: Planet,
@@ -319,22 +341,37 @@ object VedicAstrologyUtils {
             return getNaturalRelationship(planet1, planet2)
         }
 
-        val houseDiff = abs(pos1.house - pos2.house)
-        val isTemporaryFriend = houseDiff in listOf(0, 1, 2, 3, 4, 10, 11, 12) // 2,3,4,10,11,12 from each other
-        val isTemporaryEnemy = houseDiff in listOf(5, 6, 7, 8, 9)
+        // Calculate house distance from planet1 to planet2 (forward count, 1-indexed)
+        // House distance of 1 means same house, 2 means adjacent house, etc.
+        val houseDistance = ((pos2.house - pos1.house + 12) % 12) + 1
+
+        // Temporary friends: houses 2, 3, 4, 10, 11, 12 from each other (also same house = 1)
+        // This means distances: 1, 2, 3, 4, 10, 11, 12
+        val isTemporaryFriend = houseDistance in listOf(1, 2, 3, 4, 10, 11, 12)
+
+        // Temporary enemies: houses 5, 6, 7, 8, 9 from each other
+        val isTemporaryEnemy = houseDistance in listOf(5, 6, 7, 8, 9)
 
         val naturalRel = getNaturalRelationship(planet1, planet2)
 
-        return when {
-            naturalRel == PlanetaryRelationship.FRIEND && isTemporaryFriend ->
-                PlanetaryRelationship.BEST_FRIEND
-            naturalRel == PlanetaryRelationship.ENEMY && isTemporaryEnemy ->
-                PlanetaryRelationship.BITTER_ENEMY
-            naturalRel == PlanetaryRelationship.FRIEND || isTemporaryFriend ->
-                PlanetaryRelationship.FRIEND
-            naturalRel == PlanetaryRelationship.ENEMY || isTemporaryEnemy ->
-                PlanetaryRelationship.ENEMY
-            else -> PlanetaryRelationship.NEUTRAL
+        // 5-fold (Panchada) relationship calculation per BPHS
+        return when (naturalRel) {
+            PlanetaryRelationship.FRIEND -> when {
+                isTemporaryFriend -> PlanetaryRelationship.BEST_FRIEND  // Friend + Friend = Best Friend
+                isTemporaryEnemy -> PlanetaryRelationship.NEUTRAL       // Friend + Enemy = Neutral
+                else -> PlanetaryRelationship.FRIEND
+            }
+            PlanetaryRelationship.ENEMY -> when {
+                isTemporaryFriend -> PlanetaryRelationship.NEUTRAL      // Enemy + Friend = Neutral
+                isTemporaryEnemy -> PlanetaryRelationship.BITTER_ENEMY  // Enemy + Enemy = Bitter Enemy
+                else -> PlanetaryRelationship.ENEMY
+            }
+            PlanetaryRelationship.NEUTRAL -> when {
+                isTemporaryFriend -> PlanetaryRelationship.FRIEND       // Neutral + Friend = Friend
+                isTemporaryEnemy -> PlanetaryRelationship.ENEMY         // Neutral + Enemy = Enemy
+                else -> PlanetaryRelationship.NEUTRAL
+            }
+            else -> naturalRel  // For BEST_FRIEND and BITTER_ENEMY (shouldn't occur from natural)
         }
     }
 

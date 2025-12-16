@@ -19,6 +19,7 @@ import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.ephemeris.DivisionalChartCalculator
+import com.astro.storm.ephemeris.VedicAstrologyUtils
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -153,57 +154,34 @@ class ChartRenderer {
         }
     }
 
-    private fun isExalted(planet: Planet, sign: ZodiacSign): Boolean = when (planet) {
-        Planet.SUN -> sign == ZodiacSign.ARIES
-        Planet.MOON -> sign == ZodiacSign.TAURUS
-        Planet.MARS -> sign == ZodiacSign.CAPRICORN
-        Planet.MERCURY -> sign == ZodiacSign.VIRGO
-        Planet.JUPITER -> sign == ZodiacSign.CANCER
-        Planet.VENUS -> sign == ZodiacSign.PISCES
-        Planet.SATURN -> sign == ZodiacSign.LIBRA
-        Planet.RAHU -> sign == ZodiacSign.TAURUS || sign == ZodiacSign.GEMINI
-        Planet.KETU -> sign == ZodiacSign.SCORPIO || sign == ZodiacSign.SAGITTARIUS
-        else -> false
-    }
+    /**
+     * Check if a planet is exalted in a sign.
+     * Delegates to centralized VedicAstrologyUtils for consistency.
+     */
+    private fun isExalted(planet: Planet, sign: ZodiacSign): Boolean =
+        VedicAstrologyUtils.isExalted(planet, sign)
 
-    private fun isDebilitated(planet: Planet, sign: ZodiacSign): Boolean = when (planet) {
-        Planet.SUN -> sign == ZodiacSign.LIBRA
-        Planet.MOON -> sign == ZodiacSign.SCORPIO
-        Planet.MARS -> sign == ZodiacSign.CANCER
-        Planet.MERCURY -> sign == ZodiacSign.PISCES
-        Planet.JUPITER -> sign == ZodiacSign.CAPRICORN
-        Planet.VENUS -> sign == ZodiacSign.VIRGO
-        Planet.SATURN -> sign == ZodiacSign.ARIES
-        Planet.RAHU -> sign == ZodiacSign.SCORPIO || sign == ZodiacSign.SAGITTARIUS
-        Planet.KETU -> sign == ZodiacSign.TAURUS || sign == ZodiacSign.GEMINI
-        else -> false
-    }
+    /**
+     * Check if a planet is debilitated in a sign.
+     * Delegates to centralized VedicAstrologyUtils for consistency.
+     */
+    private fun isDebilitated(planet: Planet, sign: ZodiacSign): Boolean =
+        VedicAstrologyUtils.isDebilitated(planet, sign)
 
-    private fun isOwnSign(planet: Planet, sign: ZodiacSign): Boolean = when (planet) {
-        Planet.SUN -> sign == ZodiacSign.LEO
-        Planet.MOON -> sign == ZodiacSign.CANCER
-        Planet.MARS -> sign == ZodiacSign.ARIES || sign == ZodiacSign.SCORPIO
-        Planet.MERCURY -> sign == ZodiacSign.GEMINI || sign == ZodiacSign.VIRGO
-        Planet.JUPITER -> sign == ZodiacSign.SAGITTARIUS || sign == ZodiacSign.PISCES
-        Planet.VENUS -> sign == ZodiacSign.TAURUS || sign == ZodiacSign.LIBRA
-        Planet.SATURN -> sign == ZodiacSign.CAPRICORN || sign == ZodiacSign.AQUARIUS
-        Planet.RAHU -> sign == ZodiacSign.AQUARIUS || sign == ZodiacSign.VIRGO
-        Planet.KETU -> sign == ZodiacSign.SCORPIO || sign == ZodiacSign.PISCES
-        else -> false
-    }
+    /**
+     * Check if a planet is in its own sign.
+     * Delegates to centralized VedicAstrologyUtils for consistency.
+     */
+    private fun isOwnSign(planet: Planet, sign: ZodiacSign): Boolean =
+        VedicAstrologyUtils.isInOwnSign(planet, sign)
 
+    /**
+     * Check if a planet is in Moolatrikona.
+     * Delegates to centralized VedicAstrologyUtils for consistency.
+     */
     private fun isMoolTrikona(planet: Planet, sign: ZodiacSign, longitude: Double): Boolean {
         val degreeInSign = longitude % 30.0
-        return when (planet) {
-            Planet.SUN -> sign == ZodiacSign.LEO && degreeInSign >= 0.0 && degreeInSign <= 20.0
-            Planet.MOON -> sign == ZodiacSign.TAURUS && degreeInSign >= 3.0 && degreeInSign <= 30.0
-            Planet.MARS -> sign == ZodiacSign.ARIES && degreeInSign >= 0.0 && degreeInSign <= 12.0
-            Planet.MERCURY -> sign == ZodiacSign.VIRGO && degreeInSign >= 15.0 && degreeInSign <= 20.0
-            Planet.JUPITER -> sign == ZodiacSign.SAGITTARIUS && degreeInSign >= 0.0 && degreeInSign <= 10.0
-            Planet.VENUS -> sign == ZodiacSign.LIBRA && degreeInSign >= 0.0 && degreeInSign <= 15.0
-            Planet.SATURN -> sign == ZodiacSign.AQUARIUS && degreeInSign >= 0.0 && degreeInSign <= 20.0
-            else -> false
-        }
+        return VedicAstrologyUtils.isInMoolatrikona(planet, sign, degreeInSign)
     }
 
     private fun getPlanetaryDignity(planet: Planet, sign: ZodiacSign, longitude: Double): PlanetaryDignity {

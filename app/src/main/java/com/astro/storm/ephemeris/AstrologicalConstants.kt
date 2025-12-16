@@ -235,9 +235,15 @@ object AstrologicalConstants {
         val endDegree: Double
     )
 
+    /**
+     * Per BPHS Chapter 3:
+     * - Moon's exaltation point is 3° Taurus
+     * - Moon's Moolatrikona is 3°-27° Taurus
+     * - Moon's own sign portion is 27°-30° Taurus (and all of Cancer)
+     */
     val MOOLATRIKONA_RANGES = mapOf(
         Planet.SUN to MoolatrikonaRange(ZodiacSign.LEO, 0.0, 20.0),
-        Planet.MOON to MoolatrikonaRange(ZodiacSign.TAURUS, 4.0, 30.0),
+        Planet.MOON to MoolatrikonaRange(ZodiacSign.TAURUS, 3.0, 27.0),
         Planet.MARS to MoolatrikonaRange(ZodiacSign.ARIES, 0.0, 12.0),
         Planet.MERCURY to MoolatrikonaRange(ZodiacSign.VIRGO, 16.0, 20.0),
         Planet.JUPITER to MoolatrikonaRange(ZodiacSign.SAGITTARIUS, 0.0, 10.0),
