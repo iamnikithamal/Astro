@@ -80,6 +80,16 @@ import com.astro.storm.ui.screen.chartdetail.ChartDetailUtils
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+// Performance Optimization: Define formatters as top-level constants to avoid
+// recreating them on each recomposition. This reduces object allocation and
+// improves rendering performance, especially in frequently recomposed UIs.
+private val birthDateFormatter: DateTimeFormatter by lazy {
+    DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
+}
+private val birthTimeFormatter: DateTimeFormatter by lazy {
+    DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+}
+
 @Composable
 fun ChartTabContent(
     chart: VedicChart,
@@ -469,14 +479,22 @@ private fun BirthDetailsCard(
     )
 
     val birthData = chart.birthData
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault()) }
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()) }
 
+    // Performance Optimization: Formatting is now done with the top-level
+    // birthDateFormatter and birthTimeFormatter constants.
     val formattedDate = remember(birthData.dateTime) {
-        try { birthData.dateTime.format(dateFormatter) } catch (e: Exception) { "N/A" }
+        try {
+            birthData.dateTime.format(birthDateFormatter)
+        } catch (e: Exception) {
+            "N/A"
+        }
     }
     val formattedTime = remember(birthData.dateTime) {
-        try { birthData.dateTime.format(timeFormatter) } catch (e: Exception) { "N/A" }
+        try {
+            birthData.dateTime.format(birthTimeFormatter)
+        } catch (e: Exception) {
+            "N/A"
+        }
     }
     val formattedLocation = remember(birthData.location, birthData.latitude, birthData.longitude) {
         birthData.location.takeIf { it.isNotBlank() }
