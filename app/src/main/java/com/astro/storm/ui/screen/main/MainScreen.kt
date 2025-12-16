@@ -187,6 +187,7 @@ fun MainScreen(
                     MainTab.HOME -> {
                         HomeTab(
                             chart = currentChart,
+                            onAddNewChart = onAddNewChart,
                             onFeatureClick = { feature ->
                                 if (feature.isImplemented) {
                                     when (feature) {

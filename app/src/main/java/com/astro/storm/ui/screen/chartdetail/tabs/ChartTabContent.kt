@@ -111,13 +111,14 @@ fun ChartTabContent(
     // Performance Optimization: Use rememberSaveable to preserve the expanded/collapsed
     // state of UI cards across configuration changes (e.g., screen rotation). This
     // provides a better user experience by maintaining the UI state.
+    // Note: All sections are expanded by default for better UX
     val expandedCardTitles = rememberSaveable(
         saver = listSaver(
             save = { it.toList() },
             restore = { it.toMutableStateList() }
         )
     ) {
-        mutableStateListOf<String>()
+        mutableStateListOf("HouseCusps", "BirthDetails", "AstronomicalData")
     }
 
     val currentChartData = remember(selectedChartType, divisionalChartsMap) {
@@ -940,20 +941,12 @@ private fun HouseCuspsCard(
                         color = ChartDetailColors.TextPrimary
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (isExpanded) stringResource(StringKeyAnalysis.CHART_TAP_HOUSE_FOR_DETAILS) else stringResource(StringKeyAnalysis.CHART_TAP_TO_EXPAND),
-                        fontSize = 11.sp,
-                        color = ChartDetailColors.TextMuted
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = ChartDetailColors.TextMuted,
-                        modifier = Modifier.rotate(rotation)
-                    )
-                }
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = ChartDetailColors.TextMuted,
+                    modifier = Modifier.rotate(rotation)
+                )
             }
 
             AnimatedVisibility(
@@ -1072,20 +1065,12 @@ private fun AstronomicalDataCard(
                         color = ChartDetailColors.TextPrimary
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (isExpanded) "" else stringResource(StringKeyAnalysis.CHART_TAP_TO_EXPAND),
-                        fontSize = 11.sp,
-                        color = ChartDetailColors.TextMuted
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = ChartDetailColors.TextMuted,
-                        modifier = Modifier.rotate(rotation)
-                    )
-                }
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = ChartDetailColors.TextMuted,
+                    modifier = Modifier.rotate(rotation)
+                )
             }
 
             AnimatedVisibility(

@@ -34,6 +34,8 @@ import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.HouseSystem
 import com.astro.storm.data.model.VedicChart
+import com.astro.storm.data.preferences.ThemeManager
+import com.astro.storm.data.preferences.ThemeMode
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.theme.AppTheme
 
@@ -122,6 +124,10 @@ fun SettingsTab(
 
         item {
             LanguageSetting(localizationManager = localizationManager)
+        }
+
+        item {
+            ThemeSetting()
         }
 
         // Note: Date system selector removed - it now automatically follows language
@@ -646,6 +652,133 @@ private fun LanguageSetting(localizationManager: LocalizationManager?) {
     }
 }
 
+/**
+ * Theme Selection Setting
+ */
+@Composable
+private fun ThemeSetting() {
+    val context = LocalContext.current
+    val themeManager = remember { ThemeManager.getInstance(context) }
+    val currentTheme by themeManager.themeMode.collectAsState()
+    var expanded by remember { mutableStateOf(false) }
+
+    val themeModes = listOf(
+        ThemeMode.LIGHT to Triple(Icons.Outlined.LightMode, "Light", "Always use light theme"),
+        ThemeMode.DARK to Triple(Icons.Outlined.DarkMode, "Dark", "Always use dark theme"),
+        ThemeMode.SYSTEM to Triple(Icons.Outlined.Brightness6, "System", "Follow device settings")
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.CardBackground),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AppTheme.ChipBackground),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val icon = when (currentTheme) {
+                        ThemeMode.LIGHT -> Icons.Outlined.LightMode
+                        ThemeMode.DARK -> Icons.Outlined.DarkMode
+                        ThemeMode.SYSTEM -> Icons.Outlined.Brightness6
+                    }
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = AppTheme.AccentPrimary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Theme",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = AppTheme.TextPrimary
+                    )
+                    Text(
+                        text = currentTheme.displayName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppTheme.AccentPrimary
+                    )
+                }
+
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = AppTheme.TextMuted
+                )
+            }
+
+            if (expanded) {
+                HorizontalDivider(color = AppTheme.DividerColor)
+
+                themeModes.forEach { (mode, info) ->
+                    val (icon, name, description) = info
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                themeManager.setThemeMode(mode)
+                                expanded = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = mode == currentTheme,
+                            onClick = {
+                                themeManager.setThemeMode(mode)
+                                expanded = false
+                            },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = AppTheme.AccentPrimary,
+                                unselectedColor = AppTheme.TextMuted
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (mode == currentTheme) AppTheme.AccentPrimary else AppTheme.TextMuted,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = if (mode == currentTheme) AppTheme.TextPrimary else AppTheme.TextSecondary
+                            )
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AppTheme.TextMuted
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun AyanamsaSetting() {

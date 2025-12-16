@@ -8,6 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,9 @@ class MainActivity : ComponentActivity() {
             val hasCompletedOnboarding by onboardingManager.hasCompletedOnboarding.collectAsState()
             var showOnboarding by remember { mutableStateOf(!hasCompletedOnboarding) }
 
+            // Track if we should navigate to chart input after onboarding
+            var navigateToChartInputAfterOnboarding by remember { mutableStateOf(false) }
+
             LocalizationProvider {
                 AstroStormTheme(darkTheme = useDarkTheme) {
                     val colors = LocalAppThemeColors.current
@@ -59,13 +63,25 @@ class MainActivity : ComponentActivity() {
                     ) {
                         if (showOnboarding) {
                             OnboardingScreen(
-                                onComplete = {
+                                onComplete = { shouldNavigateToChartInput ->
+                                    navigateToChartInputAfterOnboarding = shouldNavigateToChartInput
                                     showOnboarding = false
                                 }
                             )
                         } else {
                             val navController = rememberNavController()
                             val viewModel: ChartViewModel = viewModel()
+
+                            // Navigate to chart input if coming from onboarding
+                            LaunchedEffect(navigateToChartInputAfterOnboarding) {
+                                if (navigateToChartInputAfterOnboarding) {
+                                    navController.navigate("chart_input") {
+                                        launchSingleTop = true
+                                    }
+                                    navigateToChartInputAfterOnboarding = false
+                                }
+                            }
+
                             AstroStormNavigation(
                                 navController = navController,
                                 viewModel = viewModel

@@ -274,96 +274,285 @@ val LocalAppThemeColors = staticCompositionLocalOf { DarkAppThemeColors }
 /**
  * App Theme object for accessing current theme colors
  *
- * This object provides backward-compatible access to theme colors.
- * It delegates to the current theme from CompositionLocal when accessed
- * inside a Composable, or falls back to dark theme colors for static access.
+ * IMPORTANT: In Composable functions, use LocalAppThemeColors.current for theme-aware colors.
+ * The static getters on this object are DEPRECATED and only kept for backward compatibility.
+ * They always return dark theme colors regardless of the actual theme setting.
+ *
+ * For new code, always use:
+ *   val colors = LocalAppThemeColors.current
+ *   colors.ScreenBackground // etc.
  */
 object AppTheme {
-    // Current theme accessor for Composables
+    // Current theme accessor for Composables - USE THIS FOR THEME-AWARE COLORS
     val current: AppThemeColors
         @Composable
         @ReadOnlyComposable
         get() = LocalAppThemeColors.current
 
-    // Static fallback colors for non-Composable contexts
-    // These use the dark theme as the default (existing behavior)
-    val ScreenBackground: Color get() = DarkAppThemeColors.ScreenBackground
-    val CardBackground: Color get() = DarkAppThemeColors.CardBackground
-    val CardBackgroundElevated: Color get() = DarkAppThemeColors.CardBackgroundElevated
-    val SurfaceColor: Color get() = DarkAppThemeColors.SurfaceColor
+    // COMPOSABLE THEME-AWARE ACCESSORS
+    // These are the preferred way to access colors in Composable functions
+    val ScreenBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ScreenBackground
 
-    val AccentPrimary: Color get() = DarkAppThemeColors.AccentPrimary
-    val AccentSecondary: Color get() = DarkAppThemeColors.AccentSecondary
-    val AccentGold: Color get() = DarkAppThemeColors.AccentGold
-    val AccentTeal: Color get() = DarkAppThemeColors.AccentTeal
+    val CardBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.CardBackground
 
-    val TextPrimary: Color get() = DarkAppThemeColors.TextPrimary
-    val TextSecondary: Color get() = DarkAppThemeColors.TextSecondary
-    val TextMuted: Color get() = DarkAppThemeColors.TextMuted
-    val TextSubtle: Color get() = DarkAppThemeColors.TextSubtle
+    val CardBackgroundElevated: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.CardBackgroundElevated
 
-    val BorderColor: Color get() = DarkAppThemeColors.BorderColor
-    val DividerColor: Color get() = DarkAppThemeColors.DividerColor
+    val SurfaceColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.SurfaceColor
 
-    val ChipBackground: Color get() = DarkAppThemeColors.ChipBackground
-    val ChipBackgroundSelected: Color get() = DarkAppThemeColors.ChipBackgroundSelected
-    val ButtonBackground: Color get() = DarkAppThemeColors.ButtonBackground
-    val ButtonText: Color get() = DarkAppThemeColors.ButtonText
+    val AccentPrimary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentPrimary
 
-    val SuccessColor: Color get() = DarkAppThemeColors.SuccessColor
-    val WarningColor: Color get() = DarkAppThemeColors.WarningColor
-    val ErrorColor: Color get() = DarkAppThemeColors.ErrorColor
-    val InfoColor: Color get() = DarkAppThemeColors.InfoColor
+    val AccentSecondary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentSecondary
 
-    val ChartBackground: Color get() = DarkAppThemeColors.ChartBackground
-    val ChartBorder: Color get() = DarkAppThemeColors.ChartBorder
+    val AccentGold: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentGold
 
-    val PlanetSun: Color get() = DarkAppThemeColors.PlanetSun
-    val PlanetMoon: Color get() = DarkAppThemeColors.PlanetMoon
-    val PlanetMars: Color get() = DarkAppThemeColors.PlanetMars
-    val PlanetMercury: Color get() = DarkAppThemeColors.PlanetMercury
-    val PlanetJupiter: Color get() = DarkAppThemeColors.PlanetJupiter
-    val PlanetVenus: Color get() = DarkAppThemeColors.PlanetVenus
-    val PlanetSaturn: Color get() = DarkAppThemeColors.PlanetSaturn
-    val PlanetRahu: Color get() = DarkAppThemeColors.PlanetRahu
-    val PlanetKetu: Color get() = DarkAppThemeColors.PlanetKetu
+    val AccentTeal: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentTeal
 
-    val NavBarBackground: Color get() = DarkAppThemeColors.NavBarBackground
-    val NavItemSelected: Color get() = DarkAppThemeColors.NavItemSelected
-    val NavItemUnselected: Color get() = DarkAppThemeColors.NavItemUnselected
-    val NavIndicator: Color get() = DarkAppThemeColors.NavIndicator
+    val TextPrimary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextPrimary
 
-    val BottomSheetBackground: Color get() = DarkAppThemeColors.BottomSheetBackground
-    val BottomSheetHandle: Color get() = DarkAppThemeColors.BottomSheetHandle
+    val TextSecondary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextSecondary
 
-    val PredictionCardToday: Color get() = DarkAppThemeColors.PredictionCardToday
-    val PredictionCardTomorrow: Color get() = DarkAppThemeColors.PredictionCardTomorrow
-    val PredictionCardWeekly: Color get() = DarkAppThemeColors.PredictionCardWeekly
+    val TextMuted: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextMuted
 
-    val LifeAreaCareer: Color get() = DarkAppThemeColors.LifeAreaCareer
-    val LifeAreaLove: Color get() = DarkAppThemeColors.LifeAreaLove
-    val LifeAreaHealth: Color get() = DarkAppThemeColors.LifeAreaHealth
-    val LifeAreaGrowth: Color get() = DarkAppThemeColors.LifeAreaGrowth
-    val LifeAreaFinance: Color get() = DarkAppThemeColors.LifeAreaFinance
-    val LifeAreaSpiritual: Color get() = DarkAppThemeColors.LifeAreaSpiritual
+    val TextSubtle: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextSubtle
+
+    val BorderColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.BorderColor
+
+    val DividerColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.DividerColor
+
+    val ChipBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ChipBackground
+
+    val ChipBackgroundSelected: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ChipBackgroundSelected
+
+    val ButtonBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ButtonBackground
+
+    val ButtonText: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ButtonText
+
+    val SuccessColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.SuccessColor
+
+    val WarningColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.WarningColor
+
+    val ErrorColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ErrorColor
+
+    val InfoColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.InfoColor
+
+    val ChartBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ChartBackground
+
+    val ChartBorder: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ChartBorder
+
+    val PlanetSun: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetSun
+
+    val PlanetMoon: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetMoon
+
+    val PlanetMars: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetMars
+
+    val PlanetMercury: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetMercury
+
+    val PlanetJupiter: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetJupiter
+
+    val PlanetVenus: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetVenus
+
+    val PlanetSaturn: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetSaturn
+
+    val PlanetRahu: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetRahu
+
+    val PlanetKetu: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PlanetKetu
+
+    val NavBarBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.NavBarBackground
+
+    val NavItemSelected: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.NavItemSelected
+
+    val NavItemUnselected: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.NavItemUnselected
+
+    val NavIndicator: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.NavIndicator
+
+    val BottomSheetBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.BottomSheetBackground
+
+    val BottomSheetHandle: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.BottomSheetHandle
+
+    val PredictionCardToday: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PredictionCardToday
+
+    val PredictionCardTomorrow: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PredictionCardTomorrow
+
+    val PredictionCardWeekly: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.PredictionCardWeekly
+
+    val LifeAreaCareer: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaCareer
+
+    val LifeAreaLove: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaLove
+
+    val LifeAreaHealth: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaHealth
+
+    val LifeAreaGrowth: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaGrowth
+
+    val LifeAreaFinance: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaFinance
+
+    val LifeAreaSpiritual: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaSpiritual
 
     // Alias for backward compatibility
-    val CardElevated: Color get() = DarkAppThemeColors.CardBackgroundElevated
+    val CardElevated: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.CardBackgroundElevated
 
     /**
-     * Get color for a specific planet
+     * Get color for a specific planet - Theme-aware composable function
      */
+    @Composable
+    @ReadOnlyComposable
     fun getPlanetColor(planet: Planet): Color = when (planet) {
-        Planet.SUN -> PlanetSun
-        Planet.MOON -> PlanetMoon
-        Planet.MARS -> PlanetMars
-        Planet.MERCURY -> PlanetMercury
-        Planet.JUPITER -> PlanetJupiter
-        Planet.VENUS -> PlanetVenus
-        Planet.SATURN -> PlanetSaturn
-        Planet.RAHU -> PlanetRahu
-        Planet.KETU -> PlanetKetu
-        else -> AccentGold
+        Planet.SUN -> LocalAppThemeColors.current.PlanetSun
+        Planet.MOON -> LocalAppThemeColors.current.PlanetMoon
+        Planet.MARS -> LocalAppThemeColors.current.PlanetMars
+        Planet.MERCURY -> LocalAppThemeColors.current.PlanetMercury
+        Planet.JUPITER -> LocalAppThemeColors.current.PlanetJupiter
+        Planet.VENUS -> LocalAppThemeColors.current.PlanetVenus
+        Planet.SATURN -> LocalAppThemeColors.current.PlanetSaturn
+        Planet.RAHU -> LocalAppThemeColors.current.PlanetRahu
+        Planet.KETU -> LocalAppThemeColors.current.PlanetKetu
+        else -> LocalAppThemeColors.current.AccentGold
     }
 
     /**

@@ -59,14 +59,30 @@ class ChartExporter(private val context: Context) {
     companion object {
         private const val PDF_PAGE_WIDTH = 595 // A4 width in points (72 dpi)
         private const val PDF_PAGE_HEIGHT = 842 // A4 height in points
-        private const val PDF_MARGIN = 40
-        private const val CHART_SIZE = 400
+        private const val PDF_MARGIN = 36
+        private const val PDF_MARGIN_TOP = 48
+        private const val PDF_MARGIN_BOTTOM = 36
+        private const val CHART_SIZE = 320
+        private const val NAVAMSA_SIZE = 200
 
         private const val WATERMARK_TEXT = "AstroStorm"
         private const val WATERMARK_ALPHA = 80
 
         private val dateFormatter = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
         private val displayDateFormatter = SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a", Locale.US)
+
+        // Professional color palette (warm brown theme)
+        private val COLOR_PRIMARY = Color.rgb(107, 93, 77)       // #6B5D4D - Dark brown
+        private val COLOR_SECONDARY = Color.rgb(139, 115, 85)    // #8B7355 - Medium brown
+        private val COLOR_ACCENT = Color.rgb(212, 175, 55)       // #D4AF37 - Gold
+        private val COLOR_BACKGROUND = Color.rgb(250, 248, 245)  // #FAF8F5 - Cream
+        private val COLOR_CARD_BG = Color.rgb(255, 255, 255)     // White
+        private val COLOR_BORDER = Color.rgb(212, 200, 184)      // #D4C8B8 - Light brown
+        private val COLOR_TEXT = Color.rgb(44, 36, 24)           // #2C2418 - Dark text
+        private val COLOR_TEXT_MUTED = Color.rgb(122, 109, 93)   // #7A6D5D - Muted text
+        private val COLOR_SUCCESS = Color.rgb(46, 125, 50)       // Green
+        private val COLOR_WARNING = Color.rgb(237, 108, 2)       // Orange
+        private val COLOR_ERROR = Color.rgb(211, 47, 47)         // Red
     }
 
     /**
@@ -179,82 +195,266 @@ class ChartExporter(private val context: Context) {
         val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
 
         val paint = Paint().apply {
             isAntiAlias = true
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            isSubpixelText = true
         }
 
-        var yPos = PDF_MARGIN.toFloat()
+        var yPos = PDF_MARGIN_TOP.toFloat()
 
-        // Title
-        paint.textSize = 24f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        paint.color = Color.rgb(70, 70, 70)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_VEDIC_REPORT), PDF_MARGIN.toFloat(), yPos + 24f, paint)
-        yPos += 50f
-
-        // Birth Information Box
-        paint.textSize = 12f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-        paint.color = Color.rgb(50, 50, 50)
-
-        val boxPaint = Paint().apply {
-            style = Paint.Style.STROKE
-            color = Color.rgb(180, 140, 100)
-            strokeWidth = 1f
-        }
-        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (options.pageSize.width - PDF_MARGIN).toFloat(), yPos + 80f, boxPaint)
-
-        yPos += 15f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_NAME)} ${chart.birthData.name}", PDF_MARGIN + 10f, yPos + 12f, paint)
-        yPos += 18f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_DATE_TIME)} ${chart.birthData.dateTime}", PDF_MARGIN + 10f, yPos + 12f, paint)
-        yPos += 18f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_LOCATION)} ${chart.birthData.location}", PDF_MARGIN + 10f, yPos + 12f, paint)
-        yPos += 18f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_COORDINATES)} ${formatCoordinate(chart.birthData.latitude.toDouble(), true)}, ${formatCoordinate(chart.birthData.longitude.toDouble(), false)}", PDF_MARGIN + 10f, yPos + 12f, paint)
-
+        // Header with decorative line
+        drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKeyAnalysis.EXPORT_VEDIC_REPORT))
         yPos += 40f
 
-        // Chart Image
-        if (options.includeChart) {
+        // Birth Information Card
+        yPos = drawBirthInfoCard(canvas, paint, chart, yPos, contentWidth)
+        yPos += 24f
+
+        // Charts side by side if both are included
+        if (options.includeChart && options.includeNavamsa) {
             val chartBitmap = chartRenderer.createChartBitmap(chart, CHART_SIZE, CHART_SIZE, density)
-            val chartX = (options.pageSize.width - CHART_SIZE) / 2f
-            canvas.drawBitmap(chartBitmap, chartX, yPos, null)
-            yPos += CHART_SIZE + 20f
-
-            paint.textSize = 10f
-            paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_RASHI), options.pageSize.width / 2f, yPos, paint)
-            paint.textAlign = Paint.Align.LEFT
-            yPos += 20f
-        }
-
-        // Navamsa Chart (smaller)
-        if (options.includeNavamsa) {
             val navamsaData = DivisionalChartCalculator.calculateNavamsa(chart)
             val navamsaBitmap = chartRenderer.createDivisionalChartBitmap(
                 navamsaData.planetPositions,
                 navamsaData.ascendantLongitude,
                 locManager.getString(StringKeyAnalysis.CHART_NAVAMSA),
-                250, 250, density
+                NAVAMSA_SIZE, NAVAMSA_SIZE, density
             )
-            val navamsaX = (options.pageSize.width - 250) / 2f
-            canvas.drawBitmap(navamsaBitmap, navamsaX, yPos, null)
-            yPos += 260f
 
-            paint.textSize = 10f
+            // Position charts side by side
+            val totalChartsWidth = CHART_SIZE + NAVAMSA_SIZE + 24
+            val startX = (pageWidth - totalChartsWidth) / 2f
+
+            // Draw chart labels
+            paint.textSize = 11f
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            paint.color = COLOR_PRIMARY
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_NAVAMSA), options.pageSize.width / 2f, yPos, paint)
+            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_RASHI), startX + CHART_SIZE / 2f, yPos, paint)
+            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_NAVAMSA), startX + CHART_SIZE + 24 + NAVAMSA_SIZE / 2f, yPos, paint)
             paint.textAlign = Paint.Align.LEFT
+            yPos += 12f
+
+            // Draw charts
+            canvas.drawBitmap(chartBitmap, startX, yPos, null)
+            val navamsaY = yPos + (CHART_SIZE - NAVAMSA_SIZE) / 2f
+            canvas.drawBitmap(navamsaBitmap, startX + CHART_SIZE + 24, navamsaY, null)
+
+            yPos += CHART_SIZE + 20f
+        } else if (options.includeChart) {
+            val chartBitmap = chartRenderer.createChartBitmap(chart, CHART_SIZE, CHART_SIZE, density)
+            val chartX = (pageWidth - CHART_SIZE) / 2f
+
+            paint.textSize = 11f
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            paint.color = COLOR_PRIMARY
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_RASHI), pageWidth / 2f, yPos, paint)
+            paint.textAlign = Paint.Align.LEFT
+            yPos += 12f
+
+            canvas.drawBitmap(chartBitmap, chartX, yPos, null)
+            yPos += CHART_SIZE + 20f
         }
+
+        // Quick Summary Card
+        yPos = drawQuickSummaryCard(canvas, paint, chart, yPos, contentWidth)
 
         // Footer
         addPageFooter(canvas, options.pageSize, pageNumber, paint)
 
         document.finishPage(page)
         return pageNumber + 1
+    }
+
+    private fun drawPageHeader(canvas: Canvas, paint: Paint, pageWidth: Float, yPos: Float, title: String) {
+        // Title
+        paint.textSize = 22f
+        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText(title, pageWidth / 2f, yPos + 18f, paint)
+        paint.textAlign = Paint.Align.LEFT
+
+        // Decorative line under title
+        val linePaint = Paint().apply {
+            color = COLOR_ACCENT
+            strokeWidth = 2f
+            style = Paint.Style.STROKE
+        }
+        val lineWidth = 120f
+        val lineX = (pageWidth - lineWidth) / 2f
+        canvas.drawLine(lineX, yPos + 28f, lineX + lineWidth, yPos + 28f, linePaint)
+    }
+
+    private fun drawBirthInfoCard(canvas: Canvas, paint: Paint, chart: VedicChart, startY: Float, contentWidth: Float): Float {
+        var yPos = startY
+        val cardLeft = PDF_MARGIN.toFloat()
+        val cardRight = cardLeft + contentWidth
+        val cardPadding = 12f
+
+        // Card background
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+
+        val cardHeight = 76f
+        canvas.drawRect(cardLeft, yPos, cardRight, yPos + cardHeight, cardPaint)
+        canvas.drawRect(cardLeft, yPos, cardRight, yPos + cardHeight, borderPaint)
+
+        // Accent bar on left
+        val accentPaint = Paint().apply {
+            color = COLOR_ACCENT
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(cardLeft, yPos, cardLeft + 4f, yPos + cardHeight, accentPaint)
+
+        yPos += cardPadding
+
+        // Name (larger, bold)
+        paint.textSize = 14f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_TEXT
+        canvas.drawText(chart.birthData.name, cardLeft + cardPadding + 8f, yPos + 12f, paint)
+        yPos += 20f
+
+        // Birth details in two columns
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT_MUTED
+
+        val col1X = cardLeft + cardPadding + 8f
+        val col2X = cardLeft + contentWidth / 2f
+
+        // Column 1
+        canvas.drawText("${chart.birthData.dateTime.toLocalDate()} | ${chart.birthData.dateTime.toLocalTime()}", col1X, yPos + 10f, paint)
+        yPos += 14f
+        canvas.drawText(chart.birthData.location, col1X, yPos + 10f, paint)
+
+        // Column 2 (same row as column 1 items)
+        val col2Y = startY + cardPadding + 20f
+        canvas.drawText("${formatCoordinate(chart.birthData.latitude.toDouble(), true)}, ${formatCoordinate(chart.birthData.longitude.toDouble(), false)}", col2X, col2Y + 10f, paint)
+        canvas.drawText("TZ: ${chart.birthData.timezone}", col2X, col2Y + 24f, paint)
+
+        return startY + cardHeight
+    }
+
+    private fun drawQuickSummaryCard(canvas: Canvas, paint: Paint, chart: VedicChart, startY: Float, contentWidth: Float): Float {
+        var yPos = startY
+        val cardLeft = PDF_MARGIN.toFloat()
+        val cardRight = cardLeft + contentWidth
+
+        // Section title
+        paint.textSize = 12f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_CHART_SUMMARY), cardLeft, yPos + 12f, paint)
+        yPos += 24f
+
+        // Card background
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+
+        val cardHeight = 70f
+        canvas.drawRect(cardLeft, yPos, cardRight, yPos + cardHeight, cardPaint)
+        canvas.drawRect(cardLeft, yPos, cardRight, yPos + cardHeight, borderPaint)
+
+        // Summary items in row
+        paint.textSize = 9f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT_MUTED
+
+        val itemWidth = contentWidth / 4f
+        val itemY = yPos + 12f
+        val valueY = itemY + 20f
+
+        val ascSign = ZodiacSign.fromLongitude(chart.ascendant)
+        val moonPos = chart.planetPositions.find { it.planet == Planet.MOON }
+        val sunPos = chart.planetPositions.find { it.planet == Planet.SUN }
+
+        // Item 1: Ascendant
+        val item1X = cardLeft + itemWidth * 0.5f
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_ASCENDANT_LAGNA), item1X, itemY, paint)
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText(ascSign.displayName, item1X, valueY, paint)
+
+        // Item 2: Moon Sign
+        val item2X = cardLeft + itemWidth * 1.5f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_MOON_SIGN), item2X, itemY, paint)
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText(moonPos?.sign?.displayName ?: "-", item2X, valueY, paint)
+
+        // Item 3: Sun Sign
+        val item3X = cardLeft + itemWidth * 2.5f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_SUN_SIGN), item3X, itemY, paint)
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText(sunPos?.sign?.displayName ?: "-", item3X, valueY, paint)
+
+        // Item 4: Nakshatra
+        val item4X = cardLeft + itemWidth * 3.5f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_BIRTH_NAKSHATRA).take(10), item4X, itemY, paint)
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        val nakshatra = moonPos?.nakshatra?.displayName?.take(8) ?: "-"
+        canvas.drawText(nakshatra, item4X, valueY, paint)
+
+        paint.textAlign = Paint.Align.LEFT
+
+        // Second row with more details
+        val row2Y = valueY + 22f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.textAlign = Paint.Align.CENTER
+
+        canvas.drawText("${formatDegree(chart.ascendant)}", item1X, row2Y, paint)
+        canvas.drawText(moonPos?.let { "Pada ${it.nakshatraPada}" } ?: "", item2X, row2Y, paint)
+        canvas.drawText(sunPos?.let { formatDegree(it.longitude) } ?: "", item3X, row2Y, paint)
+        canvas.drawText(moonPos?.let { "H${it.house}" } ?: "", item4X, row2Y, paint)
+
+        paint.textAlign = Paint.Align.LEFT
+
+        return yPos + cardHeight
     }
 
     private fun addPlanetaryPositionsPage(
@@ -266,24 +466,31 @@ class ChartExporter(private val context: Context) {
         val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
 
         val paint = Paint().apply {
             isAntiAlias = true
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            isSubpixelText = true
         }
 
-        var yPos = PDF_MARGIN.toFloat()
+        var yPos = PDF_MARGIN_TOP.toFloat()
 
-        // Title
-        paint.textSize = 18f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        paint.color = Color.rgb(70, 70, 70)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_PLANETARY_POSITIONS), PDF_MARGIN.toFloat(), yPos + 18f, paint)
-        yPos += 40f
+        // Title with decorative line
+        drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKeyAnalysis.EXPORT_PLANETARY_POSITIONS))
+        yPos += 48f
 
         // Table Header
-        paint.textSize = 10f
+        paint.textSize = 9f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_CARD_BG
 
         val columns = listOf(
             locManager.getString(StringKeyAnalysis.EXPORT_PLANET),
@@ -294,38 +501,50 @@ class ChartExporter(private val context: Context) {
             locManager.getString(StringKeyAnalysis.EXPORT_HOUSE),
             locManager.getString(StringKeyAnalysis.EXPORT_STATUS)
         )
-        val columnWidths = listOf(60f, 80f, 70f, 100f, 40f, 50f, 80f)
+        val columnWidths = listOf(55f, 75f, 65f, 95f, 35f, 45f, 85f)
         var xPos = PDF_MARGIN.toFloat()
 
-        // Draw header background
+        // Draw header background with rounded appearance
         val headerPaint = Paint().apply {
-            color = Color.rgb(240, 230, 210)
+            color = COLOR_PRIMARY
             style = Paint.Style.FILL
         }
-        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (options.pageSize.width - PDF_MARGIN).toFloat(), yPos + 20f, headerPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + 22f, headerPaint)
 
         columns.forEachIndexed { index, column ->
-            canvas.drawText(column, xPos + 5f, yPos + 14f, paint)
+            canvas.drawText(column, xPos + 4f, yPos + 15f, paint)
             xPos += columnWidths[index]
         }
-        yPos += 25f
+        yPos += 26f
 
         // Table Data
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         paint.textSize = 9f
 
-        chart.planetPositions.forEach { position ->
+        chart.planetPositions.forEachIndexed { rowIndex, position ->
             xPos = PDF_MARGIN.toFloat()
+
+            // Alternating row background
+            if (rowIndex % 2 == 0) {
+                val rowBgPaint = Paint().apply {
+                    color = COLOR_CARD_BG
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + 18f, rowBgPaint)
+            }
 
             val degreeInSign = position.longitude % 30.0
             val deg = degreeInSign.toInt()
             val min = ((degreeInSign - deg) * 60).toInt()
             val sec = ((((degreeInSign - deg) * 60) - min) * 60).toInt()
 
+            val isExaltedPlanet = isExalted(position.planet, position.sign)
+            val isDebilitatedPlanet = isDebilitated(position.planet, position.sign)
+
             val status = buildString {
                 if (position.isRetrograde) append("R ")
-                if (isExalted(position.planet, position.sign)) append("${locManager.getString(StringKeyMatch.PLANETARY_STATUS_EXALTED)} ")
-                if (isDebilitated(position.planet, position.sign)) append("${locManager.getString(StringKeyMatch.PLANETARY_STATUS_DEBILITATED)} ")
+                if (isExaltedPlanet) append("${locManager.getString(StringKeyMatch.PLANETARY_STATUS_EXALTED)} ")
+                if (isDebilitatedPlanet) append("${locManager.getString(StringKeyMatch.PLANETARY_STATUS_DEBILITATED)} ")
             }.trim().ifEmpty { "-" }
 
             val data = listOf(
@@ -339,69 +558,102 @@ class ChartExporter(private val context: Context) {
             )
 
             data.forEachIndexed { index, value ->
-                canvas.drawText(value, xPos + 5f, yPos + 12f, paint)
+                // Special colors for planet name and status
+                paint.color = when {
+                    index == 0 -> COLOR_PRIMARY // Planet name
+                    index == 6 && isExaltedPlanet -> COLOR_SUCCESS
+                    index == 6 && isDebilitatedPlanet -> COLOR_ERROR
+                    index == 6 && position.isRetrograde -> COLOR_WARNING
+                    else -> COLOR_TEXT
+                }
+                paint.typeface = if (index == 0) {
+                    Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                } else {
+                    Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                }
+                canvas.drawText(value, xPos + 4f, yPos + 12f, paint)
                 xPos += columnWidths[index]
             }
 
             // Draw row separator
-            paint.color = Color.rgb(220, 220, 220)
-            paint.strokeWidth = 0.5f
-            canvas.drawLine(PDF_MARGIN.toFloat(), yPos + 18f, (options.pageSize.width - PDF_MARGIN).toFloat(), yPos + 18f, paint)
-            paint.color = Color.rgb(50, 50, 50)
+            val linePaint = Paint().apply {
+                color = COLOR_BORDER
+                strokeWidth = 0.5f
+            }
+            canvas.drawLine(PDF_MARGIN.toFloat(), yPos + 18f, (pageWidth - PDF_MARGIN), yPos + 18f, linePaint)
 
             yPos += 20f
         }
 
         // Astronomical Data Section
-        yPos += 20f
-        paint.textSize = 14f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_ASTRONOMICAL_DATA), PDF_MARGIN.toFloat(), yPos + 14f, paint)
-        yPos += 30f
+        yPos += 24f
+        paint.textSize = 12f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_ASTRONOMICAL_DATA), PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        yPos += 24f
 
-        paint.textSize = 10f
-        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-
-        val astroData = listOf(
-            "${locManager.getString(StringKeyAnalysis.CHART_JULIAN_DAY)}: ${String.format("%.6f", chart.julianDay)}",
-            "${locManager.getString(StringKeyAnalysis.CHART_AYANAMSA)}: ${chart.ayanamsaName}",
-            "${locManager.getString(StringKeyAnalysis.CHART_AYANAMSA)}: ${formatDegree(chart.ayanamsa)}",
-            "${locManager.getString(StringKeyAnalysis.CHART_ASCENDANT_LAGNA)}: ${formatDegree(chart.ascendant)} (${ZodiacSign.fromLongitude(chart.ascendant).displayName})",
-            "${locManager.getString(StringKeyAnalysis.CHART_MIDHEAVEN)}: ${formatDegree(chart.midheaven)} (${ZodiacSign.fromLongitude(chart.midheaven).displayName})",
-            "${locManager.getString(StringKeyAnalysis.CHART_HOUSE_SYSTEM)}: ${chart.houseSystem.displayName}"
-        )
-
-        astroData.forEach { line ->
-            canvas.drawText(line, PDF_MARGIN.toFloat(), yPos + 12f, paint)
-            yPos += 18f
+        // Card background for astro data
+        val astroCardHeight = 100f
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
         }
-
-        // House Cusps Table
-        yPos += 20f
-        paint.textSize = 14f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_HOUSE_CUSPS), PDF_MARGIN.toFloat(), yPos + 14f, paint)
-        yPos += 30f
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + astroCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + astroCardHeight, borderPaint)
 
         paint.textSize = 9f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT
 
-        // Two columns for house cusps
-        val col1X = PDF_MARGIN.toFloat()
-        val col2X = options.pageSize.width / 2f
+        val astroDataY = yPos + 14f
+        val col1 = PDF_MARGIN.toFloat() + 8f
+        val col2 = pageWidth / 2f + 8f
+
+        // Column 1
+        canvas.drawText("${locManager.getString(StringKeyAnalysis.CHART_JULIAN_DAY)}: ${String.format("%.6f", chart.julianDay)}", col1, astroDataY, paint)
+        canvas.drawText("${locManager.getString(StringKeyAnalysis.CHART_AYANAMSA)}: ${chart.ayanamsaName} (${formatDegree(chart.ayanamsa)})", col1, astroDataY + 16f, paint)
+        canvas.drawText("${locManager.getString(StringKeyAnalysis.CHART_ASCENDANT_LAGNA)}: ${formatDegree(chart.ascendant)} (${ZodiacSign.fromLongitude(chart.ascendant).displayName})", col1, astroDataY + 32f, paint)
+
+        // Column 2
+        canvas.drawText("${locManager.getString(StringKeyAnalysis.CHART_MIDHEAVEN)}: ${formatDegree(chart.midheaven)} (${ZodiacSign.fromLongitude(chart.midheaven).displayName})", col2, astroDataY, paint)
+        canvas.drawText("${locManager.getString(StringKeyAnalysis.CHART_HOUSE_SYSTEM)}: ${chart.houseSystem.displayName}", col2, astroDataY + 16f, paint)
+
+        yPos += astroCardHeight + 24f
+
+        // House Cusps Table
+        paint.textSize = 12f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_HOUSE_CUSPS), PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        yPos += 24f
+
+        // House cusps in a 4-column grid
+        val houseCellWidth = contentWidth / 4f
+        paint.textSize = 9f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT
 
         chart.houseCusps.forEachIndexed { index, cusp ->
             val houseNum = index + 1
             val sign = ZodiacSign.fromLongitude(cusp)
-            val text = "${locManager.getString(StringKeyAnalysis.EXPORT_HOUSE)} $houseNum: ${formatDegree(cusp)} (${sign.abbreviation})"
+            val row = index / 4
+            val col = index % 4
+            val cellX = PDF_MARGIN.toFloat() + (col * houseCellWidth) + 8f
+            val cellY = yPos + (row * 18f) + 10f
 
-            if (houseNum <= 6) {
-                canvas.drawText(text, col1X, yPos + 12f, paint)
-            } else {
-                canvas.drawText(text, col2X, yPos - (6 * 18f) + 12f, paint)
-            }
+            paint.color = COLOR_ACCENT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText("H$houseNum", cellX, cellY, paint)
 
-            if (houseNum <= 6) yPos += 18f
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText("${sign.abbreviation} ${formatDegree(cusp % 30.0)}", cellX + 28f, cellY, paint)
         }
 
         addPageFooter(canvas, options.pageSize, pageNumber, paint)
@@ -418,32 +670,66 @@ class ChartExporter(private val context: Context) {
         val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
 
         val paint = Paint().apply {
             isAntiAlias = true
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            isSubpixelText = true
         }
 
-        var yPos = PDF_MARGIN.toFloat()
+        var yPos = PDF_MARGIN_TOP.toFloat()
 
         if (options.includeYogas) {
-            // Yogas Section
-            paint.textSize = 18f
-            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            paint.color = Color.rgb(70, 70, 70)
-            canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_YOGA_ANALYSIS), PDF_MARGIN.toFloat(), yPos + 18f, paint)
-            yPos += 35f
+            // Title with decorative line
+            drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKeyAnalysis.EXPORT_YOGA_ANALYSIS))
+            yPos += 48f
 
             val yogaAnalysis = YogaCalculator.calculateYogas(chart)
 
+            // Summary card
+            val summaryCardHeight = 50f
+            val cardPaint = Paint().apply {
+                color = COLOR_CARD_BG
+                style = Paint.Style.FILL
+            }
+            val borderPaint = Paint().apply {
+                color = COLOR_BORDER
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+            }
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + summaryCardHeight, cardPaint)
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + summaryCardHeight, borderPaint)
+
+            // Accent bar
+            val accentPaint = Paint().apply {
+                color = COLOR_ACCENT
+                style = Paint.Style.FILL
+            }
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + summaryCardHeight, accentPaint)
+
             paint.textSize = 10f
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            paint.color = COLOR_TEXT
 
-            // Summary
-            canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_TOTAL_YOGAS)} ${yogaAnalysis.allYogas.size}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-            yPos += 18f
-            canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_OVERALL_YOGA_STRENGTH)} ${String.format("%.1f", yogaAnalysis.overallYogaStrength)}%", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-            yPos += 25f
+            // Summary items
+            val summaryY = yPos + 20f
+            canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_TOTAL_YOGAS)} ${yogaAnalysis.allYogas.size}", PDF_MARGIN.toFloat() + 16f, summaryY, paint)
+            canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_OVERALL_YOGA_STRENGTH)} ${String.format("%.1f", yogaAnalysis.overallYogaStrength)}%", pageWidth / 2f, summaryY, paint)
+
+            paint.color = COLOR_SUCCESS
+            canvas.drawText("Auspicious: ${yogaAnalysis.allYogas.count { it.isAuspicious }}", PDF_MARGIN.toFloat() + 16f, summaryY + 16f, paint)
+            paint.color = COLOR_WARNING
+            canvas.drawText("Challenging: ${yogaAnalysis.negativeYogas.size}", pageWidth / 2f, summaryY + 16f, paint)
+
+            yPos += summaryCardHeight + 20f
 
             // List top yogas
             val topYogas = yogaAnalysis.allYogas
@@ -452,24 +738,33 @@ class ChartExporter(private val context: Context) {
                 .take(10)
 
             if (topYogas.isNotEmpty()) {
-                paint.textSize = 12f
+                paint.textSize = 11f
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                paint.color = COLOR_PRIMARY
                 canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_KEY_YOGAS)}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
                 yPos += 20f
 
                 paint.textSize = 9f
-                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
                 topYogas.forEach { yoga ->
                     val planets = yoga.planets.joinToString(", ") { it.displayName }
-                    canvas.drawText("• ${yoga.name} ($planets)", PDF_MARGIN.toFloat() + 10f, yPos + 10f, paint)
+
+                    // Yoga name with dot indicator
+                    paint.color = COLOR_SUCCESS
+                    canvas.drawCircle(PDF_MARGIN.toFloat() + 6f, yPos + 6f, 3f, paint)
+
+                    paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                    paint.color = COLOR_TEXT
+                    canvas.drawText("${yoga.name}", PDF_MARGIN.toFloat() + 16f, yPos + 10f, paint)
+
+                    paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                    paint.color = COLOR_TEXT_MUTED
+                    canvas.drawText("($planets)", PDF_MARGIN.toFloat() + 16f + paint.measureText("${yoga.name} "), yPos + 10f, paint)
                     yPos += 14f
 
-                    paint.color = Color.rgb(100, 100, 100)
-                    val effectText = if (yoga.effects.length > 80) yoga.effects.substring(0, 77) + "..." else yoga.effects
-                    canvas.drawText("  ${yoga.strength.displayName}: $effectText", PDF_MARGIN.toFloat() + 15f, yPos + 10f, paint)
-                    paint.color = Color.rgb(50, 50, 50)
-                    yPos += 16f
+                    val effectText = if (yoga.effects.length > 90) yoga.effects.substring(0, 87) + "..." else yoga.effects
+                    canvas.drawText("${yoga.strength.displayName}: $effectText", PDF_MARGIN.toFloat() + 16f, yPos + 10f, paint)
+                    yPos += 18f
 
                     if (yPos > options.pageSize.height - 100) return@forEach
                 }
@@ -477,22 +772,28 @@ class ChartExporter(private val context: Context) {
 
             // Negative Yogas if any
             if (yogaAnalysis.negativeYogas.isNotEmpty() && yPos < options.pageSize.height - 150) {
-                yPos += 15f
-                paint.textSize = 12f
+                yPos += 16f
+                paint.textSize = 11f
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-                paint.color = Color.rgb(150, 50, 50)
+                paint.color = COLOR_ERROR
                 canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_CHALLENGING_YOGAS)}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
                 yPos += 20f
 
                 paint.textSize = 9f
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-                paint.color = Color.rgb(50, 50, 50)
 
                 yogaAnalysis.negativeYogas.take(3).forEach { yoga ->
-                    canvas.drawText("• ${yoga.name}", PDF_MARGIN.toFloat() + 10f, yPos + 10f, paint)
+                    // Warning dot indicator
+                    paint.color = COLOR_WARNING
+                    canvas.drawCircle(PDF_MARGIN.toFloat() + 6f, yPos + 6f, 3f, paint)
+
+                    paint.color = COLOR_TEXT
+                    canvas.drawText("${yoga.name}", PDF_MARGIN.toFloat() + 16f, yPos + 10f, paint)
                     yPos += 14f
+
                     if (yoga.cancellationFactors.isNotEmpty()) {
-                        canvas.drawText("  ${locManager.getString(StringKeyAnalysis.EXPORT_MITIGATED_BY)} ${yoga.cancellationFactors.first()}", PDF_MARGIN.toFloat() + 15f, yPos + 10f, paint)
+                        paint.color = COLOR_SUCCESS
+                        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_MITIGATED_BY)} ${yoga.cancellationFactors.first()}", PDF_MARGIN.toFloat() + 16f, yPos + 10f, paint)
                         yPos += 14f
                     }
                 }
@@ -500,14 +801,14 @@ class ChartExporter(private val context: Context) {
         }
 
         if (options.includeAspects && yPos < options.pageSize.height - 200) {
-            yPos += 25f
+            yPos += 24f
 
             // Aspects Section
-            paint.textSize = 18f
-            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            paint.color = Color.rgb(70, 70, 70)
-            canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_PLANETARY_ASPECTS), PDF_MARGIN.toFloat(), yPos + 18f, paint)
-            yPos += 35f
+            paint.textSize = 11f
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            paint.color = COLOR_PRIMARY
+            canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_PLANETARY_ASPECTS), PDF_MARGIN.toFloat(), yPos + 12f, paint)
+            yPos += 24f
 
             val aspectMatrix = AspectCalculator.calculateAspectMatrix(chart)
 
@@ -518,16 +819,40 @@ class ChartExporter(private val context: Context) {
             val significantAspects = aspectMatrix.aspects
                 .filter { it.drishtiBala > 0.5 }
                 .sortedByDescending { it.drishtiBala }
-                .take(15)
+                .take(12)
 
-            significantAspects.forEach { aspect ->
+            significantAspects.forEachIndexed { index, aspect ->
+                // Alternating background for readability
+                if (index % 2 == 0) {
+                    val rowBgPaint = Paint().apply {
+                        color = COLOR_CARD_BG
+                        style = Paint.Style.FILL
+                    }
+                    canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + 12f, rowBgPaint)
+                }
+
                 val applying = if (aspect.isApplying) locManager.getString(StringKeyAnalysis.TRANSIT_APPLYING) else locManager.getString(StringKeyAnalysis.TRANSIT_SEPARATING)
-                val text = "${aspect.aspectingPlanet.displayName} ${aspect.aspectType.displayName} ${aspect.aspectedPlanet.displayName} " +
-                        "(${locManager.getString(StringKeyAnalysis.TRANSIT_ORB, String.format("%.1f", aspect.exactOrb))}, $applying)"
-                canvas.drawText(text, PDF_MARGIN.toFloat(), yPos + 10f, paint)
-                yPos += 14f
 
-                if (yPos > options.pageSize.height - 80) return@forEach
+                // Planet names in accent color
+                paint.color = COLOR_PRIMARY
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                canvas.drawText("${aspect.aspectingPlanet.displayName}", PDF_MARGIN.toFloat() + 4f, yPos + 10f, paint)
+
+                paint.color = COLOR_TEXT
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                canvas.drawText("${aspect.aspectType.displayName}", PDF_MARGIN.toFloat() + 65f, yPos + 10f, paint)
+
+                paint.color = COLOR_PRIMARY
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                canvas.drawText("${aspect.aspectedPlanet.displayName}", PDF_MARGIN.toFloat() + 145f, yPos + 10f, paint)
+
+                paint.color = COLOR_TEXT_MUTED
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                canvas.drawText("(${String.format("%.1f°", aspect.exactOrb)} $applying)", PDF_MARGIN.toFloat() + 210f, yPos + 10f, paint)
+
+                yPos += 16f
+
+                if (yPos > options.pageSize.height - 60) return@forEachIndexed
             }
         }
 
@@ -545,37 +870,104 @@ class ChartExporter(private val context: Context) {
         val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
 
         val paint = Paint().apply {
             isAntiAlias = true
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            isSubpixelText = true
         }
 
-        var yPos = PDF_MARGIN.toFloat()
+        var yPos = PDF_MARGIN_TOP.toFloat()
 
-        // Title
-        paint.textSize = 18f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        paint.color = Color.rgb(70, 70, 70)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_SHADBALA_ANALYSIS), PDF_MARGIN.toFloat(), yPos + 18f, paint)
-        yPos += 40f
+        // Title with decorative line
+        drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKeyAnalysis.EXPORT_SHADBALA_ANALYSIS))
+        yPos += 48f
 
         val shadbala = ShadbalaCalculator.calculateShadbala(chart)
 
-        // Summary
-        paint.textSize = 11f
+        // Summary Card
+        val summaryCardHeight = 70f
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + summaryCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + summaryCardHeight, borderPaint)
+
+        // Accent bar
+        val accentPaint = Paint().apply {
+            color = COLOR_ACCENT
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + summaryCardHeight, accentPaint)
+
+        // Summary items in row
+        paint.textSize = 9f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT_MUTED
 
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_OVERALL_CHART_STRENGTH)} ${String.format("%.1f", shadbala.overallStrengthScore)}%", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 20f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_STRONGEST_PLANET)} ${shadbala.strongestPlanet.displayName}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 20f
-        canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_WEAKEST_PLANET)} ${shadbala.weakestPlanet.displayName}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 35f
+        val itemWidth = contentWidth / 3f
+        val itemY = yPos + 18f
+        val valueY = itemY + 22f
 
-        // Detailed Table
-        paint.textSize = 10f
+        // Item 1: Overall Strength
+        val item1X = PDF_MARGIN.toFloat() + itemWidth * 0.5f
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_OVERALL_CHART_STRENGTH), item1X, itemY, paint)
+        paint.textSize = 16f
+        paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("${String.format("%.1f", shadbala.overallStrengthScore)}%", item1X, valueY, paint)
+
+        // Item 2: Strongest Planet
+        val item2X = PDF_MARGIN.toFloat() + itemWidth * 1.5f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_STRONGEST_PLANET), item2X, itemY, paint)
+        paint.textSize = 14f
+        paint.color = COLOR_SUCCESS
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText(shadbala.strongestPlanet.displayName, item2X, valueY, paint)
+
+        // Item 3: Weakest Planet
+        val item3X = PDF_MARGIN.toFloat() + itemWidth * 2.5f
+        paint.textSize = 9f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_WEAKEST_PLANET), item3X, itemY, paint)
+        paint.textSize = 14f
+        paint.color = COLOR_ERROR
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText(shadbala.weakestPlanet.displayName, item3X, valueY, paint)
+
+        paint.textAlign = Paint.Align.LEFT
+        yPos += summaryCardHeight + 24f
+
+        // Section title
+        paint.textSize = 12f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_PLANET) + " " + locManager.getString(StringKeyAnalysis.EXPORT_STRENGTH_BREAKDOWN), PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        yPos += 24f
+
+        // Detailed Table Header
+        paint.textSize = 9f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_CARD_BG
 
         val columns = listOf(
             locManager.getString(StringKeyAnalysis.EXPORT_PLANET),
@@ -584,27 +976,36 @@ class ChartExporter(private val context: Context) {
             locManager.getString(StringKeyAnalysis.EXPORT_PERCENT),
             locManager.getString(StringKeyAnalysis.EXPORT_RATING)
         )
-        val columnWidths = listOf(80f, 80f, 70f, 60f, 120f)
+        val columnWidths = listOf(70f, 85f, 75f, 65f, 130f)
         var xPos = PDF_MARGIN.toFloat()
 
-        // Header
+        // Header background
         val headerPaint = Paint().apply {
-            color = Color.rgb(240, 230, 210)
+            color = COLOR_PRIMARY
             style = Paint.Style.FILL
         }
-        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (options.pageSize.width - PDF_MARGIN).toFloat(), yPos + 22f, headerPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + 22f, headerPaint)
 
         columns.forEachIndexed { index, column ->
-            canvas.drawText(column, xPos + 5f, yPos + 16f, paint)
+            canvas.drawText(column, xPos + 4f, yPos + 15f, paint)
             xPos += columnWidths[index]
         }
-        yPos += 28f
+        yPos += 26f
 
-        // Data
+        // Data rows
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
-        shadbala.getPlanetsByStrength().forEach { planetShadbala ->
+        shadbala.getPlanetsByStrength().forEachIndexed { rowIndex, planetShadbala ->
             xPos = PDF_MARGIN.toFloat()
+
+            // Alternating row background
+            if (rowIndex % 2 == 0) {
+                val rowBgPaint = Paint().apply {
+                    color = COLOR_CARD_BG
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + 18f, rowBgPaint)
+            }
 
             val data = listOf(
                 planetShadbala.planet.displayName,
@@ -614,49 +1015,76 @@ class ChartExporter(private val context: Context) {
                 planetShadbala.strengthRating.displayName
             )
 
-            // Color code based on strength
-            paint.color = when {
-                planetShadbala.percentageOfRequired >= 100 -> Color.rgb(0, 100, 0)
-                planetShadbala.percentageOfRequired >= 80 -> Color.rgb(50, 50, 50)
-                else -> Color.rgb(150, 50, 50)
-            }
-
             data.forEachIndexed { index, value ->
-                canvas.drawText(value, xPos + 5f, yPos + 14f, paint)
+                // Color code based on strength and column
+                paint.color = when {
+                    index == 0 -> COLOR_PRIMARY // Planet name
+                    index == 3 && planetShadbala.percentageOfRequired >= 100 -> COLOR_SUCCESS
+                    index == 3 && planetShadbala.percentageOfRequired < 80 -> COLOR_ERROR
+                    index == 4 && planetShadbala.percentageOfRequired >= 100 -> COLOR_SUCCESS
+                    index == 4 && planetShadbala.percentageOfRequired < 80 -> COLOR_ERROR
+                    else -> COLOR_TEXT
+                }
+                paint.typeface = if (index == 0) {
+                    Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                } else {
+                    Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                }
+                canvas.drawText(value, xPos + 4f, yPos + 12f, paint)
                 xPos += columnWidths[index]
             }
 
-            paint.color = Color.rgb(220, 220, 220)
-            canvas.drawLine(PDF_MARGIN.toFloat(), yPos + 20f, (options.pageSize.width - PDF_MARGIN).toFloat(), yPos + 20f, paint)
-            paint.color = Color.rgb(50, 50, 50)
+            // Row separator
+            val linePaint = Paint().apply {
+                color = COLOR_BORDER
+                strokeWidth = 0.5f
+            }
+            canvas.drawLine(PDF_MARGIN.toFloat(), yPos + 18f, (pageWidth - PDF_MARGIN), yPos + 18f, linePaint)
 
-            yPos += 24f
+            yPos += 20f
         }
 
         // Detailed breakdown for strongest planet
-        yPos += 25f
+        yPos += 24f
         val strongest = shadbala.planetaryStrengths[shadbala.strongestPlanet]
         if (strongest != null) {
-            paint.textSize = 12f
+            paint.textSize = 11f
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            paint.color = COLOR_PRIMARY
             canvas.drawText("${strongest.planet.displayName} ${locManager.getString(StringKeyAnalysis.EXPORT_STRENGTH_BREAKDOWN)}", PDF_MARGIN.toFloat(), yPos + 12f, paint)
-            yPos += 25f
+            yPos += 24f
+
+            // Breakdown card
+            val breakdownCardHeight = 110f
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + breakdownCardHeight, cardPaint)
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + breakdownCardHeight, borderPaint)
 
             paint.textSize = 9f
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
             val breakdown = listOf(
-                "${locManager.getString(StringKeyAnalysis.DIALOG_STHANA_BALA)}: ${String.format("%.1f", strongest.sthanaBala.total)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}",
-                "${locManager.getString(StringKeyAnalysis.DIALOG_DIG_BALA)}: ${String.format("%.1f", strongest.digBala)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}",
-                "${locManager.getString(StringKeyAnalysis.DIALOG_KALA_BALA)}: ${String.format("%.1f", strongest.kalaBala.total)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}",
-                "${locManager.getString(StringKeyAnalysis.DIALOG_CHESTA_BALA)}: ${String.format("%.1f", strongest.chestaBala)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}",
-                "${locManager.getString(StringKeyAnalysis.DIALOG_NAISARGIKA_BALA)}: ${String.format("%.1f", strongest.naisargikaBala)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}",
-                "${locManager.getString(StringKeyAnalysis.DIALOG_DRIK_BALA)}: ${String.format("%.1f", strongest.drikBala)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}"
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_STHANA_BALA), strongest.sthanaBala.total),
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_DIG_BALA), strongest.digBala),
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_KALA_BALA), strongest.kalaBala.total),
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_CHESTA_BALA), strongest.chestaBala),
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_NAISARGIKA_BALA), strongest.naisargikaBala),
+                Pair(locManager.getString(StringKeyAnalysis.DIALOG_DRIK_BALA), strongest.drikBala)
             )
 
-            breakdown.forEach { line ->
-                canvas.drawText(line, PDF_MARGIN.toFloat() + 15f, yPos + 10f, paint)
-                yPos += 16f
+            val col1X = PDF_MARGIN.toFloat() + 12f
+            val col2X = pageWidth / 2f + 12f
+            var breakdownY = yPos + 16f
+
+            breakdown.forEachIndexed { index, (label, value) ->
+                val drawX = if (index % 2 == 0) col1X else col2X
+                if (index % 2 == 0 && index > 0) breakdownY += 16f
+
+                paint.color = COLOR_TEXT_MUTED
+                canvas.drawText(label, drawX, breakdownY + 10f, paint)
+                paint.color = COLOR_PRIMARY
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                canvas.drawText("${String.format("%.1f", value)} ${locManager.getString(StringKeyAnalysis.EXPORT_VIRUPAS)}", drawX + 100f, breakdownY + 10f, paint)
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             }
         }
 
@@ -674,112 +1102,234 @@ class ChartExporter(private val context: Context) {
         val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
 
         val paint = Paint().apply {
             isAntiAlias = true
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            isSubpixelText = true
         }
 
-        var yPos = PDF_MARGIN.toFloat()
+        var yPos = PDF_MARGIN_TOP.toFloat()
 
-        // Title
-        paint.textSize = 18f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        paint.color = Color.rgb(70, 70, 70)
-        canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_ASHTAKAVARGA_ANALYSIS), PDF_MARGIN.toFloat(), yPos + 18f, paint)
-        yPos += 40f
+        // Title with decorative line
+        drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKeyAnalysis.EXPORT_ASHTAKAVARGA_ANALYSIS))
+        yPos += 48f
 
         val ashtakavarga = AshtakavargaCalculator.calculateAshtakavarga(chart)
 
-        // SAV Summary
+        // SAV Section Title
         paint.textSize = 12f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
         canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_SARVASHTAKAVARGA), PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 25f
+        yPos += 24f
 
-        paint.textSize = 9f
-        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        // SAV Card
+        val savCardHeight = 55f
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + savCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + savCardHeight, borderPaint)
 
-        // SAV Table Header
-        val signWidth = 45f
-        var xPos = PDF_MARGIN.toFloat() + 30f
+        // SAV Table Header - zodiac signs
+        val signWidth = (contentWidth - 35f) / 12f
+        var xPos = PDF_MARGIN.toFloat() + 35f
 
         paint.textSize = 8f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_TEXT_MUTED
+
         ZodiacSign.entries.forEach { sign ->
-            canvas.drawText(sign.abbreviation, xPos, yPos + 10f, paint)
+            canvas.drawText(sign.abbreviation, xPos + 2f, yPos + 16f, paint)
             xPos += signWidth
         }
-        yPos += 20f
 
-        // SAV Values
-        xPos = PDF_MARGIN.toFloat()
-        canvas.drawText("SAV:", xPos, yPos + 10f, paint)
-        xPos += 30f
+        // SAV Values row
+        xPos = PDF_MARGIN.toFloat() + 8f
+        paint.color = COLOR_ACCENT
+        canvas.drawText("SAV", xPos, yPos + 38f, paint)
+        xPos = PDF_MARGIN.toFloat() + 35f
+
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
 
         ZodiacSign.entries.forEach { sign ->
             val bindus = ashtakavarga.sarvashtakavarga.getBindusForSign(sign)
             paint.color = when {
-                bindus >= 30 -> Color.rgb(0, 100, 0)
-                bindus >= 25 -> Color.rgb(50, 50, 50)
-                else -> Color.rgb(150, 50, 50)
+                bindus >= 30 -> COLOR_SUCCESS
+                bindus >= 25 -> COLOR_TEXT
+                else -> COLOR_ERROR
             }
-            canvas.drawText(bindus.toString(), xPos, yPos + 10f, paint)
+            canvas.drawText(bindus.toString(), xPos + 4f, yPos + 38f, paint)
             xPos += signWidth
         }
-        paint.color = Color.rgb(50, 50, 50)
-        yPos += 25f
 
-        // BAV for each planet
-        paint.textSize = 10f
+        yPos += savCardHeight + 24f
+
+        // BAV Section Title
+        paint.textSize = 12f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
         canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_BHINNASHTAKAVARGA), PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 25f
+        yPos += 24f
 
+        // BAV Card
+        val bavRowHeight = 18f
+        val bavCardHeight = bavRowHeight * ashtakavarga.bhinnashtakavarga.size + 30f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + bavCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + bavCardHeight, borderPaint)
+
+        // BAV Header row
         paint.textSize = 8f
-        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_TEXT_MUTED
 
-        ashtakavarga.bhinnashtakavarga.forEach { (planet, bav) ->
-            xPos = PDF_MARGIN.toFloat()
-            canvas.drawText(planet.symbol + ":", xPos, yPos + 10f, paint)
-            xPos += 30f
+        xPos = PDF_MARGIN.toFloat() + 35f
+        ZodiacSign.entries.forEach { sign ->
+            canvas.drawText(sign.abbreviation, xPos + 2f, yPos + 14f, paint)
+            xPos += signWidth
+        }
+        canvas.drawText("Tot", xPos + 2f, yPos + 14f, paint)
+
+        yPos += 18f
+
+        // BAV Data rows
+        paint.textSize = 9f
+
+        ashtakavarga.bhinnashtakavarga.forEachIndexed { rowIndex, (planet, bav) ->
+            xPos = PDF_MARGIN.toFloat() + 8f
+
+            // Alternating row background
+            if (rowIndex % 2 == 0) {
+                val rowBgPaint = Paint().apply {
+                    color = COLOR_BACKGROUND
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat() + 1f, yPos, (pageWidth - PDF_MARGIN) - 1f, yPos + bavRowHeight, rowBgPaint)
+            }
+
+            // Planet symbol
+            paint.color = COLOR_PRIMARY
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(planet.symbol, xPos, yPos + 13f, paint)
+            xPos = PDF_MARGIN.toFloat() + 35f
+
+            // Bindus for each sign
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            paint.color = COLOR_TEXT
 
             ZodiacSign.entries.forEach { sign ->
                 val bindus = bav.getBindusForSign(sign)
-                canvas.drawText(bindus.toString(), xPos, yPos + 10f, paint)
+                // Color code: high bindus green, low bindus red
+                paint.color = when {
+                    bindus >= 5 -> COLOR_SUCCESS
+                    bindus <= 2 -> COLOR_ERROR
+                    else -> COLOR_TEXT
+                }
+                canvas.drawText(bindus.toString(), xPos + 4f, yPos + 13f, paint)
                 xPos += signWidth
             }
 
             // Total
-            canvas.drawText("=${bav.totalBindus}", xPos, yPos + 10f, paint)
-            yPos += 16f
+            paint.color = COLOR_ACCENT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(bav.totalBindus.toString(), xPos + 4f, yPos + 13f, paint)
+
+            yPos += bavRowHeight
         }
 
-        yPos += 20f
+        yPos += 30f
 
         // Transit Interpretation Guide
         paint.textSize = 11f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
         canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_TRANSIT_GUIDE), PDF_MARGIN.toFloat(), yPos + 12f, paint)
-        yPos += 22f
+        yPos += 24f
+
+        // Guide Card
+        val guideCardHeight = 130f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + guideCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + guideCardHeight, borderPaint)
 
         paint.textSize = 9f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
-        val guide = listOf(
+        val col1X = PDF_MARGIN.toFloat() + 12f
+        val col2X = pageWidth / 2f + 12f
+
+        // SAV Guide (left column)
+        paint.color = COLOR_ACCENT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("SAV ${locManager.getString(StringKeyAnalysis.EXPORT_TRANSIT_GUIDE)}", col1X, yPos + 16f, paint)
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT
+
+        val savGuide = listOf(
             locManager.getString(StringKeyAnalysis.EXPORT_SAV_EXCELLENT),
             locManager.getString(StringKeyAnalysis.EXPORT_SAV_GOOD),
             locManager.getString(StringKeyAnalysis.EXPORT_SAV_AVERAGE),
-            locManager.getString(StringKeyAnalysis.EXPORT_SAV_CHALLENGING),
-            "",
+            locManager.getString(StringKeyAnalysis.EXPORT_SAV_CHALLENGING)
+        )
+
+        savGuide.forEachIndexed { index, line ->
+            // Add colored dot indicator
+            val dotColor = when (index) {
+                0 -> COLOR_SUCCESS
+                1 -> COLOR_SUCCESS
+                2 -> COLOR_WARNING
+                else -> COLOR_ERROR
+            }
+            val dotPaint = Paint().apply {
+                color = dotColor
+                style = Paint.Style.FILL
+            }
+            canvas.drawCircle(col1X + 4f, yPos + 32f + (index * 14f), 3f, dotPaint)
+            canvas.drawText(line, col1X + 14f, yPos + 36f + (index * 14f), paint)
+        }
+
+        // BAV Guide (right column)
+        paint.color = COLOR_ACCENT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("BAV ${locManager.getString(StringKeyAnalysis.EXPORT_TRANSIT_GUIDE)}", col2X, yPos + 16f, paint)
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        paint.color = COLOR_TEXT
+
+        val bavGuide = listOf(
             locManager.getString(StringKeyAnalysis.EXPORT_BAV_EXCELLENT),
             locManager.getString(StringKeyAnalysis.EXPORT_BAV_GOOD),
             locManager.getString(StringKeyAnalysis.EXPORT_BAV_AVERAGE),
             locManager.getString(StringKeyAnalysis.EXPORT_BAV_CHALLENGING)
         )
 
-        guide.forEach { line ->
-            canvas.drawText(line, PDF_MARGIN.toFloat() + 10f, yPos + 10f, paint)
-            yPos += 14f
+        bavGuide.forEachIndexed { index, line ->
+            val dotColor = when (index) {
+                0 -> COLOR_SUCCESS
+                1 -> COLOR_SUCCESS
+                2 -> COLOR_WARNING
+                else -> COLOR_ERROR
+            }
+            val dotPaint = Paint().apply {
+                color = dotColor
+                style = Paint.Style.FILL
+            }
+            canvas.drawCircle(col2X + 4f, yPos + 32f + (index * 14f), 3f, dotPaint)
+            canvas.drawText(line, col2X + 14f, yPos + 36f + (index * 14f), paint)
         }
 
         addPageFooter(canvas, options.pageSize, pageNumber, paint)
@@ -788,14 +1338,33 @@ class ChartExporter(private val context: Context) {
     }
 
     private fun addPageFooter(canvas: Canvas, pageSize: PageSize, pageNumber: Int, paint: Paint) {
+        val footerY = pageSize.height - PDF_MARGIN_BOTTOM.toFloat()
+
+        // Draw separator line
+        val linePaint = Paint().apply {
+            color = COLOR_BORDER
+            strokeWidth = 0.5f
+            style = Paint.Style.STROKE
+        }
+        canvas.drawLine(PDF_MARGIN.toFloat(), footerY - 12f, (pageSize.width - PDF_MARGIN).toFloat(), footerY - 12f, linePaint)
+
         paint.textSize = 8f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-        paint.color = Color.rgb(128, 128, 128)
+        paint.color = COLOR_TEXT_MUTED
 
-        val footerY = pageSize.height - 25f
+        // Left: Generated by AstroStorm
         canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_GENERATED_BY), PDF_MARGIN.toFloat(), footerY, paint)
 
+        // Center: App branding with gold accent
+        paint.textAlign = Paint.Align.CENTER
+        paint.color = COLOR_ACCENT
+        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD_ITALIC)
+        canvas.drawText("AstroStorm", pageSize.width / 2f, footerY, paint)
+
+        // Right: Page number
         paint.textAlign = Paint.Align.RIGHT
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         canvas.drawText(locManager.getString(StringKeyAnalysis.EXPORT_PAGE, pageNumber), (pageSize.width - PDF_MARGIN).toFloat(), footerY, paint)
         paint.textAlign = Paint.Align.LEFT
     }
@@ -1189,17 +1758,24 @@ class ChartExporter(private val context: Context) {
         val result = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(result)
 
+        // Extract RGB components from COLOR_PRIMARY for consistent branding
+        val r = (COLOR_PRIMARY shr 16) and 0xFF
+        val g = (COLOR_PRIMARY shr 8) and 0xFF
+        val b = COLOR_PRIMARY and 0xFF
+
         val paint = Paint().apply {
-            color = Color.argb(WATERMARK_ALPHA, 128, 128, 128)
-            textSize = bitmap.width / 15f
-            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD_ITALIC)
+            color = Color.argb(WATERMARK_ALPHA, r, g, b)
+            textSize = bitmap.width / 12f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
+            isSubpixelText = true
             textAlign = Paint.Align.CENTER
+            letterSpacing = 0.05f
         }
 
-        // Diagonal watermark
+        // Diagonal watermark - more subtle positioning
         canvas.save()
-        canvas.rotate(-30f, bitmap.width / 2f, bitmap.height / 2f)
+        canvas.rotate(-25f, bitmap.width / 2f, bitmap.height / 2f)
         canvas.drawText(watermarkText, bitmap.width / 2f, bitmap.height / 2f, paint)
         canvas.restore()
 
@@ -1207,35 +1783,84 @@ class ChartExporter(private val context: Context) {
     }
 
     private fun addTitle(bitmap: Bitmap, chart: VedicChart): Bitmap {
-        val titleHeight = 80
+        val scale = bitmap.width / 2048f // Scale based on standard export size
+        val titleHeight = (100 * scale).coerceAtLeast(60f).toInt()
+        val padding = (16 * scale).coerceAtLeast(8f)
+
         val result = Bitmap.createBitmap(bitmap.width, bitmap.height + titleHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(result)
 
-        // Draw title background
+        // Draw full background
         val bgPaint = Paint().apply {
-            color = Color.rgb(212, 196, 168)
+            color = COLOR_BACKGROUND
             style = Paint.Style.FILL
         }
-        canvas.drawRect(0f, 0f, bitmap.width.toFloat(), titleHeight.toFloat(), bgPaint)
+        canvas.drawRect(0f, 0f, bitmap.width.toFloat(), (bitmap.height + titleHeight).toFloat(), bgPaint)
 
-        // Draw title text
+        // Draw title area with accent bar
+        val titleBgPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, bitmap.width.toFloat(), titleHeight.toFloat(), titleBgPaint)
+
+        // Gold accent bar at top
+        val accentPaint = Paint().apply {
+            color = COLOR_ACCENT
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, bitmap.width.toFloat(), (4 * scale).coerceAtLeast(2f), accentPaint)
+
+        // Draw name - larger, centered, professional color
+        val nameTextSize = (32 * scale).coerceAtLeast(18f)
         val textPaint = Paint().apply {
-            color = Color.rgb(70, 70, 70)
-            textSize = 24f
-            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            color = COLOR_PRIMARY
+            textSize = nameTextSize
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
+            isSubpixelText = true
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText(chart.birthData.name, bitmap.width / 2f, 30f, textPaint)
 
-        textPaint.textSize = 14f
-        textPaint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-        canvas.drawText(
-            "${chart.birthData.dateTime} | ${chart.birthData.location}",
-            bitmap.width / 2f,
-            55f,
-            textPaint
-        )
+        // Handle empty or blank names gracefully
+        val displayName = chart.birthData.name.takeIf { it.isNotBlank() } ?: "Birth Chart"
+        val nameY = titleHeight * 0.42f
+        canvas.drawText(displayName, bitmap.width / 2f, nameY, textPaint)
+
+        // Draw subtitle with date/location
+        val subtitleTextSize = (18 * scale).coerceAtLeast(11f)
+        textPaint.textSize = subtitleTextSize
+        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        textPaint.color = COLOR_TEXT_MUTED
+
+        val dateStr = try {
+            chart.birthData.dateTime.toLocalDate().toString()
+        } catch (_: Exception) {
+            ""
+        }
+        val timeStr = try {
+            chart.birthData.dateTime.toLocalTime().toString()
+        } catch (_: Exception) {
+            ""
+        }
+        val locationStr = chart.birthData.location.takeIf { it.isNotBlank() } ?: ""
+
+        val subtitle = listOfNotNull(
+            dateStr.takeIf { it.isNotBlank() },
+            timeStr.takeIf { it.isNotBlank() },
+            locationStr.takeIf { it.isNotBlank() }
+        ).joinToString(" | ")
+
+        val subtitleY = titleHeight * 0.75f
+        canvas.drawText(subtitle, bitmap.width / 2f, subtitleY, textPaint)
+
+        // Draw separator line
+        val linePaint = Paint().apply {
+            color = COLOR_BORDER
+            strokeWidth = (1 * scale).coerceAtLeast(0.5f)
+            style = Paint.Style.STROKE
+        }
+        canvas.drawLine(padding, titleHeight.toFloat() - 1f, bitmap.width - padding, titleHeight.toFloat() - 1f, linePaint)
 
         // Draw chart below title
         canvas.drawBitmap(bitmap, 0f, titleHeight.toFloat(), null)

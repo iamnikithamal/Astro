@@ -36,6 +36,8 @@ import androidx.compose.material.icons.outlined.Stars
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -79,11 +81,15 @@ private val CardContentPadding = 16.dp
 fun HomeTab(
     chart: VedicChart?,
     onFeatureClick: (InsightFeature) -> Unit,
+    onAddNewChart: () -> Unit = {},
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(bottom = 100.dp)
 ) {
     if (chart == null) {
-        EmptyHomeState(modifier = modifier)
+        EmptyHomeState(
+            onCreateProfile = onAddNewChart,
+            modifier = modifier
+        )
         return
     }
 
@@ -578,45 +584,172 @@ enum class InsightFeature(
     }
 }
 
+/**
+ * Improved Empty State UI for Home Screen
+ *
+ * Professional, visually appealing design with:
+ * - Centered content with clear visual hierarchy
+ * - Prominent "Create Profile" call-to-action button
+ * - Subtle feature highlights to showcase app capabilities
+ * - Theme-aware colors
+ */
 @Composable
-private fun EmptyHomeState(modifier: Modifier = Modifier) {
+private fun EmptyHomeState(
+    onCreateProfile: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = AppTheme.current
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(AppTheme.ScreenBackground)
-            .padding(32.dp),
+            .background(colors.ScreenBackground)
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(
-                imageVector = Icons.Outlined.PersonAddAlt,
-                contentDescription = null,
-                tint = AppTheme.TextMuted,
-                modifier = Modifier.size(64.dp)
-            )
+            // Icon with accent background
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colors.AccentGold.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Stars,
+                    contentDescription = null,
+                    tint = colors.AccentGold,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Text(
                 text = stringResource(StringKey.NO_PROFILE_SELECTED),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextPrimary,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = colors.TextPrimary,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = stringResource(StringKey.NO_PROFILE_MESSAGE),
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppTheme.TextMuted,
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.TextMuted,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 280.dp)
+                lineHeight = 24.sp,
+                modifier = Modifier.widthIn(max = 300.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Create Profile Button - Primary CTA
+            Button(
+                onClick = onCreateProfile,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .widthIn(max = 280.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.AccentGold,
+                    contentColor = if (colors.isDark) colors.ScreenBackground else Color.White
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 8.dp
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonAddAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+                Text(
+                    text = "Create Birth Chart",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Feature highlights
+            Text(
+                text = "Discover with AstroStorm",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium,
+                color = colors.TextMuted,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                EmptyStateFeatureChip(
+                    icon = Icons.Outlined.GridView,
+                    label = "Charts",
+                    colors = colors
+                )
+                EmptyStateFeatureChip(
+                    icon = Icons.Outlined.Timeline,
+                    label = "Dashas",
+                    colors = colors
+                )
+                EmptyStateFeatureChip(
+                    icon = Icons.Outlined.AutoAwesome,
+                    label = "Yogas",
+                    colors = colors
+                )
+                EmptyStateFeatureChip(
+                    icon = Icons.Outlined.Sync,
+                    label = "Transits",
+                    colors = colors
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateFeatureChip(
+    icon: ImageVector,
+    label: String,
+    colors: com.astro.storm.ui.theme.AppThemeColors
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(colors.ChipBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = colors.AccentPrimary,
+                modifier = Modifier.size(22.dp)
             )
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.TextMuted,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

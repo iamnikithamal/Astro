@@ -78,6 +78,16 @@ import java.time.format.DateTimeParseException
 private val SpringSpec = spring<Color>(stiffness = Spring.StiffnessMedium)
 private val SpringSpecDp = spring<Dp>(stiffness = Spring.StiffnessMedium)
 
+/**
+ * Profile Switcher Bottom Sheet
+ *
+ * A Material3 modal bottom sheet for switching between saved birth charts.
+ * Features:
+ * - Full expansion by default (no partial state)
+ * - Deduplication of charts by ID
+ * - Proper navigation bar padding
+ * - Theme-aware colors
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSwitcherBottomSheet(
@@ -89,33 +99,40 @@ fun ProfileSwitcherBottomSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val colors = AppTheme.current
+
+    // Deduplicate charts by ID to prevent duplicate entries
+    val uniqueCharts = remember(savedCharts) {
+        savedCharts.distinctBy { it.id }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = AppTheme.BottomSheetBackground,
-        contentColor = AppTheme.TextPrimary,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        containerColor = colors.BottomSheetBackground,
+        contentColor = colors.TextPrimary,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = { ProfileSwitcherDragHandle() },
-        windowInsets = WindowInsets.navigationBars
+        windowInsets = WindowInsets(0.dp) // Handle insets manually for proper sizing
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
+                .padding(bottom = 8.dp) // Extra padding to ensure content isn't cut off
         ) {
             ProfileSwitcherHeader()
 
             HorizontalDivider(
-                color = AppTheme.DividerColor.copy(alpha = 0.5f),
+                color = colors.DividerColor.copy(alpha = 0.5f),
                 thickness = 0.5.dp
             )
 
-            if (savedCharts.isEmpty()) {
+            if (uniqueCharts.isEmpty()) {
                 ProfileSwitcherEmptyState()
             } else {
                 ProfileChartsList(
-                    charts = savedCharts,
+                    charts = uniqueCharts,
                     selectedChartId = selectedChartId,
                     onChartSelected = { chart ->
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -125,7 +142,7 @@ fun ProfileSwitcherBottomSheet(
             }
 
             HorizontalDivider(
-                color = AppTheme.DividerColor.copy(alpha = 0.5f),
+                color = colors.DividerColor.copy(alpha = 0.5f),
                 thickness = 0.5.dp
             )
 
@@ -136,7 +153,8 @@ fun ProfileSwitcherBottomSheet(
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Extra spacer for navigation bar area
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
