@@ -302,14 +302,14 @@ private fun YogasSummaryCard(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Yoga Analysis Summary",
+                        text = stringResource(StringKey.YOGA_ANALYSIS_SUMMARY),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
                     Text(
-                        text = "Planetary combinations in your chart",
+                        text = stringResource(StringKey.YOGA_SUBTITLE),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted,
                         fontWeight = FontWeight.Medium
@@ -324,19 +324,19 @@ private fun YogasSummaryCard(
             ) {
                 YogaStatItem(
                     value = analysis.allYogas.size.toString(),
-                    label = "Total Yogas",
+                    label = stringResource(StringKey.YOGA_TOTAL),
                     color = AppTheme.AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 YogaStatItem(
                     value = analysis.allYogas.count { it.isAuspicious }.toString(),
-                    label = "Auspicious",
+                    label = stringResource(StringKey.YOGA_AUSPICIOUS),
                     color = AppTheme.SuccessColor,
                     modifier = Modifier.weight(1f)
                 )
                 YogaStatItem(
                     value = "${analysis.overallYogaStrength.toInt()}%",
-                    label = "Strength",
+                    label = stringResource(StringKey.YOGA_STRENGTH),
                     color = AppTheme.AccentGold,
                     modifier = Modifier.weight(1f)
                 )
@@ -357,7 +357,7 @@ private fun YogasSummaryCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Overall Yoga Strength",
+                            text = stringResource(StringKey.YOGA_OVERALL_STRENGTH),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = AppTheme.TextMuted
@@ -391,7 +391,7 @@ private fun YogasSummaryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Dominant Category",
+                    text = stringResource(StringKey.YOGA_DOMINANT_CATEGORY),
                     fontSize = 12.sp,
                     color = AppTheme.TextMuted
                 )
@@ -456,7 +456,7 @@ private fun YogaCategoryFilter(
 
     Column {
         Text(
-            text = "Filter by Category",
+            text = stringResource(StringKey.YOGA_FILTER_BY_CATEGORY),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = AppTheme.TextSecondary,
@@ -527,6 +527,7 @@ private fun CategoryHeader(
 ) {
     val language = LocalLanguage.current
     val categoryColor = getCategoryColor(category)
+    val yogasSuffix = stringResource(StringKey.YOGA_COUNT_SUFFIX)
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -550,7 +551,7 @@ private fun CategoryHeader(
             color = AppTheme.CardBackgroundElevated
         ) {
             Text(
-                text = "$count yogas",
+                text = "$count $yogasSuffix",
                 fontSize = 11.sp,
                 color = AppTheme.TextMuted,
                 fontWeight = FontWeight.Medium,
@@ -702,7 +703,7 @@ private fun YogaCard(
                     // Planets involved
                     if (yoga.planets.isNotEmpty()) {
                         Text(
-                            text = "Planets Involved",
+                            text = stringResource(StringKey.YOGA_PLANETS_INVOLVED),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextSecondary,
@@ -756,7 +757,7 @@ private fun YogaCard(
                             modifier = Modifier.padding(bottom = 10.dp)
                         ) {
                             Text(
-                                text = "Houses: ",
+                                text = stringResource(StringKey.YOGA_HOUSES_LABEL),
                                 fontSize = 12.sp,
                                 color = AppTheme.TextMuted
                             )
@@ -782,7 +783,7 @@ private fun YogaCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Yoga Strength",
+                                    text = stringResource(StringKey.YOGA_STRENGTH_LABEL),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = AppTheme.TextMuted
@@ -825,7 +826,7 @@ private fun YogaCard(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Effects",
+                                    text = stringResource(StringKey.YOGA_EFFECTS),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = categoryColor
@@ -848,7 +849,7 @@ private fun YogaCard(
                             verticalAlignment = Alignment.Top
                         ) {
                             Text(
-                                text = "Activation: ",
+                                text = stringResource(StringKey.YOGA_ACTIVATION_LABEL),
                                 fontSize = 12.sp,
                                 color = AppTheme.TextMuted
                             )
@@ -864,7 +865,7 @@ private fun YogaCard(
                     if (yoga.cancellationFactors.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "Cancellation Factors",
+                            text = stringResource(StringKey.YOGA_CANCELLATION_FACTORS),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.WarningColor,
@@ -913,14 +914,14 @@ private fun EmptyYogasContent(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "No Yogas Found",
+                text = stringResource(StringKey.YOGA_NO_YOGAS_FOUND),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Please select a birth chart to analyze yogas",
+                text = stringResource(StringKey.YOGA_NO_CHART_MESSAGE),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextMuted,
                 textAlign = TextAlign.Center

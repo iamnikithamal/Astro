@@ -209,9 +209,9 @@ object MatchmakingReportUtils {
     /**
      * Get the pada (quarter) from a chart's Moon position.
      */
-    fun getPada(chart: VedicChart): String {
-        val moonPosition = getMoonPosition(chart) ?: return "N/A"
-        return "Pada ${moonPosition.nakshatraPada}"
+    fun getPada(chart: VedicChart, language: Language = Language.ENGLISH): String {
+        val moonPosition = getMoonPosition(chart) ?: return StringResources.get(StringKeyMatch.REPORT_NA, language)
+        return StringResources.get(StringKeyMatch.MATCH_PADA_NUMBER, language, moonPosition.nakshatraPada)
     }
 
     /**
