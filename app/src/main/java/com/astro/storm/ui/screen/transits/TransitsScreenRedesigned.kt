@@ -235,7 +235,7 @@ private fun TransitsTopBar(
                     if (chartName.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Current planetary movements - $chartName",
+                            text = stringResource(StringKey.TRANSIT_CURRENT_MOVEMENTS, chartName),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.TextMuted
                         )
@@ -286,7 +286,7 @@ private fun CurrentTransitsContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Planet Positions",
+                    text = stringResource(StringKey.TRANSIT_PLANET_POSITIONS),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -367,14 +367,14 @@ private fun TransitSummaryCard(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Transit Overview",
+                        text = stringResource(StringKey.TRANSIT_OVERVIEW),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
                     Text(
-                        text = "Current planetary influences",
+                        text = stringResource(StringKey.TRANSIT_CURRENT_INFLUENCES),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted,
                         fontWeight = FontWeight.Medium
@@ -389,19 +389,19 @@ private fun TransitSummaryCard(
             ) {
                 TransitStatItem(
                     value = "${analysis.transitPositions.size}",
-                    label = "Planets",
+                    label = stringResource(StringKey.TRANSIT_PLANETS_COUNT),
                     color = AppTheme.AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 TransitStatItem(
                     value = "${majorTransits.size}",
-                    label = "Major Transits",
+                    label = stringResource(StringKey.TRANSIT_MAJOR_TRANSITS),
                     color = AppTheme.AccentGold,
                     modifier = Modifier.weight(1f)
                 )
                 TransitStatItem(
                     value = "${analysis.overallAssessment.score.toInt()}%",
-                    label = "Quality",
+                    label = stringResource(StringKey.TRANSIT_QUALITY_LABEL),
                     color = getStrengthColor(analysis.overallAssessment.score),
                     modifier = Modifier.weight(1f)
                 )
@@ -425,7 +425,7 @@ private fun TransitSummaryCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Overall Assessment",
+                                text = stringResource(StringKey.TRANSIT_OVERALL_ASSESSMENT),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.AccentGold
@@ -556,7 +556,7 @@ private fun TransitPlanetCard(
                                     color = AppTheme.WarningColor.copy(alpha = 0.15f)
                                 ) {
                                     Text(
-                                        text = "R",
+                                        text = stringResource(StringKey.TRANSIT_RETROGRADE_SYMBOL),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = AppTheme.WarningColor,
@@ -597,7 +597,7 @@ private fun TransitPlanetCard(
                             color = planetColor
                         )
                         Text(
-                            text = "House",
+                            text = stringResource(StringKey.TRANSIT_HOUSE_LABEL),
                             fontSize = 9.sp,
                             color = AppTheme.TextMuted
                         )
@@ -637,7 +637,7 @@ private fun TransitPlanetCard(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
-                                    text = "TRANSIT",
+                                    text = stringResource(StringKey.TRANSIT_LABEL),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = AppTheme.TextMuted,
@@ -667,7 +667,7 @@ private fun TransitPlanetCard(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = "NATAL",
+                                        text = stringResource(StringKey.TRANSIT_NATAL_LABEL),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = AppTheme.TextMuted,
@@ -775,7 +775,7 @@ private fun HouseTransitCard(
                 )
                 if (transits.isEmpty()) {
                     Text(
-                        text = "No planets transiting",
+                        text = stringResource(StringKey.TRANSIT_NO_PLANETS_TRANSITING),
                         fontSize = 11.sp,
                         color = AppTheme.TextMuted
                     )
@@ -821,7 +821,7 @@ private fun UpcomingTransitsContent(
         // Significant transits header
         item(key = "significant_header") {
             Text(
-                text = "Significant Upcoming Transits",
+                text = stringResource(StringKey.TRANSIT_UPCOMING),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
@@ -843,7 +843,7 @@ private fun UpcomingTransitsContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No significant upcoming transits in the near future",
+                        text = stringResource(StringKey.TRANSIT_NO_UPCOMING),
                         fontSize = 14.sp,
                         color = AppTheme.TextMuted,
                         textAlign = TextAlign.Center
@@ -943,7 +943,7 @@ private fun TransitAspectsContent(
     ) {
         item(key = "aspects_header") {
             Text(
-                text = "Transit to Natal Aspects",
+                text = stringResource(StringKey.TRANSIT_TO_NATAL_ASPECTS),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
@@ -959,7 +959,7 @@ private fun TransitAspectsContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No significant transit aspects currently active",
+                        text = stringResource(StringKey.TRANSIT_NO_ASPECTS),
                         fontSize = 14.sp,
                         color = AppTheme.TextMuted,
                         textAlign = TextAlign.Center
@@ -1102,14 +1102,14 @@ private fun EmptyTransitsContent(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "No Transit Data",
+                text = stringResource(StringKey.TRANSIT_NO_DATA),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AppTheme.TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Please select a birth chart to view transits",
+                text = stringResource(StringKey.TRANSIT_SELECT_CHART),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextMuted,
                 textAlign = TextAlign.Center

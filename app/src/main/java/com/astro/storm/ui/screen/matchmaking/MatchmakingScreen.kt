@@ -2456,7 +2456,7 @@ private fun getRashiName(chart: VedicChart): String {
 private fun getPada(chart: VedicChart): String {
     val unknownText = stringResource(StringKeyMatch.MISC_UNKNOWN)
     val moonPosition = getMoonPosition(chart) ?: return unknownText
-    return "Pada ${moonPosition.nakshatraPada}"
+    return stringResource(StringKeyMatch.MATCH_PADA_NUMBER, moonPosition.nakshatraPada)
 }
 
 @Composable
