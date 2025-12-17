@@ -524,8 +524,8 @@ object TarabalaCalculator {
             )
 
             // Position is already in sidereal
-            val nakshatraInfo = Nakshatra.fromLongitude(moonPos.longitude)
-            nakshatraInfo.first
+            val (nakshatra, _) = Nakshatra.fromLongitude(moonPos.longitude)
+            nakshatra
         } catch (e: Exception) {
             null
         }

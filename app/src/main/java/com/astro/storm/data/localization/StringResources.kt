@@ -3875,7 +3875,116 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     TARABALA_BEST_LABEL("Best", "सबैभन्दा राम्रो"),
     TARABALA_ALL_27_DESC("All 27 Nakshatras with their Tarabala values", "सबै २७ नक्षत्र तिनीहरूको तारबल मानहरू साथ"),
     TARABALA_EXPLANATION("Explanation", "व्याख्या"),
-    CHANDRABALA_EXPLANATION("Explanation", "व्याख्या");
+    CHANDRABALA_EXPLANATION("Explanation", "व्याख्या"),
+
+    // ============================================
+    // SANDHI INTENSITY LEVELS
+    // ============================================
+    SANDHI_INTENSITY_CRITICAL("Critical", "गम्भीर"),
+    SANDHI_INTENSITY_HIGH("High", "उच्च"),
+    SANDHI_INTENSITY_MODERATE("Moderate", "मध्यम"),
+    SANDHI_INTENSITY_MILD("Mild", "हल्का"),
+    SANDHI_INTENSITY_MINIMAL("Minimal", "न्यूनतम"),
+
+    // ============================================
+    // TRANSITION (RELATIONSHIP) TYPES
+    // ============================================
+    TRANSITION_FRIEND_FRIEND("Friend to Friend", "साथीबाट साथी"),
+    TRANSITION_FRIEND_NEUTRAL("Friend to Neutral", "साथीबाट तटस्थ"),
+    TRANSITION_FRIEND_ENEMY("Friend to Enemy", "साथीबाट शत्रु"),
+    TRANSITION_NEUTRAL_FRIEND("Neutral to Friend", "तटस्थबाट साथी"),
+    TRANSITION_NEUTRAL_NEUTRAL("Neutral to Neutral", "तटस्थबाट तटस्थ"),
+    TRANSITION_NEUTRAL_ENEMY("Neutral to Enemy", "तटस्थबाट शत्रु"),
+    TRANSITION_ENEMY_FRIEND("Enemy to Friend", "शत्रुबाट साथी"),
+    TRANSITION_ENEMY_NEUTRAL("Enemy to Neutral", "शत्रुबाट तटस्थ"),
+    TRANSITION_ENEMY_ENEMY("Enemy to Enemy", "शत्रुबाट शत्रु"),
+
+    // ============================================
+    // TARA TYPES AND DESCRIPTIONS
+    // ============================================
+    TARA_JANMA("Janma", "जन्म"),
+    TARA_SAMPAT("Sampat", "सम्पत्"),
+    TARA_VIPAT("Vipat", "विपत्"),
+    TARA_KSHEMA("Kshema", "क्षेम"),
+    TARA_PRATYARI("Pratyari", "प्रत्यारी"),
+    TARA_SADHAKA("Sadhaka", "साधक"),
+    TARA_VADHA("Vadha", "वध"),
+    TARA_MITRA("Mitra", "मित्र"),
+    TARA_PARAMA_MITRA("Parama Mitra", "परम मित्र"),
+    TARA_JANMA_DESC("Birth - Same nakshatra as natal moon, neutral influence", "जन्म - जन्मकालीन चन्द्रमासँग समान नक्षत्र, तटस्थ प्रभाव"),
+    TARA_SAMPAT_DESC("Wealth - Second nakshatra, beneficial for material gains", "सम्पत्त - दोस्रो नक्षत्र, भौतिक लाभको लागि अनुकूल"),
+    TARA_VIPAT_DESC("Adversity - Third nakshatra, challenging period", "विपत्ति - तीसरो नक्षत्र, चुनौतीपूर्ण अवधि"),
+    TARA_KSHEMA_DESC("Welfare - Fourth nakshatra, harmonious and protective", "क्षेम - चौथो नक्षत्र, समञ्जसपूर्ण र सुरक्षात्मक"),
+    TARA_PRATYARI_DESC("Enemy - Fifth nakshatra, requires caution", "प्रत्यारी - पाँचौ नक्षत्र, सावधानी आवश्यक"),
+    TARA_SADHAKA_DESC("Achievement - Sixth nakshatra, favorable for goals", "साधक - छैटौ नक्षत्र, लक्ष्यको लागि अनुकूल"),
+    TARA_VADHA_DESC("Killing/Harm - Seventh nakshatra, most inauspicious", "वध - सातौ नक्षत्र, सबैभन्दा अशुभ"),
+    TARA_MITRA_DESC("Friend - Eighth nakshatra, beneficial", "मित्र - आठौ नक्षत्र, अनुकूल"),
+    TARA_PARAMA_MITRA_DESC("Highest Friend - Ninth nakshatra, most auspicious", "परम मित्र - नवौ नक्षत्र, सबैभन्दा शुभ"),
+
+    // ============================================
+    // CHANDRABALA STRENGTH LEVELS
+    // ============================================
+    CHANDRABALA_EXCELLENT("Excellent", "उत्तम"),
+    CHANDRABALA_GOOD("Good", "राम्रो"),
+    CHANDRABALA_NEUTRAL("Neutral", "तटस्थ"),
+    CHANDRABALA_WEAK("Weak", "कमजोर"),
+    CHANDRABALA_UNFAVORABLE("Unfavorable", "प्रतिकूल"),
+
+    // ============================================
+    // COMBINED TARA-CHANDRABALA ASSESSMENT
+    // ============================================
+    COMBINED_HIGHLY_FAVORABLE("Highly Favorable", "अत्यन्त अनुकूल"),
+    COMBINED_FAVORABLE("Favorable", "अनुकूल"),
+    COMBINED_MIXED("Mixed", "मिश्रित"),
+    COMBINED_CHALLENGING("Challenging", "चुनौतीपूर्ण"),
+    COMBINED_UNFAVORABLE("Unfavorable", "प्रतिकूल"),
+
+    // ============================================
+    // VEDHA (BLOCKING) LEVELS
+    // ============================================
+    VEDHA_COMPLETE("Complete", "सम्पूर्ण"),
+    VEDHA_STRONG("Strong", "शक्तिशाली"),
+    VEDHA_MODERATE("Moderate", "मध्यम"),
+    VEDHA_PARTIAL("Partial", "आंशिक"),
+    VEDHA_NONE("None", "कुनै पनि छैन"),
+
+    // ============================================
+    // TRANSIT EFFECTIVENESS/QUALITY
+    // ============================================
+    TRANSIT_EXCELLENT("Excellent", "उत्तम"),
+    TRANSIT_GOOD("Good", "राम्रो"),
+    TRANSIT_MODERATE("Moderate", "मध्यम"),
+    TRANSIT_WEAK("Weak", "कमजोर"),
+    TRANSIT_NULLIFIED("Nullified", "रद्द गरिएको"),
+    TRANSIT_UNFAVORABLE("Unfavorable", "प्रतिकूल"),
+
+    // ============================================
+    // BHANGA (CANCELLATION) TYPES
+    // ============================================
+    BHANGA_KENDRA_MOON("Moon in Kendra", "चन्द्र केन्द्रमा"),
+    BHANGA_KENDRA_LAGNA("Lagna in Kendra", "लग्न केन्द्रमा"),
+    BHANGA_MOON_KENDRA("Kendra with Moon", "चन्द्रसँग केन्द्र"),
+    BHANGA_BENEFIC_ASPECT("Benefic Aspect", "शुभ दृष्टि"),
+    BHANGA_BENEFIC_CONJUNCTION("Benefic Conjunction", "शुभ संयोजन"),
+    BHANGA_MOON_EXALTED("Moon Exalted", "चन्द्र उच्च"),
+    BHANGA_MOON_OWN("Moon in Own Sign", "चन्द्र स्वराशिमा"),
+    BHANGA_MOON_FRIEND("Moon with Friend", "चन्द्र साथीसँग"),
+    BHANGA_FULL_MOON("Full Moon", "पूर्ण चन्द्र"),
+    BHANGA_ANGULAR_MOON("Moon Angular", "चन्द्र केन्द्रीय"),
+    BHANGA_STRONG_DISPOSITOR("Strong Dispositor", "शक्तिशाली अधिपति"),
+    BHANGA_JUPITER_ASPECT("Jupiter Aspect", "बृहस्पति दृष्टि"),
+    BHANGA_VENUS_ASPECT("Venus Aspect", "शुक्र दृष्टि"),
+
+    // ============================================
+    // KEMADRUMA YOGA STATUS
+    // ============================================
+    KEMADRUMA_NOT_PRESENT("Not Present", "उपस्थित छैन"),
+    KEMADRUMA_FULLY_CANCELLED("Fully Cancelled", "पूर्णतः रद्द गरिएको"),
+    KEMADRUMA_MOSTLY_CANCELLED("Mostly Cancelled", "अधिकांशतः रद्द गरिएको"),
+    KEMADRUMA_PARTIALLY_CANCELLED("Partially Cancelled", "आंशिक रद्द गरिएको"),
+    KEMADRUMA_WEAKLY_CANCELLED("Weakly Cancelled", "कमजोर रूपमा रद्द गरिएको"),
+    KEMADRUMA_ACTIVE_MODERATE("Active - Moderate", "सक्रिय - मध्यम"),
+    KEMADRUMA_ACTIVE_SEVERE("Active - Severe", "सक्रिय - गम्भीर");
 }
 
 /**

@@ -775,24 +775,20 @@ object GocharaVedhaCalculator {
         // Check Jupiter status (most important)
         val jupiterTransit = transits.find { it.planet == Planet.JUPITER }
         jupiterTransit?.let {
-            if (it.hasVedha) {
-                insights.add("Jupiter's blessings are currently obstructed - major fortune delayed")
-            } else if (it.isNaturallyFavorable) {
-                insights.add("Jupiter favorably placed - expansion and wisdom available")
-            } else {
-                // Jupiter neutral
+            when {
+                it.hasVedha -> insights.add("Jupiter's blessings are currently obstructed - major fortune delayed")
+                it.isNaturallyFavorable -> insights.add("Jupiter favorably placed - expansion and wisdom available")
+                else -> { /* Jupiter neutral */ }
             }
         }
 
         // Check Saturn status
         val saturnTransit = transits.find { it.planet == Planet.SATURN }
         saturnTransit?.let {
-            if (!it.isNaturallyFavorable) {
-                insights.add("Saturn's challenging transit requires patience and discipline")
-            } else if (!it.hasVedha) {
-                insights.add("Saturn supporting through steady effort - rewards for hard work")
-            } else {
-                // Saturn obstructed
+            when {
+                !it.isNaturallyFavorable -> insights.add("Saturn's challenging transit requires patience and discipline")
+                !it.hasVedha -> insights.add("Saturn supporting through steady effort - rewards for hard work")
+                else -> { /* Saturn obstructed */ }
             }
         }
 
