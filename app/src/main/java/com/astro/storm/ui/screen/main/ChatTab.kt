@@ -359,7 +359,11 @@ private fun EmptyChatState(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Configure AI Models")
+                Text(
+                    text = "Configure AI Models",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))

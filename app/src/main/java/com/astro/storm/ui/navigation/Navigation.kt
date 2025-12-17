@@ -42,12 +42,14 @@ import com.astro.storm.ui.screen.DivisionalChartsScreen
 import com.astro.storm.ui.screen.UpachayaTransitScreen
 import com.astro.storm.ui.screen.KalachakraDashaScreen
 import com.astro.storm.ui.screen.tarabala.TarabalaScreen
+import com.astro.storm.ui.screen.AiModelsScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartViewModel
 import com.astro.storm.ui.viewmodel.ChatViewModel
+import com.astro.storm.data.ai.provider.AiProviderRegistry
 
 /**
  * Navigation routes
@@ -151,6 +153,9 @@ sealed class Screen(val route: String) {
     object Tarabala : Screen("tarabala/{chartId}") {
         fun createRoute(chartId: Long) = "tarabala/$chartId"
     }
+
+    // AI Models configuration screen
+    object AiModels : Screen("ai_models")
 }
 
 /**
@@ -172,6 +177,9 @@ fun AstroStormNavigation(
     val density = LocalDensity.current
     val context = LocalContext.current
     val selectedChartId by viewModel.selectedChartId.collectAsState()
+
+    // Get AI Provider Registry for AI Models screen
+    val providerRegistry = remember { AiProviderRegistry.getInstance(context) }
 
     var currentChart by remember { mutableStateOf<VedicChart?>(null) }
 
@@ -344,6 +352,9 @@ fun AstroStormNavigation(
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.Tarabala.createRoute(chartId))
                     }
+                },
+                onNavigateToAiModels = {
+                    navController.navigate(Screen.AiModels.route)
                 },
                 onExportChart = { format ->
                     currentChart?.let { chart ->
@@ -954,6 +965,14 @@ fun AstroStormNavigation(
             TarabalaScreen(
                 context = context,
                 chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // AI Models configuration screen
+        composable(Screen.AiModels.route) {
+            AiModelsScreen(
+                providerRegistry = providerRegistry,
                 onBack = { navController.popBackStack() }
             )
         }
