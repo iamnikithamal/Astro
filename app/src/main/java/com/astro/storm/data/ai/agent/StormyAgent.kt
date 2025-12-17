@@ -1,0 +1,485 @@
+package com.astro.storm.data.ai.agent
+
+import android.content.Context
+import com.astro.storm.data.ai.provider.AiModel
+import com.astro.storm.data.ai.provider.AiProvider
+import com.astro.storm.data.ai.provider.AiProviderRegistry
+import com.astro.storm.data.ai.provider.ChatMessage
+import com.astro.storm.data.ai.provider.ChatResponse
+import com.astro.storm.data.ai.provider.FunctionCall
+import com.astro.storm.data.ai.provider.MessageRole
+import com.astro.storm.data.ai.provider.ToolCall
+import com.astro.storm.data.ai.agent.tools.AstrologyToolRegistry
+import com.astro.storm.data.ai.agent.tools.ToolExecutionResult
+import com.astro.storm.data.local.ChartDatabase
+import com.astro.storm.data.model.VedicChart
+import com.astro.storm.data.repository.SavedChart
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import org.json.JSONArray
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
+
+/**
+ * Stormy - The Vedic Astrology AI Assistant
+ *
+ * Stormy is an intelligent agent capable of:
+ * - Providing Vedic astrology insights and guidance
+ * - Executing tools to fetch chart data and perform calculations
+ * - Supporting multiple AI models (model-agnostic)
+ * - Handling tool calls through JSON parsing (works even with models without native tool support)
+ */
+class StormyAgent private constructor(
+    private val context: Context,
+    private val providerRegistry: AiProviderRegistry,
+    private val toolRegistry: AstrologyToolRegistry
+) {
+
+    companion object {
+        const val AGENT_NAME = "Stormy"
+        const val AGENT_DESCRIPTION = "Your Vedic Astrology AI Assistant"
+
+        private const val MAX_TOOL_ITERATIONS = 10
+
+        @Volatile
+        private var INSTANCE: StormyAgent? = null
+
+        fun getInstance(context: Context): StormyAgent {
+            return INSTANCE ?: synchronized(this) {
+                val appContext = context.applicationContext
+                val registry = AiProviderRegistry.getInstance(appContext)
+                val toolRegistry = AstrologyToolRegistry.getInstance(appContext)
+                StormyAgent(appContext, registry, toolRegistry).also {
+                    INSTANCE = it
+                }
+            }
+        }
+    }
+
+    /**
+     * Generate the system prompt for Stormy
+     */
+    fun generateSystemPrompt(
+        currentProfile: SavedChart?,
+        allProfiles: List<SavedChart>,
+        currentChart: VedicChart?
+    ): String {
+        val profileContext = buildProfileContext(currentProfile, allProfiles, currentChart)
+        val toolsDescription = toolRegistry.getToolsDescription()
+
+        return """
+You are Stormy, an expert Vedic astrologer and AI assistant in the AstroStorm app. You provide accurate, insightful, and helpful astrological guidance based on authentic Vedic astrology principles (Jyotish Shastra).
+
+## Your Expertise
+- Deep knowledge of Vedic astrology including Parashari, Jaimini, and Nadi systems
+- Planetary analysis (Grahas), houses (Bhavas), signs (Rashis), and constellations (Nakshatras)
+- Dasha systems (Vimshottari, Yogini, Chara, Kalachakra, Ashtottari)
+- Yogas (planetary combinations) and their effects
+- Transits (Gochar) and their impacts
+- Divisional charts (Vargas/Shodashvarga)
+- Muhurta (electional astrology) and auspicious timing
+- Remedial measures (Upayas) - mantras, gemstones, rituals
+- Matchmaking (Kundli Milan) and compatibility analysis
+
+## Communication Style
+- Be warm, professional, and compassionate
+- Provide practical, actionable insights
+- Explain complex concepts in accessible terms
+- Be honest about limitations and uncertainties
+- Respect users' beliefs while maintaining astrological accuracy
+
+## Important Guidelines
+1. Always base your analysis on classical Vedic astrology texts and principles
+2. When discussing predictions, emphasize free will and the indicative nature of astrology
+3. Avoid making absolute statements about health, death, or severe negative events
+4. Recommend professional consultation for serious life decisions
+5. Be culturally sensitive when discussing remedies
+
+$profileContext
+
+## Available Tools
+You can call the following tools to get information from the app. To call a tool, respond with a JSON block in this exact format:
+
+```tool_call
+{
+  "tool": "tool_name",
+  "arguments": {
+    "arg1": "value1",
+    "arg2": "value2"
+  }
+}
+```
+
+$toolsDescription
+
+## Tool Usage Guidelines
+1. Call tools when you need specific chart data or calculations
+2. You can call multiple tools by including multiple tool_call blocks
+3. After receiving tool results, synthesize the information into a helpful response
+4. If a tool returns an error, explain the issue and suggest alternatives
+5. Always verify you have the necessary profile/chart before calling chart-specific tools
+
+Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help users understand their charts, make informed decisions, and find guidance through the wisdom of Vedic astrology.
+        """.trimIndent()
+    }
+
+    /**
+     * Build context about available profiles and current chart
+     */
+    private fun buildProfileContext(
+        currentProfile: SavedChart?,
+        allProfiles: List<SavedChart>,
+        currentChart: VedicChart?
+    ): String {
+        val sb = StringBuilder()
+        sb.appendLine("## Current Context")
+        sb.appendLine()
+
+        if (currentProfile != null) {
+            sb.appendLine("**Active Profile:** ${currentProfile.name}")
+            sb.appendLine("- Birth Location: ${currentProfile.location}")
+            sb.appendLine("- Birth Date/Time: ${currentProfile.dateTime}")
+            sb.appendLine("- Profile ID: ${currentProfile.id}")
+
+            if (currentChart != null) {
+                sb.appendLine("- Ascendant (Lagna): ${currentChart.planetPositions.find { it.planet.displayName == "Ascendant" }?.sign?.displayName ?: "Available"}")
+                sb.appendLine("- Moon Sign (Rashi): ${currentChart.planetPositions.find { it.planet.displayName == "Moon" }?.sign?.displayName ?: "Available"}")
+            }
+        } else {
+            sb.appendLine("**No profile is currently selected.** Ask the user to create or select a birth chart profile to provide personalized readings.")
+        }
+
+        sb.appendLine()
+
+        if (allProfiles.isNotEmpty()) {
+            sb.appendLine("**Available Profiles:** (${allProfiles.size} total)")
+            allProfiles.take(5).forEach { profile ->
+                val marker = if (profile.id == currentProfile?.id) " [ACTIVE]" else ""
+                sb.appendLine("- ${profile.name}$marker (ID: ${profile.id})")
+            }
+            if (allProfiles.size > 5) {
+                sb.appendLine("- ... and ${allProfiles.size - 5} more")
+            }
+        } else {
+            sb.appendLine("**No profiles available.** Encourage the user to create their first birth chart.")
+        }
+
+        sb.appendLine()
+        sb.appendLine("**Current Date:** ${SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())}")
+
+        return sb.toString()
+    }
+
+    /**
+     * Process a user message and generate a response with tool calling support
+     */
+    fun processMessage(
+        messages: List<ChatMessage>,
+        model: AiModel,
+        currentProfile: SavedChart?,
+        allProfiles: List<SavedChart>,
+        currentChart: VedicChart?,
+        temperature: Float? = null,
+        maxTokens: Int? = null
+    ): Flow<AgentResponse> = flow {
+        val provider = providerRegistry.getProvider(model.providerId)
+            ?: throw IllegalStateException("Provider not found: ${model.providerId}")
+
+        val systemPrompt = generateSystemPrompt(currentProfile, allProfiles, currentChart)
+
+        // Build messages with system prompt
+        val fullMessages = mutableListOf<ChatMessage>()
+        fullMessages.add(ChatMessage(role = MessageRole.SYSTEM, content = systemPrompt))
+        fullMessages.addAll(messages)
+
+        var iteration = 0
+        var continueProcessing = true
+        val toolsUsed = mutableListOf<String>()
+
+        while (continueProcessing && iteration < MAX_TOOL_ITERATIONS) {
+            iteration++
+            var currentContent = StringBuilder()
+            var currentReasoning = StringBuilder()
+            var pendingToolCalls = mutableListOf<ToolCallRequest>()
+            var hasError = false
+            var errorMessage: String? = null
+
+            // Call the AI model
+            provider.chat(
+                messages = fullMessages,
+                model = model.id,
+                temperature = temperature,
+                maxTokens = maxTokens,
+                stream = true
+            ).collect { response ->
+                when (response) {
+                    is ChatResponse.Content -> {
+                        currentContent.append(response.text)
+                        emit(AgentResponse.ContentChunk(response.text))
+                    }
+                    is ChatResponse.Reasoning -> {
+                        currentReasoning.append(response.text)
+                        emit(AgentResponse.ReasoningChunk(response.text))
+                    }
+                    is ChatResponse.ToolCallRequest -> {
+                        response.toolCalls.forEach { call ->
+                            pendingToolCalls.add(
+                                ToolCallRequest(
+                                    id = call.id,
+                                    name = call.function.name,
+                                    arguments = call.function.arguments
+                                )
+                            )
+                        }
+                    }
+                    is ChatResponse.Error -> {
+                        hasError = true
+                        errorMessage = response.message
+                        emit(AgentResponse.Error(response.message, response.isRetryable))
+                    }
+                    is ChatResponse.Usage -> {
+                        emit(AgentResponse.TokenUsage(
+                            response.promptTokens,
+                            response.completionTokens,
+                            response.totalTokens
+                        ))
+                    }
+                    is ChatResponse.Done -> {
+                        // Check for embedded tool calls in content
+                        if (pendingToolCalls.isEmpty()) {
+                            pendingToolCalls.addAll(parseEmbeddedToolCalls(currentContent.toString()))
+                        }
+                    }
+                    is ChatResponse.ProviderInfo -> {
+                        emit(AgentResponse.ModelInfo(response.providerId, response.model))
+                    }
+                }
+            }
+
+            if (hasError) {
+                continueProcessing = false
+                continue
+            }
+
+            // Process tool calls if any
+            if (pendingToolCalls.isNotEmpty()) {
+                emit(AgentResponse.ToolCallsStarted(pendingToolCalls.map { it.name }))
+
+                // Add assistant message with tool calls
+                fullMessages.add(ChatMessage(
+                    role = MessageRole.ASSISTANT,
+                    content = currentContent.toString().cleanToolCallBlocks(),
+                    toolCalls = pendingToolCalls.map { call ->
+                        ToolCall(
+                            id = call.id,
+                            function = FunctionCall(call.name, call.arguments)
+                        )
+                    }
+                ))
+
+                // Execute each tool
+                for (toolCall in pendingToolCalls) {
+                    emit(AgentResponse.ToolExecuting(toolCall.name))
+                    toolsUsed.add(toolCall.name)
+
+                    val result = executeToolCall(toolCall, currentProfile, allProfiles, currentChart)
+
+                    emit(AgentResponse.ToolResult(toolCall.name, result.success, result.summary))
+
+                    // Add tool result message
+                    fullMessages.add(ChatMessage(
+                        role = MessageRole.TOOL,
+                        content = result.toJson(),
+                        toolCallId = toolCall.id
+                    ))
+                }
+
+                // Continue processing to let AI respond to tool results
+            } else {
+                // No tool calls, we're done
+                continueProcessing = false
+                emit(AgentResponse.Complete(
+                    content = currentContent.toString().cleanToolCallBlocks(),
+                    reasoning = currentReasoning.toString().takeIf { it.isNotEmpty() },
+                    toolsUsed = toolsUsed.toList()
+                ))
+            }
+        }
+
+        if (iteration >= MAX_TOOL_ITERATIONS) {
+            emit(AgentResponse.Error("Maximum tool call iterations reached", isRetryable = false))
+        }
+    }
+
+    /**
+     * Parse embedded tool calls from AI response content
+     */
+    private fun parseEmbeddedToolCalls(content: String): List<ToolCallRequest> {
+        val toolCalls = mutableListOf<ToolCallRequest>()
+
+        // Look for tool_call JSON blocks
+        val pattern = Regex("""```tool_call\s*\n?\s*(\{[\s\S]*?\})\s*\n?```""", RegexOption.MULTILINE)
+        val matches = pattern.findAll(content)
+
+        for (match in matches) {
+            try {
+                val jsonStr = match.groupValues[1].trim()
+                val json = JSONObject(jsonStr)
+                val toolName = json.getString("tool")
+                val arguments = json.optJSONObject("arguments")?.toString() ?: "{}"
+
+                toolCalls.add(ToolCallRequest(
+                    id = "tool_${UUID.randomUUID().toString().take(8)}",
+                    name = toolName,
+                    arguments = arguments
+                ))
+            } catch (e: Exception) {
+                // Invalid JSON, skip
+            }
+        }
+
+        // Also check for inline JSON tool calls (for models that don't use code blocks)
+        val inlinePattern = Regex("""\{"tool"\s*:\s*"([^"]+)"\s*,\s*"arguments"\s*:\s*(\{[^}]*\})\s*\}""")
+        val inlineMatches = inlinePattern.findAll(content)
+
+        for (match in inlineMatches) {
+            try {
+                val toolName = match.groupValues[1]
+                val arguments = match.groupValues[2]
+
+                // Avoid duplicates
+                if (toolCalls.none { it.name == toolName }) {
+                    toolCalls.add(ToolCallRequest(
+                        id = "tool_${UUID.randomUUID().toString().take(8)}",
+                        name = toolName,
+                        arguments = arguments
+                    ))
+                }
+            } catch (e: Exception) {
+                // Invalid format, skip
+            }
+        }
+
+        return toolCalls
+    }
+
+    /**
+     * Execute a tool call
+     */
+    private suspend fun executeToolCall(
+        toolCall: ToolCallRequest,
+        currentProfile: SavedChart?,
+        allProfiles: List<SavedChart>,
+        currentChart: VedicChart?
+    ): ToolExecutionResult {
+        return try {
+            val arguments = try {
+                JSONObject(toolCall.arguments)
+            } catch (e: Exception) {
+                JSONObject()
+            }
+
+            toolRegistry.executeTool(
+                toolName = toolCall.name,
+                arguments = arguments,
+                currentProfile = currentProfile,
+                allProfiles = allProfiles,
+                currentChart = currentChart
+            )
+        } catch (e: Exception) {
+            ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message ?: "Unknown error executing tool",
+                summary = "Failed to execute ${toolCall.name}"
+            )
+        }
+    }
+
+    /**
+     * Clean tool call blocks from content for display
+     */
+    private fun String.cleanToolCallBlocks(): String {
+        return this
+            .replace(Regex("""```tool_call\s*\n?\s*\{[\s\S]*?\}\s*\n?```"""), "")
+            .replace(Regex("""\{"tool"\s*:\s*"[^"]+"\s*,\s*"arguments"\s*:\s*\{[^}]*\}\s*\}"""), "")
+            .trim()
+    }
+}
+
+/**
+ * Tool call request data
+ */
+data class ToolCallRequest(
+    val id: String,
+    val name: String,
+    val arguments: String
+)
+
+/**
+ * Sealed class for agent responses
+ */
+sealed class AgentResponse {
+    /**
+     * Content chunk during streaming
+     */
+    data class ContentChunk(val text: String) : AgentResponse()
+
+    /**
+     * Reasoning/thinking chunk
+     */
+    data class ReasoningChunk(val text: String) : AgentResponse()
+
+    /**
+     * Model information
+     */
+    data class ModelInfo(val providerId: String, val model: String) : AgentResponse()
+
+    /**
+     * Tool calls are starting
+     */
+    data class ToolCallsStarted(val toolNames: List<String>) : AgentResponse()
+
+    /**
+     * A tool is being executed
+     */
+    data class ToolExecuting(val toolName: String) : AgentResponse()
+
+    /**
+     * Tool execution result
+     */
+    data class ToolResult(
+        val toolName: String,
+        val success: Boolean,
+        val summary: String
+    ) : AgentResponse()
+
+    /**
+     * Token usage information
+     */
+    data class TokenUsage(
+        val promptTokens: Int,
+        val completionTokens: Int,
+        val totalTokens: Int
+    ) : AgentResponse()
+
+    /**
+     * Error occurred
+     */
+    data class Error(
+        val message: String,
+        val isRetryable: Boolean = false
+    ) : AgentResponse()
+
+    /**
+     * Response complete
+     */
+    data class Complete(
+        val content: String,
+        val reasoning: String?,
+        val toolsUsed: List<String>
+    ) : AgentResponse()
+}

@@ -55,7 +55,8 @@ fun SettingsTab(
     onEditProfile: () -> Unit,
     onDeleteProfile: (Long) -> Unit,
     onExportChart: (ExportFormat) -> Unit,
-    onManageProfiles: () -> Unit
+    onManageProfiles: () -> Unit,
+    onNavigateToAiModels: () -> Unit = {}
 ) {
     val language = LocalLanguage.current
     val localizationManager = LocalLocalizationManager.current
@@ -114,6 +115,21 @@ fun SettingsTab(
                     onClick = { onExportChart(ExportFormat.PDF) }
                 )
             }
+        }
+
+        // AI & Chat Section
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsSectionHeader(titleKey = StringKey.SETTINGS_AI_CHAT)
+        }
+
+        item {
+            SettingsItem(
+                icon = Icons.Outlined.Psychology,
+                titleKey = StringKey.SETTINGS_AI_MODELS,
+                subtitleKey = StringKey.SETTINGS_AI_MODELS_DESC,
+                onClick = onNavigateToAiModels
+            )
         }
 
         // Preferences Section

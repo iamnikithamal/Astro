@@ -27,6 +27,7 @@ import com.astro.storm.ui.components.ProfileSwitcherBottomSheet
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartUiState
 import com.astro.storm.ui.viewmodel.ChartViewModel
+import com.astro.storm.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -44,6 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen(
     viewModel: ChartViewModel,
+    chatViewModel: ChatViewModel,
     savedCharts: List<SavedChart>,
     currentChart: VedicChart?,
     selectedChartId: Long?,
@@ -80,6 +82,7 @@ fun MainScreen(
     onNavigateToUpachayaTransit: () -> Unit = {},
     onNavigateToKalachakraDasha: () -> Unit = {},
     onNavigateToTarabala: () -> Unit = {},
+    onNavigateToAiModels: () -> Unit = {},
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -236,6 +239,15 @@ fun MainScreen(
                             onCreateChart = onAddNewChart
                         )
                     }
+                    MainTab.CHAT -> {
+                        ChatTab(
+                            viewModel = chatViewModel,
+                            currentChart = currentChart,
+                            savedCharts = savedCharts,
+                            selectedChartId = selectedChartId,
+                            onNavigateToModels = onNavigateToAiModels
+                        )
+                    }
                     MainTab.SETTINGS -> {
                         SettingsTab(
                             currentChart = currentChart,
@@ -245,7 +257,8 @@ fun MainScreen(
                                 viewModel.deleteChart(chartId)
                             },
                             onExportChart = onExportChart,
-                            onManageProfiles = { showProfileSwitcher = true }
+                            onManageProfiles = { showProfileSwitcher = true },
+                            onNavigateToAiModels = onNavigateToAiModels
                         )
                     }
                 }
@@ -373,6 +386,11 @@ enum class MainTab(
         titleKey = StringKey.TAB_INSIGHTS,
         selectedIcon = Icons.Filled.Insights,
         unselectedIcon = Icons.Outlined.Insights
+    ),
+    CHAT(
+        titleKey = StringKey.TAB_CHAT,
+        selectedIcon = Icons.Filled.Chat,
+        unselectedIcon = Icons.Outlined.Chat
     ),
     SETTINGS(
         titleKey = StringKey.TAB_SETTINGS,
