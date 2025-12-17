@@ -331,15 +331,15 @@ class TransitCalculatorWrapper(private val context: android.content.Context) {
                     transitHouse = gochara.houseFromMoon,
                     natalSign = natalPos?.sign ?: ZodiacSign.ARIES,
                     natalHouse = natalPos?.house ?: 1,
-                    aspect = analysis.transitAspects.firstOrNull { it.transitPlanet == gochara.planet }?.let { "${it.aspectType} aspect" } ?: "None",
+                    aspect = analysis.transitAspects.firstOrNull { it.transitingPlanet == gochara.planet }?.let { "${it.aspectType} aspect" } ?: "None",
                     isRetrograde = transitPos?.isRetrograde ?: false,
                     effect = gochara.effect.displayName,
                     intensity = when (gochara.effect) {
-                        TransitAnalyzer.GocharaEffect.VERY_FAVORABLE -> 100
-                        TransitAnalyzer.GocharaEffect.FAVORABLE -> 75
-                        TransitAnalyzer.GocharaEffect.NEUTRAL -> 50
-                        TransitAnalyzer.GocharaEffect.UNFAVORABLE -> 25
-                        TransitAnalyzer.GocharaEffect.VERY_UNFAVORABLE -> 0
+                        TransitAnalyzer.TransitEffect.EXCELLENT -> 100
+                        TransitAnalyzer.TransitEffect.GOOD -> 75
+                        TransitAnalyzer.TransitEffect.NEUTRAL -> 50
+                        TransitAnalyzer.TransitEffect.CHALLENGING -> 25
+                        TransitAnalyzer.TransitEffect.DIFFICULT -> 0
                     }
                 )
             }
@@ -529,11 +529,11 @@ class ShadbalaCalculatorWrapper {
                     totalStrength = planetStrength.totalRupas,
                     requiredStrength = planetStrength.requiredRupas,
                     sthanaBala = planetStrength.sthanaBala.total,
-                    digBala = planetStrength.digBala.value,
+                    digBala = planetStrength.digBala,
                     kalaBala = planetStrength.kalaBala.total,
-                    chestaBala = planetStrength.chestaBala.value,
-                    naisargikaBala = planetStrength.naisargikaBala.value,
-                    drikBala = planetStrength.drikBala.value
+                    chestaBala = planetStrength.chestaBala,
+                    naisargikaBala = planetStrength.naisargikaBala,
+                    drikBala = planetStrength.drikBala
                 )
             }
         } catch (e: Exception) {
