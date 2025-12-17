@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.astro.storm.data.local.chat.ChatConverters
 import com.astro.storm.data.local.chat.ChatDao
 import com.astro.storm.data.local.chat.ConversationEntity
 import com.astro.storm.data.local.chat.MessageEntity
@@ -24,7 +23,7 @@ import com.astro.storm.data.local.chat.MessageEntity
     version = 3,
     exportSchema = true
 )
-@TypeConverters(Converters::class, ChatConverters::class)
+@TypeConverters(Converters::class)
 abstract class ChartDatabase : RoomDatabase() {
     abstract fun chartDao(): ChartDao
     abstract fun chatDao(): ChatDao

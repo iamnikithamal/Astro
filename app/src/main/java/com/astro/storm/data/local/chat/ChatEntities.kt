@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
 import com.astro.storm.data.ai.provider.MessageRole
 import org.json.JSONArray
 import org.json.JSONObject
@@ -152,28 +151,6 @@ data class MessageEntity(
     val completionTokens: Int? = null,
     val totalTokens: Int? = null
 )
-
-/**
- * Type converters for Room database
- */
-class ChatConverters {
-
-    @TypeConverter
-    fun fromToolsUsedList(tools: List<String>?): String? {
-        return tools?.let { JSONArray(it).toString() }
-    }
-
-    @TypeConverter
-    fun toToolsUsedList(json: String?): List<String>? {
-        if (json == null) return null
-        return try {
-            val array = JSONArray(json)
-            List(array.length()) { array.getString(it) }
-        } catch (e: Exception) {
-            null
-        }
-    }
-}
 
 /**
  * Domain model for a conversation with its last message

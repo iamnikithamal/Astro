@@ -220,14 +220,13 @@ interface ChatDao {
      */
     @Query("""
         UPDATE chat_messages
-        SET content = :content, isStreaming = :isStreaming, updatedAt = :updatedAt
+        SET content = :content, isStreaming = :isStreaming
         WHERE id = :messageId
     """)
     suspend fun updateMessageContent(
         messageId: Long,
         content: String,
-        isStreaming: Boolean,
-        updatedAt: Long = System.currentTimeMillis()
+        isStreaming: Boolean
     )
 
     /**
