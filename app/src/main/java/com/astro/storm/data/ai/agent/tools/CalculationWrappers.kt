@@ -705,24 +705,33 @@ class BhriguBinduCalculatorWrapper {
 
     fun calculate(chart: VedicChart): BhriguBinduResult {
         return try {
-            val result = BhriguBinduCalculator.calculate(chart)
+            val analysis = BhriguBinduCalculator.analyzeBhriguBindu(chart)
+
+            // Calculate degree within sign from longitude
+            val degreeInSign = analysis.bhriguBindu % 30.0
+
+            // Extract karmic themes from interpretation
+            val karmicThemes = analysis.interpretation.lifeAreas.map { it.description }
+
+            // Convert significant periods to activation periods
+            val activationPeriods = analysis.transitAnalysis?.significantPeriods?.map { period ->
+                ActivationPeriod(
+                    trigger = period.triggeringPlanet.displayName,
+                    timing = "${period.startDate} to ${period.endDate}",
+                    effect = period.description
+                )
+            } ?: emptyList()
 
             BhriguBinduResult(
-                longitude = result.longitude,
-                sign = result.sign,
-                degree = result.degreeInSign,
-                nakshatra = result.nakshatra,
-                nakshatraPada = result.nakshatraPada,
-                house = result.house,
-                interpretation = result.interpretation,
-                karmicThemes = result.significances,
-                activationPeriods = result.activationPeriods.map { period ->
-                    ActivationPeriod(
-                        trigger = period.trigger,
-                        timing = period.period,
-                        effect = period.significance
-                    )
-                }
+                longitude = analysis.bhriguBindu,
+                sign = analysis.bhriguBinduSign,
+                degree = degreeInSign,
+                nakshatra = analysis.bhriguBinduNakshatra,
+                nakshatraPada = analysis.bhriguBinduPada,
+                house = analysis.bhriguBinduHouse,
+                interpretation = analysis.interpretation.generalMeaning,
+                karmicThemes = karmicThemes.ifEmpty { listOf(analysis.interpretation.karmicSignificance) },
+                activationPeriods = activationPeriods
             )
         } catch (e: Exception) {
             // Return default

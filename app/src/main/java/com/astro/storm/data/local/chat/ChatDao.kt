@@ -296,7 +296,11 @@ interface ChatDao {
      */
     @Transaction
     @Query("""
-        SELECT c.*, m.*
+        SELECT c.*,
+               m.id as last_id,
+               m.content as last_content,
+               m.role as last_role,
+               m.createdAt as last_createdAt
         FROM chat_conversations c
         LEFT JOIN (
             SELECT conversationId, MAX(createdAt) as maxCreatedAt
