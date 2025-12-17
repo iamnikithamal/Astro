@@ -56,16 +56,16 @@ class VimshottariDashaCalculator {
                 val antarPeriods = mahadasha.antardashas.map { antar ->
                     AntarDashaPeriod(
                         planet = antar.planet,
-                        startDate = java.sql.Date.valueOf(antar.startDate),
-                        endDate = java.sql.Date.valueOf(antar.endDate),
+                        startDate = java.sql.Date.valueOf(antar.startDate.toString()),
+                        endDate = java.sql.Date.valueOf(antar.endDate.toString()),
                         isCurrent = antar.isActiveOn(today)
                     )
                 }
 
                 dashas.add(DashaPeriod(
                     planet = mahadasha.planet,
-                    startDate = java.sql.Date.valueOf(mahadasha.startDate),
-                    endDate = java.sql.Date.valueOf(mahadasha.endDate),
+                    startDate = java.sql.Date.valueOf(mahadasha.startDate.toString()),
+                    endDate = java.sql.Date.valueOf(mahadasha.endDate.toString()),
                     isCurrent = mahadasha.isActiveOn(today),
                     antarDashas = antarPeriods
                 ))
@@ -87,11 +87,11 @@ class VimshottariDashaCalculator {
 
         return CurrentDashaInfo(
             mahaDasha = currentMaha.planet,
-            mahaDashaStart = java.sql.Date.valueOf(currentMaha.startDate),
-            mahaDashaEnd = java.sql.Date.valueOf(currentMaha.endDate),
+            mahaDashaStart = java.sql.Date.valueOf(currentMaha.startDate.toString()),
+            mahaDashaEnd = java.sql.Date.valueOf(currentMaha.endDate.toString()),
             antarDasha = currentAntar.planet,
-            antarDashaStart = java.sql.Date.valueOf(currentAntar.startDate),
-            antarDashaEnd = java.sql.Date.valueOf(currentAntar.endDate),
+            antarDashaStart = java.sql.Date.valueOf(currentAntar.startDate.toString()),
+            antarDashaEnd = java.sql.Date.valueOf(currentAntar.endDate.toString()),
             pratyantarDasha = currentPratyantar?.planet
         )
     }
@@ -208,27 +208,27 @@ class PanchangaCalculatorWrapper(private val context: android.content.Context) {
 
             PanchangaResult(
                 tithi = TithiInfo(
-                    name = panchanga.tithi.name,
+                    name = panchanga.tithi.tithi.displayName,
                     number = panchanga.tithi.number,
-                    paksha = panchanga.paksha.name,
-                    deity = panchanga.tithi.deity ?: ""
+                    paksha = panchanga.paksha.displayName,
+                    deity = panchanga.tithi.lord.displayName
                 ),
                 nakshatra = NakshatraInfo(
                     name = panchanga.nakshatra.nakshatra.displayName,
-                    ruler = panchanga.nakshatra.nakshatra.ruler.displayName,
+                    ruler = panchanga.nakshatra.lord.displayName,
                     pada = panchanga.nakshatra.pada
                 ),
                 yoga = YogaInfo(
-                    name = panchanga.yoga.name,
-                    nature = "Neutral"
+                    name = panchanga.yoga.yoga.displayName,
+                    nature = panchanga.yoga.yoga.nature.name
                 ),
                 karana = KaranaInfo(
-                    name = panchanga.karana.name,
-                    nature = "Neutral"
+                    name = panchanga.karana.karana.displayName,
+                    nature = "Movable"
                 ),
                 vara = VaraInfo(
-                    name = panchanga.vara.name,
-                    lord = panchanga.vara.ruler.displayName
+                    name = panchanga.vara.displayName,
+                    lord = panchanga.vara.lord.displayName
                 ),
                 rahuKala = "Calculate separately",
                 yamaGanda = "Calculate separately",
@@ -254,27 +254,27 @@ class PanchangaCalculatorWrapper(private val context: android.content.Context) {
 
             PanchangaResult(
                 tithi = TithiInfo(
-                    name = panchanga.tithi.name,
+                    name = panchanga.tithi.tithi.displayName,
                     number = panchanga.tithi.number,
-                    paksha = panchanga.paksha.name,
-                    deity = panchanga.tithi.deity ?: ""
+                    paksha = panchanga.paksha.displayName,
+                    deity = panchanga.tithi.lord.displayName
                 ),
                 nakshatra = NakshatraInfo(
                     name = panchanga.nakshatra.nakshatra.displayName,
-                    ruler = panchanga.nakshatra.nakshatra.ruler.displayName,
+                    ruler = panchanga.nakshatra.lord.displayName,
                     pada = panchanga.nakshatra.pada
                 ),
                 yoga = YogaInfo(
-                    name = panchanga.yoga.name,
-                    nature = "Neutral"
+                    name = panchanga.yoga.yoga.displayName,
+                    nature = panchanga.yoga.yoga.nature.name
                 ),
                 karana = KaranaInfo(
-                    name = panchanga.karana.name,
-                    nature = "Neutral"
+                    name = panchanga.karana.karana.displayName,
+                    nature = "Movable"
                 ),
                 vara = VaraInfo(
-                    name = panchanga.vara.name,
-                    lord = panchanga.vara.ruler.displayName
+                    name = panchanga.vara.displayName,
+                    lord = panchanga.vara.lord.displayName
                 ),
                 rahuKala = "Calculate separately",
                 yamaGanda = "Calculate separately",
@@ -303,7 +303,7 @@ class PanchangaCalculatorWrapper(private val context: android.content.Context) {
 // TRANSIT WRAPPER
 // ============================================
 
-class TransitCalculatorWrapper {
+class TransitCalculatorWrapper(private val context: android.content.Context) {
 
     data class TransitResult(
         val planet: Planet,
@@ -319,20 +319,28 @@ class TransitCalculatorWrapper {
 
     fun calculateCurrentTransits(chart: VedicChart): List<TransitResult> {
         return try {
-            val analyzer = TransitAnalyzer(chart)
-            val analysis = analyzer.analyzeCurrentTransits()
+            val analyzer = TransitAnalyzer(context)
+            val analysis = analyzer.analyzeTransits(chart)
 
-            analysis.transits.map { transit ->
+            analysis.gocharaResults.map { gochara ->
+                val transitPos = analysis.transitPositions.find { it.planet == gochara.planet }
+                val natalPos = chart.planetPositions.find { it.planet == gochara.planet }
                 TransitResult(
-                    planet = transit.planet,
-                    transitSign = transit.currentSign,
-                    transitHouse = transit.transitHouse,
-                    natalSign = chart.planetPositions.find { it.planet == transit.planet }?.sign ?: transit.currentSign,
-                    natalHouse = chart.planetPositions.find { it.planet == transit.planet }?.house ?: transit.transitHouse,
-                    aspect = transit.aspects.firstOrNull()?.let { "${it.aspectType} aspect" } ?: "None",
-                    isRetrograde = transit.isRetrograde,
-                    effect = transit.transitEffects.firstOrNull() ?: "General transit influence",
-                    intensity = transit.strength.ordinal * 25
+                    planet = gochara.planet,
+                    transitSign = transitPos?.sign ?: ZodiacSign.ARIES,
+                    transitHouse = gochara.houseFromMoon,
+                    natalSign = natalPos?.sign ?: ZodiacSign.ARIES,
+                    natalHouse = natalPos?.house ?: 1,
+                    aspect = analysis.transitAspects.firstOrNull { it.transitPlanet == gochara.planet }?.let { "${it.aspectType} aspect" } ?: "None",
+                    isRetrograde = transitPos?.isRetrograde ?: false,
+                    effect = gochara.effect.displayName,
+                    intensity = when (gochara.effect) {
+                        TransitAnalyzer.GocharaEffect.VERY_FAVORABLE -> 100
+                        TransitAnalyzer.GocharaEffect.FAVORABLE -> 75
+                        TransitAnalyzer.GocharaEffect.NEUTRAL -> 50
+                        TransitAnalyzer.GocharaEffect.UNFAVORABLE -> 25
+                        TransitAnalyzer.GocharaEffect.VERY_UNFAVORABLE -> 0
+                    }
                 )
             }
         } catch (e: Exception) {
@@ -370,30 +378,52 @@ class CompatibilityCalculatorWrapper {
 
     fun calculateKundliMilan(chart1: VedicChart, chart2: VedicChart): CompatibilityResult {
         return try {
-            val result = GunaMilanCalculator.calculateCompatibility(chart1, chart2)
+            // Get Moon positions from both charts
+            val moon1 = chart1.planetPositions.find { it.planet == Planet.MOON }
+            val moon2 = chart2.planetPositions.find { it.planet == Planet.MOON }
+
+            if (moon1 == null || moon2 == null) {
+                return CompatibilityResult(
+                    totalScore = 0.0,
+                    verdict = "Unable to calculate - Moon position not found",
+                    kutas = emptyList(),
+                    doshas = emptyList()
+                )
+            }
+
+            val gunas = GunaMilanCalculator.calculateAllGunas(
+                brideMoonSign = moon1.sign,
+                groomMoonSign = moon2.sign,
+                brideNakshatra = moon1.nakshatra,
+                groomNakshatra = moon2.nakshatra,
+                bridePada = moon1.nakshatraPada,
+                groomPada = moon2.nakshatraPada
+            )
+
+            val totalPoints = gunas.sumOf { it.obtainedPoints }
 
             CompatibilityResult(
-                totalScore = result.totalPoints.toDouble(),
+                totalScore = totalPoints,
                 verdict = when {
-                    result.totalPoints >= 25 -> "Excellent Match - Highly recommended"
-                    result.totalPoints >= 18 -> "Good Match - Recommended with minor considerations"
-                    result.totalPoints >= 14 -> "Average Match - Requires understanding and adjustment"
+                    totalPoints >= 25 -> "Excellent Match - Highly recommended"
+                    totalPoints >= 18 -> "Good Match - Recommended with minor considerations"
+                    totalPoints >= 14 -> "Average Match - Requires understanding and adjustment"
                     else -> "Below Average - May face challenges"
                 },
-                kutas = result.kutas.map { kuta ->
+                kutas = gunas.map { guna ->
                     KutaResult(
-                        name = kuta.name,
-                        points = kuta.obtainedPoints.toDouble(),
-                        maxPoints = kuta.maxPoints.toDouble(),
-                        description = kuta.description
+                        name = guna.name,
+                        points = guna.obtainedPoints,
+                        maxPoints = guna.maxPoints,
+                        description = guna.description
                     )
                 },
                 doshas = listOf(
                     DoshaResult(
-                        name = "Manglik Dosha",
-                        isPresent = result.manglikStatus?.let { !it.compatible } ?: false,
-                        severity = result.manglikStatus?.let { if (!it.compatible) "Medium" else "None" } ?: "Unknown",
-                        remedy = result.manglikStatus?.remedy ?: "Consult an astrologer"
+                        name = "Nadi Dosha",
+                        isPresent = gunas.find { it.name == "Nadi" }?.let { it.obtainedPoints == 0.0 } ?: false,
+                        severity = if (gunas.find { it.name == "Nadi" }?.obtainedPoints == 0.0) "High" else "None",
+                        remedy = "Consult an astrologer for Nadi Dosha remedies"
                     )
                 )
             )
@@ -493,17 +523,17 @@ class ShadbalaCalculatorWrapper {
         return try {
             val analysis = ShadbalaCalculator.calculateShadbala(chart)
 
-            analysis.planetStrengths.map { planetStrength ->
+            analysis.planetaryStrengths.map { (planet, planetStrength) ->
                 ShadbalaResult(
-                    planet = planetStrength.planet,
-                    totalStrength = planetStrength.totalShadbala,
-                    requiredStrength = planetStrength.requiredStrength,
+                    planet = planet,
+                    totalStrength = planetStrength.totalRupas,
+                    requiredStrength = planetStrength.requiredRupas,
                     sthanaBala = planetStrength.sthanaBala.total,
-                    digBala = planetStrength.digBala,
+                    digBala = planetStrength.digBala.value,
                     kalaBala = planetStrength.kalaBala.total,
-                    chestaBala = planetStrength.chestaBala,
-                    naisargikaBala = planetStrength.naisargikaBala,
-                    drikBala = planetStrength.drikBala
+                    chestaBala = planetStrength.chestaBala.value,
+                    naisargikaBala = planetStrength.naisargikaBala.value,
+                    drikBala = planetStrength.drikBala.value
                 )
             }
         } catch (e: Exception) {
@@ -538,15 +568,15 @@ class VargaCalculatorWrapper {
                 "D1", "RASHI" -> DivisionalChartType.D1_RASHI
                 "D2", "HORA" -> DivisionalChartType.D2_HORA
                 "D3", "DREKKANA" -> DivisionalChartType.D3_DREKKANA
-                "D4", "CHATURTHAMSA" -> DivisionalChartType.D4_CHATURTHAMSHA
+                "D4", "CHATURTHAMSA" -> DivisionalChartType.D4_CHATURTHAMSA
                 "D7", "SAPTAMSA" -> DivisionalChartType.D7_SAPTAMSA
                 "D9", "NAVAMSA" -> DivisionalChartType.D9_NAVAMSA
                 "D10", "DASAMSA" -> DivisionalChartType.D10_DASAMSA
                 "D12", "DWADASHAMSA" -> DivisionalChartType.D12_DWADASAMSA
                 "D16", "SHODASHAMSA" -> DivisionalChartType.D16_SHODASAMSA
                 "D20", "VIMSHAMSA" -> DivisionalChartType.D20_VIMSAMSA
-                "D24", "CHATURVIMSHAMSA" -> DivisionalChartType.D24_SIDDHAMSA
-                "D27", "NAKSHATRAMSA" -> DivisionalChartType.D27_BHAMSA
+                "D24", "CHATURVIMSHAMSA" -> DivisionalChartType.D24_CHATURVIMSAMSA
+                "D27", "NAKSHATRAMSA" -> DivisionalChartType.D27_SAPTAVIMSAMSA
                 "D30", "TRIMSHAMSA" -> DivisionalChartType.D30_TRIMSAMSA
                 "D40", "KHAVEDAMSA" -> DivisionalChartType.D40_KHAVEDAMSA
                 "D45", "AKSHAVEDAMSA" -> DivisionalChartType.D45_AKSHAVEDAMSA
@@ -559,7 +589,7 @@ class VargaCalculatorWrapper {
             VargaChartResult(
                 name = chartType.displayName,
                 ascendantSign = vargaChart.ascendantSign,
-                ascendantDegree = vargaChart.ascendantDegree,
+                ascendantDegree = vargaChart.ascendantDegreeInSign,
                 planets = vargaChart.planetPositions.map { pos ->
                     VargaPlanetPosition(
                         planet = pos.planet,
@@ -623,21 +653,24 @@ class MuhurtaCalculatorWrapper(private val context: android.content.Context) {
             )
 
             // For now, return current day's assessment
+            val inauspiciousList = mutableListOf<String>()
+            inauspiciousList.add(muhurtaResult.inauspiciousPeriods.rahukala.name)
+            inauspiciousList.add(muhurtaResult.inauspiciousPeriods.yamaghanta.name)
+            inauspiciousList.add(muhurtaResult.inauspiciousPeriods.gulikaKala.name)
+            muhurtaResult.inauspiciousPeriods.durmuhurtas.forEach { inauspiciousList.add(it.name) }
+
             listOf(
                 MuhurtaTime(
                     date = java.sql.Date(System.currentTimeMillis()),
-                    startTime = muhurtaResult.abhijitMuhurta?.startTime?.toString() ?: "12:00",
-                    endTime = muhurtaResult.abhijitMuhurta?.endTime?.toString() ?: "12:48",
-                    quality = if (muhurtaResult.inauspiciousPeriods.isEmpty()) "Good" else "Mixed",
-                    score = 70,
+                    startTime = muhurtaResult.abhijitMuhurta.startTime.toString(),
+                    endTime = muhurtaResult.abhijitMuhurta.endTime.toString(),
+                    quality = if (muhurtaResult.isAuspicious) "Good" else "Mixed",
+                    score = muhurtaResult.overallScore,
                     tithi = muhurtaResult.tithi.name,
                     nakshatra = muhurtaResult.nakshatra.nakshatra.displayName,
                     yoga = muhurtaResult.yoga.name,
-                    favorableFactors = listOf(
-                        "Abhijit Muhurta available",
-                        "Good Nakshatra"
-                    ),
-                    cautions = muhurtaResult.inauspiciousPeriods.map { it.name }
+                    favorableFactors = muhurtaResult.recommendations,
+                    cautions = inauspiciousList.filter { it.isNotEmpty() }
                 )
             )
         } catch (e: Exception) {
@@ -729,16 +762,20 @@ class ArgalaCalculatorWrapper {
         return try {
             val analysis = ArgalaCalculator.analyzeArgala(chart)
 
-            analysis.houseArgalas.flatMap { (targetHouse, argalas) ->
-                argalas.map { argala ->
+            analysis.houseArgalas.flatMap { (targetHouse, houseResult) ->
+                houseResult.primaryArgalas.map { argala ->
+                    // Check if this argala is obstructed
+                    val isObstructed = houseResult.virodhaArgalas.any {
+                        it.obstructedArgalaHouse == argala.argalaHouse && it.isEffective
+                    }
                     ArgalaResult(
                         targetHouse = targetHouse,
                         sourceHouse = argala.sourceHouse,
-                        type = argala.type.displayName,
-                        planets = argala.contributingPlanets,
+                        type = argala.argalaType.displayName,
+                        planets = argala.planets,
                         strength = (argala.strength * 100).toInt(),
-                        isObstructed = argala.isObstructed,
-                        effect = argala.interpretation
+                        isObstructed = isObstructed,
+                        effect = argala.description
                     )
                 }
             }

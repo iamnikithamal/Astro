@@ -47,6 +47,7 @@ import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartViewModel
+import com.astro.storm.ui.viewmodel.ChatViewModel
 
 /**
  * Navigation routes
@@ -163,7 +164,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AstroStormNavigation(
     navController: NavHostController,
-    viewModel: ChartViewModel = viewModel()
+    viewModel: ChartViewModel = viewModel(),
+    chatViewModel: ChatViewModel = viewModel()
 ) {
     val savedCharts by viewModel.savedCharts.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
@@ -188,6 +190,7 @@ fun AstroStormNavigation(
         composable(Screen.Main.route) {
             MainScreen(
                 viewModel = viewModel,
+                chatViewModel = chatViewModel,
                 savedCharts = savedCharts,
                 currentChart = currentChart,
                 selectedChartId = selectedChartId,

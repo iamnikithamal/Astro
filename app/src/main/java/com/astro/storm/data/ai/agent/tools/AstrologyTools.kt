@@ -727,19 +727,19 @@ class GetYogasTool : AstrologyTool {
         val category = arguments.optString("category", "all")
 
         try {
-            val yogaCalculator = YogaCalculator()
-            val allYogas = yogaCalculator.calculateYogas(chart)
+            val yogaCalculatorWrapper = YogaCalculatorWrapper()
+            val allYogas = yogaCalculatorWrapper.calculateYogas(chart)
 
             val filteredYogas = if (category == "all") {
                 allYogas
             } else {
-                allYogas.filter { it.category.lowercase() == category.lowercase() }
+                allYogas.filter { yoga -> yoga.category.lowercase() == category.lowercase() }
             }
 
             val data = JSONObject().apply {
                 put("totalYogas", filteredYogas.size)
-                put("auspiciousCount", filteredYogas.count { it.isAuspicious })
-                put("inauspiciousCount", filteredYogas.count { !it.isAuspicious })
+                put("auspiciousCount", filteredYogas.count { yoga -> yoga.isAuspicious })
+                put("inauspiciousCount", filteredYogas.count { yoga -> !yoga.isAuspicious })
                 put("yogas", JSONArray().apply {
                     filteredYogas.forEach { yoga ->
                         put(JSONObject().apply {
@@ -750,7 +750,7 @@ class GetYogasTool : AstrologyTool {
                             put("strength", yoga.strength)
                             put("description", yoga.description)
                             put("effects", yoga.effects)
-                            put("formingPlanets", JSONArray(yoga.formingPlanets.map { it.displayName }))
+                            put("formingPlanets", JSONArray(yoga.formingPlanets.map { planet -> planet.displayName }))
                         })
                     }
                 })
@@ -759,7 +759,7 @@ class GetYogasTool : AstrologyTool {
             return ToolExecutionResult(
                 success = true,
                 data = data,
-                summary = "Found ${filteredYogas.size} yogas (${filteredYogas.count { it.isAuspicious }} auspicious)"
+                summary = "Found ${filteredYogas.size} yogas (${filteredYogas.count { yoga -> yoga.isAuspicious }} auspicious)"
             )
         } catch (e: Exception) {
             return ToolExecutionResult(
@@ -800,10 +800,10 @@ class GetAshtakavargaTool : AstrologyTool {
         val type = arguments.optString("type", "sarvashtakavarga")
 
         try {
-            val ashtakavargaCalculator = AshtakavargaCalculator()
+            val ashtakavargaCalculatorWrapper = AshtakavargaCalculatorWrapper()
 
             val data = if (type == "sarvashtakavarga") {
-                val sav = ashtakavargaCalculator.calculateSarvashtakavarga(chart)
+                val sav = ashtakavargaCalculatorWrapper.calculateSarvashtakavarga(chart)
                 JSONObject().apply {
                     put("type", "Sarvashtakavarga")
                     put("description", "Combined strength points from all planets in each sign")
@@ -825,7 +825,7 @@ class GetAshtakavargaTool : AstrologyTool {
                     put("weakest", ZodiacSign.entries[sav.indexOf(sav.minOrNull() ?: 0)].displayName)
                 }
             } else {
-                val bav = ashtakavargaCalculator.calculateBhinnashtakavarga(chart)
+                val bav = ashtakavargaCalculatorWrapper.calculateBhinnashtakavarga(chart)
                 JSONObject().apply {
                     put("type", "Bhinnashtakavarga")
                     put("description", "Individual planet strength in each sign (0-8 bindus)")
@@ -894,7 +894,7 @@ class GetPanchangaTool : AstrologyTool {
         }
 
         try {
-            val panchangaCalculator = PanchangaCalculator()
+            val panchangaCalculator = PanchangaCalculatorWrapper(context.context)
             val panchanga = if (forNow) {
                 // Use default coordinates when profile doesn't have detailed location data
                 panchangaCalculator.calculateForNow(27.7172, 85.3240) // Default: Kathmandu
@@ -973,7 +973,7 @@ class GetTransitsTool : AstrologyTool {
             )
 
         try {
-            val transitCalculator = TransitCalculator()
+            val transitCalculator = TransitCalculatorWrapper(context.context)
             val transits = transitCalculator.calculateCurrentTransits(chart)
 
             val data = JSONObject().apply {
@@ -994,7 +994,7 @@ class GetTransitsTool : AstrologyTool {
                     }
                 })
                 put("majorTransits", JSONArray().apply {
-                    transits.filter { it.intensity >= 3 }.forEach { transit ->
+                    transits.filter { transitItem -> transitItem.intensity >= 3 }.forEach { transit ->
                         put("${transit.planet.displayName} transiting ${transit.transitHouse}th house: ${transit.effect}")
                     }
                 })
@@ -1069,7 +1069,7 @@ class GetCompatibilityTool : AstrologyTool {
                     summary = "Could not load partner's chart"
                 )
 
-            val compatibilityCalculator = CompatibilityCalculator()
+            val compatibilityCalculator = CompatibilityCalculatorWrapper()
             val result = compatibilityCalculator.calculateKundliMilan(chart1, partnerChart)
 
             val data = JSONObject().apply {
@@ -1145,7 +1145,7 @@ class GetRemediesTool : AstrologyTool {
         val focusArea = arguments.optString("focus_area", "all")
 
         try {
-            val remedyCalculator = RemedyCalculator()
+            val remedyCalculator = RemedyCalculatorWrapper()
             val remedies = remedyCalculator.calculateRemedies(chart, focusArea)
 
             val data = JSONObject().apply {
@@ -1163,7 +1163,7 @@ class GetRemediesTool : AstrologyTool {
                     remedies.recommendations.forEach { remedy ->
                         put(JSONObject().apply {
                             put("type", remedy.type)
-                            put("planet", remedy.forPlanet.displayName)
+                            put("planet", remedy.forPlanet?.displayName)
                             put("remedy", remedy.description)
                             put("mantra", remedy.mantra)
                             put("gemstone", remedy.gemstone)
@@ -1219,13 +1219,13 @@ class GetStrengthAnalysisTool : AstrologyTool {
         val planetFilter = arguments.optString("planet", "")
 
         try {
-            val shadbalaCalculator = ShadbalaCalculator()
+            val shadbalaCalculator = ShadbalaCalculatorWrapper()
             val shadbala = shadbalaCalculator.calculate(chart)
 
             val filteredResults = if (planetFilter.isEmpty()) {
                 shadbala
             } else {
-                shadbala.filter { it.planet.displayName.equals(planetFilter, ignoreCase = true) }
+                shadbala.filter { result -> result.planet.displayName.equals(planetFilter, ignoreCase = true) }
             }
 
             val data = JSONObject().apply {
@@ -1294,7 +1294,7 @@ class GetDivisionalChartTool : AstrologyTool {
         val varga = arguments.optString("varga", "D9").uppercase()
 
         try {
-            val vargaCalculator = VargaCalculator()
+            val vargaCalculator = VargaCalculatorWrapper()
             val divisionalChart = vargaCalculator.calculate(chart, varga)
 
             val vargaMeanings = mapOf(
@@ -1379,7 +1379,7 @@ class CalculateMuhurtaTool : AstrologyTool {
         val daysAhead = arguments.optInt("days_ahead", 7).coerceIn(1, 30)
 
         try {
-            val muhurtaCalculator = MuhurtaCalculator()
+            val muhurtaCalculator = MuhurtaCalculatorWrapper(context.context)
             // Use default coordinates when profile doesn't have detailed location data
             val latitude = 27.7172  // Default to Kathmandu
             val longitude = 85.3240
@@ -1464,7 +1464,7 @@ class GetBhriguBinduTool : AstrologyTool {
             )
 
         try {
-            val bhriguCalculator = BhriguBinduCalculator()
+            val bhriguCalculator = BhriguBinduCalculatorWrapper()
             val result = bhriguCalculator.calculate(chart)
 
             val data = JSONObject().apply {
@@ -1532,11 +1532,11 @@ class GetArgalaTool : AstrologyTool {
         val houseFilter = arguments.optInt("house", 0)
 
         try {
-            val argalaCalculator = ArgalaCalculator()
+            val argalaCalculator = ArgalaCalculatorWrapper()
             val argalas = argalaCalculator.calculate(chart)
 
             val filteredArgalas = if (houseFilter > 0) {
-                argalas.filter { it.targetHouse == houseFilter }
+                argalas.filter { argala -> argala.targetHouse == houseFilter }
             } else {
                 argalas
             }
@@ -1544,7 +1544,7 @@ class GetArgalaTool : AstrologyTool {
             val data = JSONObject().apply {
                 put("description", "Argala shows how planets intervene in house matters. Primary Argala from 2nd, 4th, 11th houses. Obstruction (Virodha Argala) from 12th, 10th, 3rd houses.")
                 put("houses", JSONArray().apply {
-                    val groupedByHouse = filteredArgalas.groupBy { it.targetHouse }
+                    val groupedByHouse = filteredArgalas.groupBy { argala -> argala.targetHouse }
                     groupedByHouse.forEach { (house, argalaList) ->
                         put(JSONObject().apply {
                             put("house", house)
@@ -1553,14 +1553,14 @@ class GetArgalaTool : AstrologyTool {
                                     put(JSONObject().apply {
                                         put("type", argala.type)
                                         put("fromHouse", argala.sourceHouse)
-                                        put("planets", JSONArray(argala.planets.map { it.displayName }))
+                                        put("planets", JSONArray(argala.planets.map { planet -> planet.displayName }))
                                         put("strength", argala.strength)
                                         put("isObstructed", argala.isObstructed)
                                         put("effect", argala.effect)
                                     })
                                 }
                             })
-                            put("netEffect", argalaList.sumOf { if (it.isObstructed) -it.strength else it.strength })
+                            put("netEffect", argalaList.sumOf { argala -> if (argala.isObstructed) -argala.strength else argala.strength })
                         })
                     }
                 })
