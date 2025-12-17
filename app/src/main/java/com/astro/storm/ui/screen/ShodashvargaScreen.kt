@@ -1465,6 +1465,7 @@ private fun ShodashvargaInfoDialog(onDismiss: () -> Unit) {
 // HELPER FUNCTIONS
 // ============================================
 
+@Composable
 private fun getStrengthColorFromBala(bala: Double): Color {
     return when {
         bala >= 15.0 -> AppTheme.SuccessColor
@@ -1475,6 +1476,7 @@ private fun getStrengthColorFromBala(bala: Double): Color {
     }
 }
 
+@Composable
 private fun getStrengthGradeColor(grade: StrengthGrade): Color {
     return when (grade) {
         StrengthGrade.EXCELLENT -> AppTheme.SuccessColor
@@ -1495,6 +1497,7 @@ private fun getStrengthIcon(grade: StrengthGrade): ImageVector {
     }
 }
 
+@Composable
 private fun getDignityColor(dignity: VargaDignity): Color {
     return when (dignity) {
         VargaDignity.EXALTED -> AppTheme.SuccessColor

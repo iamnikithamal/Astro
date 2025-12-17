@@ -1517,6 +1517,7 @@ private fun getStrengthText(strength: OverallStrength): String = when (strength)
     OverallStrength.DIFFICULT -> "Difficult"
 }
 
+@Composable
 private fun getStrengthColor(strength: OverallStrength): Color = when (strength) {
     OverallStrength.EXCELLENT -> AppTheme.SuccessColor
     OverallStrength.GOOD -> Color(0xFF4CAF50)
@@ -1525,6 +1526,7 @@ private fun getStrengthColor(strength: OverallStrength): Color = when (strength)
     OverallStrength.DIFFICULT -> AppTheme.ErrorColor
 }
 
+@Composable
 private fun getStrengthBackgroundColor(strength: OverallStrength): Color = when (strength) {
     OverallStrength.EXCELLENT -> AppTheme.SuccessColor.copy(alpha = 0.08f)
     OverallStrength.GOOD -> Color(0xFF4CAF50).copy(alpha = 0.08f)
@@ -1541,6 +1543,7 @@ private fun getStrengthIcon(strength: OverallStrength): ImageVector = when (stre
     OverallStrength.DIFFICULT -> Icons.Filled.Error
 }
 
+@Composable
 private fun getInfluenceColor(influence: FactorInfluence): Color = when (influence) {
     FactorInfluence.HIGHLY_POSITIVE -> AppTheme.SuccessColor
     FactorInfluence.POSITIVE -> Color(0xFF4CAF50)
@@ -1550,6 +1553,7 @@ private fun getInfluenceColor(influence: FactorInfluence): Color = when (influen
     FactorInfluence.HIGHLY_NEGATIVE -> AppTheme.ErrorColor
 }
 
+@Composable
 private fun getAreaInfluenceColor(influence: AreaInfluence): Color = when (influence) {
     AreaInfluence.VERY_FAVORABLE -> AppTheme.SuccessColor
     AreaInfluence.FAVORABLE -> Color(0xFF4CAF50)
@@ -1597,6 +1601,7 @@ private fun getAspectTypeName(aspectType: AspectType): String = when (aspectType
     AspectType.SPECIAL_ASPECT -> "Special Aspect"
 }
 
+@Composable
 private fun getAspectTypeColor(aspectType: AspectType): Color = when (aspectType) {
     AspectType.CONJUNCTION -> AppTheme.AccentGold
     AspectType.OPPOSITION -> AppTheme.ErrorColor
@@ -1614,6 +1619,7 @@ private fun getTransitTypeName(transitType: BhriguBinduCalculator.TransitType): 
     BhriguBinduCalculator.TransitType.ENTERING_SIGN -> "Entering Sign"
 }
 
+@Composable
 private fun getTransitSignificanceColor(significance: BhriguBinduCalculator.TransitSignificance): Color = when (significance) {
     BhriguBinduCalculator.TransitSignificance.HIGHLY_SIGNIFICANT -> AppTheme.AccentGold
     BhriguBinduCalculator.TransitSignificance.SIGNIFICANT -> AppTheme.AccentPrimary
@@ -1639,6 +1645,7 @@ private fun getRemedyCategoryName(category: RemedyCategory): String = when (cate
     RemedyCategory.LIFESTYLE -> "Lifestyle"
 }
 
+@Composable
 private fun getRemedyPriorityColor(priority: RemedyPriority): Color = when (priority) {
     RemedyPriority.ESSENTIAL -> AppTheme.ErrorColor
     RemedyPriority.RECOMMENDED -> AppTheme.AccentGold

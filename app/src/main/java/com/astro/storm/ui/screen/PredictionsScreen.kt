@@ -1969,6 +1969,7 @@ private fun getAdvice(area: LifeArea): String = when (area) {
     LifeArea.SPIRITUAL -> "Maintain daily spiritual practices. Connect with like-minded seekers and serve others."
 }
 
+@Composable
 private fun getEnergyColor(energy: Int): Color = when {
     energy >= 8 -> AppTheme.SuccessColor
     energy >= 6 -> AppTheme.AccentGold
@@ -1976,6 +1977,7 @@ private fun getEnergyColor(energy: Int): Color = when {
     else -> AppTheme.ErrorColor
 }
 
+@Composable
 private fun getLifeAreaColor(area: LifeArea): Color = when (area) {
     LifeArea.CAREER -> AppTheme.LifeAreaCareer
     LifeArea.FINANCE -> AppTheme.LifeAreaFinance
@@ -1986,4 +1988,5 @@ private fun getLifeAreaColor(area: LifeArea): Color = when (area) {
     LifeArea.SPIRITUAL -> AppTheme.LifeAreaSpiritual
 }
 
+@Composable
 private fun getPlanetColor(planet: Planet): Color = AppTheme.getPlanetColor(planet)

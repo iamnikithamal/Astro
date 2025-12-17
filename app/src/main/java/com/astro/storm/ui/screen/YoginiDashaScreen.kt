@@ -1814,10 +1814,12 @@ private fun getNatureLocalizedName(nature: YoginiDashaCalculator.YoginiNature, l
     }
 }
 
+@Composable
 private fun getYoginiColor(yogini: YoginiDashaCalculator.Yogini): Color {
     return AppTheme.getPlanetColor(yogini.planet)
 }
 
+@Composable
 private fun getNatureColor(nature: YoginiDashaCalculator.YoginiNature): Color {
     return when (nature) {
         YoginiDashaCalculator.YoginiNature.HIGHLY_AUSPICIOUS -> AppTheme.SuccessColor

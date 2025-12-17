@@ -1211,7 +1211,7 @@ class ChartExporter(private val context: Context) {
         // BAV Data rows
         paint.textSize = 9f
 
-        ashtakavarga.bhinnashtakavarga.forEachIndexed { rowIndex, (planet, bav) ->
+        ashtakavarga.bhinnashtakavarga.entries.forEachIndexed { rowIndex, (planet, bav) ->
             xPos = PDF_MARGIN.toFloat() + 8f
 
             // Alternating row background

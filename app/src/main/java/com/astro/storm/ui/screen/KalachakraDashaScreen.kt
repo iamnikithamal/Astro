@@ -2179,6 +2179,7 @@ private fun getRelationshipLocalizedName(
     }
 }
 
+@Composable
 private fun getHealthColor(health: KalachakraDashaCalculator.HealthIndicator): Color {
     return when (health) {
         KalachakraDashaCalculator.HealthIndicator.EXCELLENT -> AppTheme.SuccessColor
@@ -2189,6 +2190,7 @@ private fun getHealthColor(health: KalachakraDashaCalculator.HealthIndicator): C
     }
 }
 
+@Composable
 private fun getRelationshipColor(relationship: KalachakraDashaCalculator.DehaJeevaRelationship): Color {
     return when (relationship) {
         KalachakraDashaCalculator.DehaJeevaRelationship.HARMONIOUS -> AppTheme.SuccessColor
@@ -2199,6 +2201,7 @@ private fun getRelationshipColor(relationship: KalachakraDashaCalculator.DehaJee
     }
 }
 
+@Composable
 private fun getApplicabilityColor(score: Int): Color {
     return when {
         score >= 70 -> AppTheme.SuccessColor

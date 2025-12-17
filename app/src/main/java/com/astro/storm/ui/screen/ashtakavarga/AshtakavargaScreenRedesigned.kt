@@ -125,15 +125,21 @@ fun AshtakavargaScreenRedesigned(
         }
     }
 
-    val tabs = remember {
+    // Read colors outside remember
+    val accentPrimary = AppTheme.AccentPrimary
+    val successColor = AppTheme.SuccessColor
+    val accentGold = AppTheme.AccentGold
+    val accentTeal = AppTheme.AccentTeal
+
+    val tabs = remember(accentPrimary, successColor, accentGold, accentTeal) {
         AshtakavargaViewType.entries.map { type ->
             TabItem(
                 title = type.title,
                 accentColor = when (type) {
-                    AshtakavargaViewType.OVERVIEW -> AppTheme.AccentPrimary
-                    AshtakavargaViewType.SARVASHTAKAVARGA -> AppTheme.SuccessColor
-                    AshtakavargaViewType.BY_PLANET -> AppTheme.AccentGold
-                    AshtakavargaViewType.BY_HOUSE -> AppTheme.AccentTeal
+                    AshtakavargaViewType.OVERVIEW -> accentPrimary
+                    AshtakavargaViewType.SARVASHTAKAVARGA -> successColor
+                    AshtakavargaViewType.BY_PLANET -> accentGold
+                    AshtakavargaViewType.BY_HOUSE -> accentTeal
                 }
             )
         }
@@ -1326,6 +1332,7 @@ private fun AshtakavargaInfoDialog(onDismiss: () -> Unit) {
     )
 }
 
+@Composable
 private fun getBinduColor(bindus: Int): Color {
     return when {
         bindus >= 30 -> AppTheme.SuccessColor
@@ -1335,6 +1342,7 @@ private fun getBinduColor(bindus: Int): Color {
     }
 }
 
+@Composable
 private fun getBinduStrengthColor(percent: Double): Color {
     return when {
         percent >= 75 -> AppTheme.SuccessColor

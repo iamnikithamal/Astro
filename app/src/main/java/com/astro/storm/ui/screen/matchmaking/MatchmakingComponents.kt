@@ -92,6 +92,7 @@ fun getRatingIcon(rating: CompatibilityRating): ImageVector {
 /**
  * Get color based on Manglik status text.
  */
+@Composable
 fun getManglikStatusColor(status: String): Color {
     return when {
         status.contains("No concerns", ignoreCase = true) -> AppTheme.SuccessColor
@@ -106,6 +107,7 @@ fun getManglikStatusColor(status: String): Color {
 /**
  * Get color based on Manglik Dosha severity.
  */
+@Composable
 fun getManglikSeverityColor(dosha: ManglikDosha): Color {
     return when (dosha) {
         ManglikDosha.NONE -> AppTheme.SuccessColor

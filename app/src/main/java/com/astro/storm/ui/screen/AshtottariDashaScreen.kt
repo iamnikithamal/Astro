@@ -1160,6 +1160,7 @@ private fun calculateMahadashaProgress(mahadasha: AshtottariMahadasha): Double {
     return (elapsedDays / totalDays).coerceIn(0.0, 1.0)
 }
 
+@Composable
 private fun getPlanetColor(planet: Planet): Color {
     return when (planet) {
         Planet.SUN -> Color(0xFFFF6B35)

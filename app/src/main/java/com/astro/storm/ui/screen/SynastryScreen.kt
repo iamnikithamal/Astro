@@ -1741,6 +1741,7 @@ private fun SynastryInfoDialog(onDismiss: () -> Unit) {
     )
 }
 
+@Composable
 private fun getCompatibilityColor(score: Double): Color {
     return when {
         score >= 80 -> AppTheme.SuccessColor

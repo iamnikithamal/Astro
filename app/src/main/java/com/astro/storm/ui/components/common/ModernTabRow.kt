@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.ui.theme.AppTheme
+import com.astro.storm.ui.theme.DarkAppThemeColors
 
 /**
  * Tab data class for modern tab row
@@ -53,7 +54,7 @@ data class TabItem(
     val title: String,
     val icon: ImageVector? = null,
     val badge: String? = null,
-    val accentColor: Color = AppTheme.AccentPrimary
+    val accentColor: Color = DarkAppThemeColors.AccentPrimary
 )
 
 /**

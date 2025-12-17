@@ -930,6 +930,7 @@ private fun EmptyYogasContent(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
 private fun getCategoryColor(category: YogaCalculator.YogaCategory): Color {
     return when (category) {
         YogaCalculator.YogaCategory.RAJA_YOGA -> AppTheme.AccentGold
@@ -956,6 +957,7 @@ private fun getCategoryIcon(category: YogaCalculator.YogaCategory): ImageVector 
     }
 }
 
+@Composable
 private fun getStrengthColor(strength: Double): Color {
     return when {
         strength >= 80 -> AppTheme.SuccessColor

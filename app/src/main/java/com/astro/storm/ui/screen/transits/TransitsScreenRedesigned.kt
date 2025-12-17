@@ -135,15 +135,21 @@ fun TransitsScreenRedesigned(
         transitAnalysis?.transitPositions ?: emptyList()
     }
 
-    val tabs = remember {
+    // Read colors outside remember
+    val accentPrimary = AppTheme.AccentPrimary
+    val accentTeal = AppTheme.AccentTeal
+    val accentGold = AppTheme.AccentGold
+    val lifeAreaSpiritual = AppTheme.LifeAreaSpiritual
+
+    val tabs = remember(accentPrimary, accentTeal, accentGold, lifeAreaSpiritual) {
         TransitViewType.entries.map { type ->
             TabItem(
                 title = type.title,
                 accentColor = when (type) {
-                    TransitViewType.CURRENT -> AppTheme.AccentPrimary
-                    TransitViewType.BY_HOUSE -> AppTheme.AccentTeal
-                    TransitViewType.UPCOMING -> AppTheme.AccentGold
-                    TransitViewType.ASPECTS -> AppTheme.LifeAreaSpiritual
+                    TransitViewType.CURRENT -> accentPrimary
+                    TransitViewType.BY_HOUSE -> accentTeal
+                    TransitViewType.UPCOMING -> accentGold
+                    TransitViewType.ASPECTS -> lifeAreaSpiritual
                 }
             )
         }
@@ -1136,6 +1142,7 @@ private fun getHouseSignification(house: Int): String {
     }
 }
 
+@Composable
 private fun getStrengthColor(strength: Double): Color {
     return when {
         strength >= 70 -> AppTheme.SuccessColor

@@ -936,25 +936,38 @@ private fun SouthIndianChart(
 ) {
     val textMeasurer = rememberTextMeasurer()
 
+    // Read colors outside Canvas
+    val cardBackgroundElevated = AppTheme.CardBackgroundElevated
+    val dividerColor = AppTheme.DividerColor
+    val textMuted = AppTheme.TextMuted
+    val accentPrimary = AppTheme.AccentPrimary
+    val accentGold = AppTheme.AccentGold
+    val warningColor = AppTheme.WarningColor
+    val cardBackground = AppTheme.CardBackground
+    val textPrimary = AppTheme.TextPrimary
+
+    // Precompute planet colors
+    val planetColors = planetPositions.keys.associateWith { planet -> getPlanetColor(planet) }
+
     Canvas(modifier = modifier) {
         val cellSize = size.width / 4
         val strokeWidth = 2.dp.toPx()
 
         drawRect(
-            color = AppTheme.CardBackgroundElevated,
+            color = cardBackgroundElevated,
             size = size
         )
 
         // Draw grid
         for (i in 0..4) {
             drawLine(
-                color = AppTheme.DividerColor,
+                color = dividerColor,
                 start = Offset(i * cellSize, 0f),
                 end = Offset(i * cellSize, size.height),
                 strokeWidth = strokeWidth
             )
             drawLine(
-                color = AppTheme.DividerColor,
+                color = dividerColor,
                 start = Offset(0f, i * cellSize),
                 end = Offset(size.width, i * cellSize),
                 strokeWidth = strokeWidth
@@ -989,7 +1002,7 @@ private fun SouthIndianChart(
                 text = getZodiacSymbol(sign),
                 style = TextStyle(
                     fontSize = 10.sp,
-                    color = AppTheme.TextMuted
+                    color = textMuted
                 )
             )
 
@@ -1003,7 +1016,7 @@ private fun SouthIndianChart(
 
             if (sign == ascendantSign) {
                 drawCircle(
-                    color = AppTheme.AccentPrimary.copy(alpha = 0.2f),
+                    color = accentPrimary.copy(alpha = 0.2f),
                     radius = cellSize / 3,
                     center = position
                 )
@@ -1011,7 +1024,7 @@ private fun SouthIndianChart(
 
             if (sign == munthaSign) {
                 drawCircle(
-                    color = AppTheme.AccentGold,
+                    color = accentGold,
                     radius = 6.dp.toPx(),
                     center = Offset(position.x + cellSize / 3, position.y - cellSize / 3),
                     style = Stroke(width = 2.dp.toPx())
@@ -1040,13 +1053,13 @@ private fun SouthIndianChart(
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = getPlanetColor(planet)
+                        color = planetColors[planet] ?: textPrimary
                     )
                 )
 
                 if (pos.isRetrograde) {
                     drawCircle(
-                        color = AppTheme.WarningColor.copy(alpha = 0.3f),
+                        color = warningColor.copy(alpha = 0.3f),
                         radius = 12.dp.toPx(),
                         center = planetPos
                     )
@@ -1064,7 +1077,7 @@ private fun SouthIndianChart(
 
         // Draw center box
         drawRect(
-            color = AppTheme.CardBackground,
+            color = cardBackground,
             topLeft = Offset(cellSize, cellSize),
             size = Size(cellSize * 2, cellSize * 2)
         )
@@ -1074,7 +1087,7 @@ private fun SouthIndianChart(
             style = TextStyle(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = AppTheme.TextPrimary
+                color = textPrimary
             )
         )
         drawText(
@@ -2323,6 +2336,7 @@ private fun HousePredictionCard(prediction: HousePrediction) {
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+@Composable
 private fun getPlanetColor(planet: Planet): Color {
     return when (planet) {
         Planet.SUN -> AppTheme.PlanetSun
@@ -2338,6 +2352,7 @@ private fun getPlanetColor(planet: Planet): Color {
     }
 }
 
+@Composable
 private fun getStrengthColor(strength: String): Color {
     return when {
         strength.contains("Excellent", ignoreCase = true) -> AppTheme.SuccessColor
@@ -2352,6 +2367,7 @@ private fun getStrengthColor(strength: String): Color {
     }
 }
 
+@Composable
 private fun getAspectStrengthColor(strength: AspectStrength): Color {
     return when (strength) {
         AspectStrength.VERY_STRONG -> AppTheme.SuccessColor

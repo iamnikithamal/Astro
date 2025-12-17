@@ -504,11 +504,12 @@ private fun InsightsErrorState(
 
 @Composable
 private fun InsightsLoadingSkeleton() {
-    val shimmerColors = remember {
+    val cardBackground = AppTheme.CardBackground
+    val shimmerColors = remember(cardBackground) {
         listOf(
-            AppTheme.CardBackground.copy(alpha = 0.9f),
-            AppTheme.CardBackground.copy(alpha = 0.4f),
-            AppTheme.CardBackground.copy(alpha = 0.9f)
+            cardBackground.copy(alpha = 0.9f),
+            cardBackground.copy(alpha = 0.4f),
+            cardBackground.copy(alpha = 0.9f)
         )
     }
 
@@ -866,6 +867,7 @@ private fun EnergyDot(index: Int, isActive: Boolean) {
     )
 }
 
+@Composable
 private fun getEnergyColor(energy: Int): Color = when {
     energy < 4 -> AppTheme.ErrorColor
     energy < 7 -> AppTheme.WarningColor
@@ -1054,6 +1056,7 @@ private fun ExpandIcon(expanded: Boolean) {
 @Stable
 private data class LifeAreaConfig(val color: Color, val icon: ImageVector)
 
+@Composable
 private fun getLifeAreaConfig(area: HoroscopeCalculator.LifeArea): LifeAreaConfig {
     return when (area) {
         HoroscopeCalculator.LifeArea.CAREER -> LifeAreaConfig(AppTheme.LifeAreaCareer, Icons.Outlined.Work)
@@ -2164,6 +2167,7 @@ private fun formatDuration(days: Long): String {
     }
 }
 
+@Composable
 private fun getPlanetColor(planet: Planet): Color {
     return when (planet) {
         Planet.SUN -> AppTheme.PlanetSun

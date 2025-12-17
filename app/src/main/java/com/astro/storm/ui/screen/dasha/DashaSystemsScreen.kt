@@ -181,16 +181,23 @@ fun DashaSystemsScreen(
         }
     }
 
-    val tabs = remember {
+    // Read colors outside remember
+    val accentPrimary = AppTheme.AccentPrimary
+    val lifeAreaLove = AppTheme.LifeAreaLove
+    val accentGold = AppTheme.AccentGold
+    val accentTeal = AppTheme.AccentTeal
+    val lifeAreaSpiritual = AppTheme.LifeAreaSpiritual
+
+    val tabs = remember(accentPrimary, lifeAreaLove, accentGold, accentTeal, lifeAreaSpiritual) {
         DashaSystemType.entries.map { system ->
             TabItem(
                 title = system.displayName,
                 accentColor = when (system) {
-                    DashaSystemType.VIMSOTTARI -> AppTheme.AccentPrimary
-                    DashaSystemType.YOGINI -> AppTheme.LifeAreaLove
-                    DashaSystemType.ASHTOTTARI -> AppTheme.AccentGold
-                    DashaSystemType.SUDARSHANA -> AppTheme.AccentTeal
-                    DashaSystemType.CHARA -> AppTheme.LifeAreaSpiritual
+                    DashaSystemType.VIMSOTTARI -> accentPrimary
+                    DashaSystemType.YOGINI -> lifeAreaLove
+                    DashaSystemType.ASHTOTTARI -> accentGold
+                    DashaSystemType.SUDARSHANA -> accentTeal
+                    DashaSystemType.CHARA -> lifeAreaSpiritual
                 }
             )
         }

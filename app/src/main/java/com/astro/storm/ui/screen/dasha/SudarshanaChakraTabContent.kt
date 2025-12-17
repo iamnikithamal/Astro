@@ -906,6 +906,7 @@ private fun YearSignDetail(
     }
 }
 
+@Composable
 private fun getStrengthColor(strength: Double): Color {
     return when {
         strength >= 70 -> AppTheme.SuccessColor

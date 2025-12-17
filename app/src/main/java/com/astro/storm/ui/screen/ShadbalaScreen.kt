@@ -1258,6 +1258,7 @@ private fun ShadbalaInfoDialog(onDismiss: () -> Unit) {
 // Helper Functions
 // ============================================
 
+@Composable
 private fun getStrengthColor(percentage: Double): Color {
     return when {
         percentage >= 130 -> AppTheme.SuccessColor
