@@ -551,19 +551,26 @@ Implement Shoola Dasha - a Jaimini dasha system specifically used for timing of 
 
 ---
 
-## 23. Tarabala and Chandrabala Calculator
+## 23. Tarabala and Chandrabala Calculator ✅ IMPLEMENTED
 
 ### Description
 Implement daily and transit-based Tarabala (nakshatra strength) and Chandrabala (Moon's position) calculations for determining auspicious activities.
 
 ### Implementation Details
-- Daily Tarabala calculation from birth nakshatra
-- Nine-fold nakshatra cycle (Janma, Sampat, Vipat, Kshema, Pratyari, Sadhana, Naidhana, Mitra, Ati-Mitra)
-- Chandrabala from Moon sign for daily activities
-- Combined strength score for muhurta selection
-- Activity-specific recommendations based on Tarabala
-- Integration with Panchanga for daily planning
-- Transit Moon nakshatra alerts
+- ✅ Daily Tarabala calculation from birth nakshatra
+- ✅ Nine-fold nakshatra cycle (Janma, Sampat, Vipat, Kshema, Pratyari, Sadhana, Naidhana, Mitra, Ati-Mitra)
+- ✅ Chandrabala from Moon sign for daily activities (12-house analysis)
+- ✅ Combined daily strength score (0-100%) with overall assessment
+- ✅ Activity-specific recommendations based on Tarabala/Chandrabala
+- ✅ Weekly forecast with best/worst day identification
+- ✅ All 27 nakshatra Tarabala mapping from birth star
+- ✅ Three-cycle Tarabala strength variation analysis
+- ✅ House significations for Chandrabala (12 house interpretations)
+- ✅ Complete UI with Today, Weekly, and All Nakshatras tabs
+
+### Implementation Location
+`/app/src/main/java/com/astro/storm/ephemeris/TarabalaCalculator.kt`
+`/app/src/main/java/com/astro/storm/ui/screen/tarabala/TarabalaScreen.kt`
 
 ### Vedic References
 - Muhurta Chintamani
@@ -591,19 +598,25 @@ Enhance Ashtakavarga with specific transit prediction capabilities - predict the
 
 ---
 
-## 25. Gochara Vedha (Transit Obstruction) System
+## 25. Gochara Vedha (Transit Obstruction) System ✅ IMPLEMENTED
 
 ### Description
 Implement classical Vedha rules for transits - positions where planetary transits get obstructed by other planets, reducing or nullifying their effects.
 
 ### Implementation Details
-- Complete Vedha point mapping for all planets
-- Real-time Vedha detection in current transits
-- Transit effectiveness scoring with Vedha consideration
-- Saturn transit Vedha from Mars, Mars Vedha from Saturn analysis
-- Jupiter transit Vedha points tracking
-- Beneficial transit protection alerts
-- Malefic transit mitigation notifications
+- ✅ Complete Vedha point mapping for all planets (classical pairs: 1↔5, 2↔12, 3↔9, 4↔10, 6↔12, 7↔11)
+- ✅ Real-time Vedha detection in current transits using Swiss Ephemeris
+- ✅ Transit effectiveness scoring with Vedha severity levels (Complete, Strong, Moderate, Partial, None)
+- ✅ Sun-Saturn exception rule (they don't obstruct each other)
+- ✅ Favorable/unfavorable house mappings per planet from Moon
+- ✅ Vedha interaction details with lost benefits analysis
+- ✅ Weighted overall transit score (Jupiter/Saturn weighted higher)
+- ✅ Key insights generation based on obstructed planets
+- ✅ Remedial recommendations for obstructed transits
+- ✅ Complete interpretation system with house and planet significations
+
+### Implementation Location
+`/app/src/main/java/com/astro/storm/ephemeris/GocharaVedhaCalculator.kt`
 
 ### Vedic References
 - Phaladeepika (Transit chapters)
@@ -611,19 +624,27 @@ Implement classical Vedha rules for transits - positions where planetary transit
 
 ---
 
-## 26. Dasha Sandhi (Period Junction) Analysis
+## 26. Dasha Sandhi (Period Junction) Analysis ✅ IMPLEMENTED
 
 ### Description
 Implement detailed Dasha Sandhi analysis - the critical transition periods between major and minor planetary periods where significant life changes occur.
 
 ### Implementation Details
-- Major Dasha transition timing and alerts
-- Sandhi period intensity calculation (3-month pre/post)
-- Antardasha Sandhi tracking within Mahadashas
-- Planet relationship analysis at Sandhi (friend/enemy transitions)
-- Event probability patterns at Dasha junctions
-- Remedial measures for difficult Sandhi periods
-- Historical event correlation with past Sandhi
+- ✅ Major Dasha (Mahadasha) transition timing and analysis
+- ✅ Sandhi period duration calculation (proportional to dasha length)
+- ✅ Antardasha Sandhi tracking within Mahadashas
+- ✅ Planet relationship analysis (Friend, Neutral, Enemy transitions)
+- ✅ Transition intensity scoring (1-5 scale)
+- ✅ Life area impact predictions (Career, Relationships, Health, Finance, Spiritual)
+- ✅ Favorable/challenging transitions identification
+- ✅ Recommended activities and actions during Sandhi
+- ✅ Cautions and warnings for difficult transitions
+- ✅ Current Sandhi detection with progress tracking
+- ✅ Upcoming Sandhi timeline (within 2 years)
+- ✅ Complete interpretation system with specific predictions
+
+### Implementation Location
+`/app/src/main/java/com/astro/storm/ephemeris/DashaSandhiAnalyzer.kt`
 
 ### Vedic References
 - BPHS on Dasha transition effects
@@ -735,26 +756,43 @@ Implement comprehensive detection and analysis of the five great yogas formed by
 
 ---
 
-## 32. Kemadruma Yoga and Cancellation Analysis
+## 32. Kemadruma Yoga and Cancellation Analysis ✅ IMPLEMENTED
 
 ### Description
 Implement detection of Kemadruma Yoga (Moon without planetary support) and its various cancellation conditions - important for emotional and financial wellbeing.
 
 ### Implementation Details
-- Kemadruma detection (no planets in 2nd/12th from Moon)
-- Strength assessment (degrees of affliction)
-- Cancellation conditions:
-  - Planets in Kendra from Moon or Lagna
-  - Full Moon condition
-  - Moon in Kendra
-  - Moon aspected by Jupiter
-- Dasha periods when Kemadruma activates
-- Remedial measures for uncancelled Kemadruma
-- Emotional and financial impact predictions
+- ✅ Kemadruma detection (no planets in 2nd/12th from Moon, Moon alone)
+- ✅ Comprehensive strength assessment with formation details
+- ✅ 13 Cancellation (Bhanga) conditions:
+  - ✅ Planets in Kendra from Moon
+  - ✅ Planets in Kendra from Lagna
+  - ✅ Moon in Kendra from Lagna
+  - ✅ Jupiter aspects Moon (special 5th/7th/9th aspects)
+  - ✅ Venus aspects Moon
+  - ✅ Moon exalted (Taurus)
+  - ✅ Moon in own sign (Cancer)
+  - ✅ Moon in friendly sign
+  - ✅ Full or bright Moon
+  - ✅ Angular Moon
+  - ✅ Strong dispositor
+  - ✅ Benefic conjunction/aspect
+- ✅ Effective status determination (7 levels from Not Present to Active Severe)
+- ✅ Emotional impact analysis (mental peace, stability, confidence, anxiety, depression risk)
+- ✅ Financial impact analysis (wealth retention, stability, unexpected expenses, support)
+- ✅ Social impact analysis (family support, friendship, public image, isolation)
+- ✅ Dasha activation periods (Moon, Rahu, Saturn, dispositor)
+- ✅ Comprehensive remedies (Mantra, Puja, Donation, Fasting, Gemstone, Yantra, Lifestyle)
+- ✅ Detailed interpretation with Moon analysis and cancellation summary
+
+### Implementation Location
+`/app/src/main/java/com/astro/storm/ephemeris/KemadrumaYogaCalculator.kt`
 
 ### Vedic References
 - BPHS on Chandra Yogas
 - Phaladeepika
+- Saravali
+- Hora Sara
 
 ---
 
@@ -763,17 +801,328 @@ Implement detection of Kemadruma Yoga (Moon without planetary support) and its v
 | Priority | Feature | Complexity | Impact | Status |
 |----------|---------|------------|--------|--------|
 | High | Ashtavarga Transit Predictions | Medium | High | Pending |
-| High | Gochara Vedha System | Medium | High | Pending |
-| High | Dasha Sandhi Analysis | Medium | High | Pending |
+| High | Gochara Vedha System | Medium | High | ✅ DONE |
+| High | Dasha Sandhi Analysis | Medium | High | ✅ DONE |
 | High | Panch Mahapurusha Yoga | Low | High | Pending |
-| Medium | Tarabala/Chandrabala | Low | Medium | Pending |
+| High | Tarabala/Chandrabala | Low | High | ✅ DONE |
 | Medium | Maraka Analysis | Medium | Medium | Pending |
 | Medium | Badhaka Planet Analysis | Medium | Medium | Pending |
 | Medium | Vipareeta Raja Yoga | Low | Medium | Pending |
-| Medium | Kemadruma Yoga Analysis | Low | Medium | Pending |
+| Medium | Kemadruma Yoga Analysis | Low | Medium | ✅ DONE |
 | Medium | Shoola Dasha | High | Medium | Pending |
 | Medium | Kakshya Transit System | Medium | Medium | Pending |
 | Low | Ashtamangala Prashna | High | Medium | Pending |
+
+---
+
+## New Development Ideas (Advanced Vedic Astrology Features)
+
+The following are 12 new serious, production-ready features based on authentic Vedic astrology principles. All implementations should be offline-capable with no cloud dependencies.
+
+---
+
+## 33. Graha Yuddha (Planetary War) Analysis
+
+### Description
+Implement comprehensive Graha Yuddha detection - when two planets are within one degree of each other, they engage in planetary war, significantly affecting both planets' results.
+
+### Implementation Details
+- Detect Graha Yuddha between any two planets within 1° longitude
+- Determine winner/loser based on:
+  - Northern latitude wins over southern
+  - Higher brightness wins
+  - Faster planet generally loses
+- Calculate war intensity (closer = more intense)
+- Impact on both planets' significations
+- Dasha/Antardasha effects when war planets rule periods
+- Transit trigger analysis for natal Graha Yuddha
+- Remedial measures for the defeated planet
+
+### Vedic References
+- BPHS on Graha Yuddha
+- Surya Siddhanta on planetary brightness
+- Phaladeepika on war effects
+
+---
+
+## 34. Avastha (Planetary States) Calculator
+
+### Description
+Implement the nine planetary states (Avasthas) that significantly modify a planet's ability to deliver results - from Deepta (brilliant) to Kshudita (hungry).
+
+### Implementation Details
+- Calculate all 9 Avasthas for each planet:
+  - Deepta (exalted)
+  - Swastha (own sign)
+  - Mudita (friend's sign)
+  - Shanta (benefic aspect)
+  - Shakta (retrograde, angular)
+  - Peedita (combust, with malefic)
+  - Deena (enemy sign)
+  - Vikala (debilitated)
+  - Khala (defeated in war)
+- Avastha strength scoring (0-100)
+- Impact on planet's house results
+- Dasha period modifications based on Avastha
+- Combined Avastha for chart analysis
+
+### Vedic References
+- BPHS Chapter on Avasthas
+- Saravali
+- Hora Ratnam
+
+---
+
+## 35. Ishta Phala and Kashta Phala (Desirable/Undesirable Results)
+
+### Description
+Implement the classical calculation of Ishta Phala (beneficial results) and Kashta Phala (malefic results) for each planet - essential for determining actual planet effectiveness.
+
+### Implementation Details
+- Calculate Uchcha Bala (exaltation strength)
+- Calculate Chestha Bala (motional strength)
+- Ishta Phala = (Uchcha Bala + Chestha Bala) / 2
+- Kashta Phala = 60 - Ishta Phala
+- Net effect determination for each planet
+- House lordship impact assessment
+- Dasha result modification based on Ishta/Kashta
+- Comparative planet ranking by net benefit
+
+### Vedic References
+- BPHS Shadbala chapter
+- Phaladeepika on result determination
+
+---
+
+## 36. Bhava Madhya and Bhava Sandhi Analysis
+
+### Description
+Implement precise Bhava (house) cusp calculations and analyze planets near house boundaries (Sandhi) where results become mixed or weakened.
+
+### Implementation Details
+- Calculate Bhava Madhya (house mid-point) for all 12 houses
+- Calculate Bhava Sandhi (house cusp/junction)
+- Detect planets within 5° of Sandhi (boundary effect)
+- House overlap analysis for Shri Pati system
+- Planet's actual house determination
+- Sandhi planet weakness assessment
+- Remedial measures for Sandhi-placed planets
+- Comparative analysis with whole-sign houses
+
+### Vedic References
+- Shri Pati Jyotish Ratnamala
+- North Indian house calculation traditions
+
+---
+
+## 37. Arudha Pada (Manifestation Points) Complete System
+
+### Description
+Implement all 12 Arudha Padas showing how the matters of each house manifest in the material world - essential Jaimini technique for worldly predictions.
+
+### Implementation Details
+- Calculate all 12 Arudha Padas (A1-A12)
+- Special Arudha calculations:
+  - Arudha Lagna (AL) - public image
+  - Upapada (A12/UL) - spouse
+  - Darapada (A7) - business
+  - Labha Pada (A11) - gains
+- Arudha-to-Arudha relationships
+- Raja Yoga from Arudhas
+- Transit effects on Arudha positions
+- Dasha activation of Arudha matters
+
+### Vedic References
+- Jaimini Sutras Chapter 1
+- BPHS on Arudha
+- Commentaries by Raghunatha
+
+---
+
+## 38. Drig Bala (Aspectual Strength) Calculator
+
+### Description
+Implement detailed Drig Bala calculations - the strength a planet gains or loses from aspects of other planets, essential for accurate Shadbala.
+
+### Implementation Details
+- Calculate aspect strength (full, 3/4, 1/2, 1/4)
+- Benefic aspect contribution (positive)
+- Malefic aspect contribution (negative)
+- Net Drig Bala computation
+- Special aspects (Mars, Jupiter, Saturn)
+- Mutual aspect analysis
+- Aspect from exalted/debilitated planets
+- Drig Dasha (aspect-based timing)
+
+### Vedic References
+- BPHS Shadbala chapter
+- Hora Sara on aspects
+- Saravali
+
+---
+
+## 39. Sthana Bala (Positional Strength) Complete Analysis
+
+### Description
+Implement all five components of Sthana Bala with detailed breakdowns - essential for understanding a planet's basic strength in the chart.
+
+### Implementation Details
+- Calculate 5 Sthana Bala components:
+  - Uchcha Bala (exaltation strength)
+  - Saptavargiya Bala (divisional dignity)
+  - Ojayugmarasyamsa Bala (odd/even balance)
+  - Kendradi Bala (angular strength)
+  - Drekkana Bala (decan strength)
+- Combined Sthana Bala scoring
+- Comparative analysis between planets
+- Weakness identification and remedies
+- Integration with full Shadbala
+
+### Vedic References
+- BPHS Shadbala chapter
+- Phaladeepika
+- Hora Ratnam
+
+---
+
+## 40. Kala Bala (Temporal Strength) Calculator
+
+### Description
+Implement comprehensive Kala Bala calculations - the strength planets derive from time factors including day/night, weekday, month, and hora.
+
+### Implementation Details
+- Calculate 6 Kala Bala components:
+  - Nathonnatha Bala (day/night strength)
+  - Paksha Bala (fortnight strength)
+  - Tribhaga Bala (portion of day)
+  - Varsha/Masa/Dina/Hora Bala (year/month/day/hour lords)
+  - Ayana Bala (solstice strength)
+  - Yuddha Bala (war strength)
+- Day-born vs night-born analysis
+- Temporal muhurta optimization
+- Birth time strength assessment
+
+### Vedic References
+- BPHS Shadbala chapter
+- Surya Siddhanta
+
+---
+
+## 41. Chesta Bala (Motional Strength) Analysis
+
+### Description
+Implement Chesta Bala calculations based on planetary motion - retrograde, direct, stationary, and their effects on planet strength.
+
+### Implementation Details
+- Calculate 8 types of Chesta (motion states):
+  - Vakra (retrograde)
+  - Anuvakra (re-entering retrograde)
+  - Vikala (very slow)
+  - Manda (slow)
+  - Mandatara (slower)
+  - Sama (normal speed)
+  - Chara (fast)
+  - Ativakra (very fast retrograde)
+- Chesta strength scoring
+- Retrograde planet interpretation
+- Stationary planet power analysis
+- Speed-based result timing
+
+### Vedic References
+- BPHS on planetary motion
+- Surya Siddhanta
+- Saravali
+
+---
+
+## 42. Naisargika Bala (Natural Strength) and Dignity Hierarchy
+
+### Description
+Implement the natural strength hierarchy of planets and complete dignity analysis for quick strength reference.
+
+### Implementation Details
+- Natural strength order: Sun > Moon > Venus > Jupiter > Mercury > Mars > Saturn
+- Naisargika Bala values (60, 51.43, 42.86, etc.)
+- Complete dignity hierarchy display:
+  - Exaltation with degree
+  - Moolatrikona with range
+  - Own signs
+  - Friend's signs
+  - Neutral signs
+  - Enemy signs
+  - Debilitation with degree
+- Quick reference dignity lookup
+- Dignity-based remedial priorities
+
+### Vedic References
+- BPHS on planetary friendships
+- Traditional dignity tables
+
+---
+
+## 43. Saham (Arabic Parts) for Vedic Context
+
+### Description
+Implement key Sahams (sensitive points) that have been traditionally used in Indian astrology alongside Vedic techniques.
+
+### Implementation Details
+- Calculate essential Sahams:
+  - Punya Saham (fortune)
+  - Vidya Saham (education)
+  - Yashas Saham (fame)
+  - Mrityu Saham (death indicator)
+  - Vivaha Saham (marriage)
+  - Santana Saham (children)
+  - Karma Saham (profession)
+  - Rog Saham (disease)
+- Saham transit analysis
+- Dasha activation of Sahams
+- House placement interpretations
+
+### Vedic References
+- Tajika Neelakanthi
+- Varshaphala traditions
+- Persian-Indian astrological fusion
+
+---
+
+## 44. Nitya Yoga (27 Daily Yogas) from Panchanga
+
+### Description
+Implement the 27 Nitya Yogas formed by Sun-Moon combination, essential for Panchanga calculations and muhurta selection.
+
+### Implementation Details
+- Calculate current Nitya Yoga from Sun + Moon longitude
+- All 27 yogas with effects:
+  - Vishkumbha, Priti, Ayushman, Saubhagya, Shobhana, Atiganda, Sukarma, Dhriti, Shoola, Ganda, Vriddhi, Dhruva, Vyaghata, Harshana, Vajra, Siddhi, Vyatipata, Variyan, Parigha, Shiva, Siddha, Sadhya, Shubha, Shukla, Brahma, Indra, Vaidhriti
+- Favorable/unfavorable yoga identification
+- Activity-specific yoga recommendations
+- Yoga change alerts
+- Birth yoga personality analysis
+
+### Vedic References
+- Muhurta Chintamani
+- Panchanga Siddhanta
+- Traditional Panchanga texts
+
+---
+
+## New Features Priority Matrix
+
+| Priority | Feature | Complexity | Impact | Status |
+|----------|---------|------------|--------|--------|
+| High | Arudha Pada System | Medium | High | Pending |
+| High | Nitya Yoga Calculator | Low | High | Pending |
+| High | Graha Yuddha Analysis | Medium | High | Pending |
+| High | Avastha Calculator | Medium | High | Pending |
+| Medium | Ishta/Kashta Phala | Medium | Medium | Pending |
+| Medium | Drig Bala | Medium | Medium | Pending |
+| Medium | Sthana Bala | Medium | Medium | Pending |
+| Medium | Kala Bala | High | Medium | Pending |
+| Medium | Chesta Bala | Medium | Medium | Pending |
+| Low | Bhava Sandhi Analysis | Medium | Medium | Pending |
+| Low | Naisargika Bala | Low | Low | Pending |
+| Low | Saham Calculator | Medium | Low | Pending |
 
 ---
 

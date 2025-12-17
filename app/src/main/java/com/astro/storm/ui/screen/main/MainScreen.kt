@@ -79,6 +79,7 @@ fun MainScreen(
     onNavigateToDivisionalCharts: () -> Unit = {},
     onNavigateToUpachayaTransit: () -> Unit = {},
     onNavigateToKalachakraDasha: () -> Unit = {},
+    onNavigateToTarabala: () -> Unit = {},
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -221,6 +222,7 @@ fun MainScreen(
                                         InsightFeature.DIVISIONAL_CHARTS -> if (currentChart != null) onNavigateToDivisionalCharts()
                                         InsightFeature.UPACHAYA_TRANSIT -> if (currentChart != null) onNavigateToUpachayaTransit()
                                         InsightFeature.KALACHAKRA_DASHA -> if (currentChart != null) onNavigateToKalachakraDasha()
+                                        InsightFeature.TARABALA -> if (currentChart != null) onNavigateToTarabala()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }

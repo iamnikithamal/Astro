@@ -566,6 +566,13 @@ enum class InsightFeature(
         icon = Icons.Outlined.HealthAndSafety,
         color = DarkAppThemeColors.LifeAreaSpiritual,
         isImplemented = true
+    ),
+    TARABALA(
+        titleKey = StringKey.FEATURE_TARABALA,
+        descriptionKey = StringKey.FEATURE_TARABALA_DESC,
+        icon = Icons.Outlined.Stars,
+        color = DarkAppThemeColors.PlanetMoon,
+        isImplemented = true
     );
 
     /**

@@ -41,6 +41,7 @@ import com.astro.storm.ui.screen.LalKitabRemediesScreen
 import com.astro.storm.ui.screen.DivisionalChartsScreen
 import com.astro.storm.ui.screen.UpachayaTransitScreen
 import com.astro.storm.ui.screen.KalachakraDashaScreen
+import com.astro.storm.ui.screen.tarabala.TarabalaScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
@@ -145,6 +146,9 @@ sealed class Screen(val route: String) {
     }
     object KalachakraDasha : Screen("kalachakra_dasha/{chartId}") {
         fun createRoute(chartId: Long) = "kalachakra_dasha/$chartId"
+    }
+    object Tarabala : Screen("tarabala/{chartId}") {
+        fun createRoute(chartId: Long) = "tarabala/$chartId"
     }
 }
 
@@ -331,6 +335,11 @@ fun AstroStormNavigation(
                 onNavigateToKalachakraDasha = {
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.KalachakraDasha.createRoute(chartId))
+                    }
+                },
+                onNavigateToTarabala = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Tarabala.createRoute(chartId))
                     }
                 },
                 onExportChart = { format ->
@@ -921,6 +930,26 @@ fun AstroStormNavigation(
             }
 
             KalachakraDashaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Tarabala & Chandrabala Analysis screen
+        composable(
+            route = Screen.Tarabala.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            TarabalaScreen(
+                context = context,
                 chart = currentChart,
                 onBack = { navController.popBackStack() }
             )
