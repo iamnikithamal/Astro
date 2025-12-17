@@ -22,9 +22,16 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.ephemeris.AshtakavargaCalculator
 import com.astro.storm.ephemeris.AspectCalculator
+import com.astro.storm.ephemeris.DashaCalculator
 import com.astro.storm.ephemeris.DivisionalChartCalculator
+import com.astro.storm.ephemeris.HoroscopeCalculator
+import com.astro.storm.ephemeris.ManglikDoshaCalculator
+import com.astro.storm.ephemeris.PitraDoshaCalculator
+import com.astro.storm.ephemeris.RemediesCalculator
+import com.astro.storm.ephemeris.SadeSatiCalculator
 import com.astro.storm.ephemeris.ShadbalaCalculator
 import com.astro.storm.ephemeris.YogaCalculator
+import com.astro.storm.ui.chart.ChartColorConfig
 import com.astro.storm.ui.chart.ChartRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -53,7 +60,8 @@ import java.util.Locale
  */
 class ChartExporter(private val context: Context) {
 
-    private val chartRenderer = ChartRenderer()
+    // Use Print-optimized color configuration for high-quality PDF output
+    private val chartRenderer = ChartRenderer(ChartColorConfig.Print)
     private val locManager = LocalizationManager.getInstance(context)
 
     companion object {
@@ -62,8 +70,14 @@ class ChartExporter(private val context: Context) {
         private const val PDF_MARGIN = 36
         private const val PDF_MARGIN_TOP = 48
         private const val PDF_MARGIN_BOTTOM = 36
-        private const val CHART_SIZE = 320
-        private const val NAVAMSA_SIZE = 200
+        // Chart display sizes in PDF (in points)
+        private const val CHART_DISPLAY_SIZE = 260 // Display size for main chart
+        private const val NAVAMSA_DISPLAY_SIZE = 200 // Display size for Navamsa
+        // Render at higher resolution for crisp quality, then scale down
+        private const val CHART_RENDER_SCALE = 3 // 3x resolution for crisp rendering
+        // Actual render sizes (for high quality)
+        private const val CHART_RENDER_SIZE = CHART_DISPLAY_SIZE * CHART_RENDER_SCALE
+        private const val NAVAMSA_RENDER_SIZE = NAVAMSA_DISPLAY_SIZE * CHART_RENDER_SCALE
 
         private const val WATERMARK_TEXT = "AstroStorm"
         private const val WATERMARK_ALPHA = 80
@@ -105,7 +119,7 @@ class ChartExporter(private val context: Context) {
     }
 
     /**
-     * PDF export options
+     * PDF export options - comprehensive by default for full Vedic astrology reports
      */
     data class PdfExportOptions(
         val includeChart: Boolean = true,
@@ -115,7 +129,12 @@ class ChartExporter(private val context: Context) {
         val includeShadbala: Boolean = true,
         val includeYogas: Boolean = true,
         val includeAshtakavarga: Boolean = true,
-        val includeDashas: Boolean = false,
+        val includeDashas: Boolean = true, // Now enabled by default
+        val includeNakshatraAnalysis: Boolean = true, // Nakshatra details
+        val includeDoshaAnalysis: Boolean = true, // Manglik, Pitra, Sade Sati
+        val includePredictions: Boolean = true, // Life area predictions
+        val includeDivisionalCharts: Boolean = true, // Key divisional charts
+        val includeRemedies: Boolean = true, // Gemstones, mantras
         val pageSize: PageSize = PageSize.A4
     )
 
@@ -173,6 +192,31 @@ class ChartExporter(private val context: Context) {
                 pageNumber = addAshtakavargaPage(document, chart, options, pageNumber)
             }
 
+            // Page 6: Vimshottari Dasha Timeline
+            if (options.includeDashas) {
+                pageNumber = addDashaPage(document, chart, options, pageNumber)
+            }
+
+            // Page 7: Nakshatra Analysis
+            if (options.includeNakshatraAnalysis) {
+                pageNumber = addNakshatraPage(document, chart, options, pageNumber)
+            }
+
+            // Page 8: Dosha Analysis (Manglik, Pitra, Sade Sati)
+            if (options.includeDoshaAnalysis) {
+                pageNumber = addDoshaAnalysisPage(document, chart, options, pageNumber)
+            }
+
+            // Page 9: Life Predictions
+            if (options.includePredictions) {
+                pageNumber = addPredictionsPage(document, chart, options, pageNumber)
+            }
+
+            // Page 10: Remedies
+            if (options.includeRemedies) {
+                pageNumber = addRemediesPage(document, chart, options, pageNumber)
+            }
+
             // Save the document
             val fileName = "AstroStorm_${chart.birthData.name.replace(" ", "_")}_${dateFormatter.format(Date())}.pdf"
             val path = saveDocument(document, fileName)
@@ -222,17 +266,26 @@ class ChartExporter(private val context: Context) {
 
         // Charts side by side if both are included
         if (options.includeChart && options.includeNavamsa) {
-            val chartBitmap = chartRenderer.createChartBitmap(chart, CHART_SIZE, CHART_SIZE, density)
+            // Render charts at high resolution for crisp quality
+            val chartBitmapHiRes = chartRenderer.createChartBitmap(chart, CHART_RENDER_SIZE, CHART_RENDER_SIZE, density)
             val navamsaData = DivisionalChartCalculator.calculateNavamsa(chart)
-            val navamsaBitmap = chartRenderer.createDivisionalChartBitmap(
+            val navamsaBitmapHiRes = chartRenderer.createDivisionalChartBitmap(
                 navamsaData.planetPositions,
                 navamsaData.ascendantLongitude,
                 locManager.getString(StringKeyAnalysis.CHART_NAVAMSA),
-                NAVAMSA_SIZE, NAVAMSA_SIZE, density
+                NAVAMSA_RENDER_SIZE, NAVAMSA_RENDER_SIZE, density
             )
 
+            // Scale down to display size with high quality filtering
+            val chartBitmap = Bitmap.createScaledBitmap(chartBitmapHiRes, CHART_DISPLAY_SIZE, CHART_DISPLAY_SIZE, true)
+            val navamsaBitmap = Bitmap.createScaledBitmap(navamsaBitmapHiRes, NAVAMSA_DISPLAY_SIZE, NAVAMSA_DISPLAY_SIZE, true)
+
+            // Clean up high-res bitmaps
+            chartBitmapHiRes.recycle()
+            navamsaBitmapHiRes.recycle()
+
             // Position charts side by side
-            val totalChartsWidth = CHART_SIZE + NAVAMSA_SIZE + 24
+            val totalChartsWidth = CHART_DISPLAY_SIZE + NAVAMSA_DISPLAY_SIZE + 24
             val startX = (pageWidth - totalChartsWidth) / 2f
 
             // Draw chart labels
@@ -240,20 +293,28 @@ class ChartExporter(private val context: Context) {
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             paint.color = COLOR_PRIMARY
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_RASHI), startX + CHART_SIZE / 2f, yPos, paint)
-            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_NAVAMSA), startX + CHART_SIZE + 24 + NAVAMSA_SIZE / 2f, yPos, paint)
+            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_RASHI), startX + CHART_DISPLAY_SIZE / 2f, yPos, paint)
+            canvas.drawText(locManager.getString(StringKeyAnalysis.CHART_NAVAMSA), startX + CHART_DISPLAY_SIZE + 24 + NAVAMSA_DISPLAY_SIZE / 2f, yPos, paint)
             paint.textAlign = Paint.Align.LEFT
             yPos += 12f
 
-            // Draw charts
-            canvas.drawBitmap(chartBitmap, startX, yPos, null)
-            val navamsaY = yPos + (CHART_SIZE - NAVAMSA_SIZE) / 2f
-            canvas.drawBitmap(navamsaBitmap, startX + CHART_SIZE + 24, navamsaY, null)
+            // Draw charts with high quality rendering
+            val chartPaint = Paint().apply {
+                isFilterBitmap = true
+                isAntiAlias = true
+            }
+            canvas.drawBitmap(chartBitmap, startX, yPos, chartPaint)
+            val navamsaY = yPos + (CHART_DISPLAY_SIZE - NAVAMSA_DISPLAY_SIZE) / 2f
+            canvas.drawBitmap(navamsaBitmap, startX + CHART_DISPLAY_SIZE + 24, navamsaY, chartPaint)
 
-            yPos += CHART_SIZE + 20f
+            yPos += CHART_DISPLAY_SIZE + 20f
         } else if (options.includeChart) {
-            val chartBitmap = chartRenderer.createChartBitmap(chart, CHART_SIZE, CHART_SIZE, density)
-            val chartX = (pageWidth - CHART_SIZE) / 2f
+            // Render at high resolution, then scale down
+            val chartBitmapHiRes = chartRenderer.createChartBitmap(chart, CHART_RENDER_SIZE, CHART_RENDER_SIZE, density)
+            val chartBitmap = Bitmap.createScaledBitmap(chartBitmapHiRes, CHART_DISPLAY_SIZE, CHART_DISPLAY_SIZE, true)
+            chartBitmapHiRes.recycle()
+
+            val chartX = (pageWidth - CHART_DISPLAY_SIZE) / 2f
 
             paint.textSize = 11f
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
@@ -263,8 +324,12 @@ class ChartExporter(private val context: Context) {
             paint.textAlign = Paint.Align.LEFT
             yPos += 12f
 
-            canvas.drawBitmap(chartBitmap, chartX, yPos, null)
-            yPos += CHART_SIZE + 20f
+            val chartPaint = Paint().apply {
+                isFilterBitmap = true
+                isAntiAlias = true
+            }
+            canvas.drawBitmap(chartBitmap, chartX, yPos, chartPaint)
+            yPos += CHART_DISPLAY_SIZE + 20f
         }
 
         // Quick Summary Card
@@ -1331,6 +1396,758 @@ class ChartExporter(private val context: Context) {
             canvas.drawCircle(col2X + 4f, yPos + 32f + (index * 14f), 3f, dotPaint)
             canvas.drawText(line, col2X + 14f, yPos + 36f + (index * 14f), paint)
         }
+
+        addPageFooter(canvas, options.pageSize, pageNumber, paint)
+        document.finishPage(page)
+        return pageNumber + 1
+    }
+
+    /**
+     * Page: Vimshottari Dasha Timeline
+     * Shows current Mahadasha, Antardasha, and upcoming periods
+     */
+    private fun addDashaPage(
+        document: PdfDocument,
+        chart: VedicChart,
+        options: PdfExportOptions,
+        pageNumber: Int
+    ): Int {
+        val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
+        val page = document.startPage(pageInfo)
+        val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+        val contentWidth = pageWidth - (PDF_MARGIN * 2)
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isSubpixelText = true
+        }
+
+        var yPos = PDF_MARGIN_TOP.toFloat()
+
+        // Title
+        drawPageHeader(canvas, paint, pageWidth, yPos, "Vimshottari Dasha Timeline")
+        yPos += 48f
+
+        // Calculate dasha periods
+        val dashaCalculator = DashaCalculator()
+        val mahadashas = dashaCalculator.calculateMahadashas(chart)
+        val currentMahadasha = mahadashas.find { it.isCurrent }
+        val currentAntardasha = currentMahadasha?.antardashas?.find { it.isCurrent }
+        val currentPratyantardasha = currentAntardasha?.pratyantardashas?.find { it.isCurrent }
+
+        // Current Period Summary Card
+        val cardHeight = 100f
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        val accentPaint = Paint().apply {
+            color = COLOR_ACCENT
+            style = Paint.Style.FILL
+        }
+
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, borderPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + cardHeight, accentPaint)
+
+        // Current period info
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT_MUTED
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        canvas.drawText("Current Planetary Periods", PDF_MARGIN.toFloat() + 16f, yPos + 18f, paint)
+
+        if (currentMahadasha != null) {
+            paint.textSize = 12f
+            paint.color = COLOR_PRIMARY
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText("Mahadasha: ${currentMahadasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 38f, paint)
+
+            paint.textSize = 10f
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText("Duration: ${currentMahadasha.years} years", PDF_MARGIN.toFloat() + 200f, yPos + 38f, paint)
+
+            if (currentAntardasha != null) {
+                paint.color = COLOR_SECONDARY
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                canvas.drawText("Antardasha: ${currentAntardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
+
+                paint.color = COLOR_TEXT
+                paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                canvas.drawText("Ends: ${currentAntardasha.endDate.toLocalDate()}", PDF_MARGIN.toFloat() + 200f, yPos + 56f, paint)
+            }
+
+            if (currentPratyantardasha != null) {
+                paint.color = COLOR_TEXT_MUTED
+                canvas.drawText("Pratyantardasha: ${currentPratyantardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
+            }
+        }
+
+        yPos += cardHeight + 24f
+
+        // Mahadasha Timeline
+        paint.textSize = 11f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText("Complete Mahadasha Sequence", PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        yPos += 24f
+
+        // Timeline table
+        val rowHeight = 22f
+        paint.textSize = 9f
+
+        mahadashas.forEachIndexed { index, dasha ->
+            if (yPos > options.pageSize.height - 80) return@forEachIndexed
+
+            // Highlight current dasha
+            if (dasha.isCurrent) {
+                val highlightPaint = Paint().apply {
+                    color = Color.argb(30, 212, 175, 55) // Light gold
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + rowHeight - 2f, highlightPaint)
+            }
+
+            // Alternating background
+            if (index % 2 == 0 && !dasha.isCurrent) {
+                val rowBgPaint = Paint().apply {
+                    color = COLOR_CARD_BG
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + rowHeight - 2f, rowBgPaint)
+            }
+
+            // Planet name
+            paint.color = if (dasha.isCurrent) COLOR_ACCENT else COLOR_PRIMARY
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(dasha.planet.displayName, PDF_MARGIN.toFloat() + 8f, yPos + 14f, paint)
+
+            // Duration
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText("${dasha.years} years", PDF_MARGIN.toFloat() + 80f, yPos + 14f, paint)
+
+            // Date range
+            paint.color = COLOR_TEXT_MUTED
+            canvas.drawText("${dasha.startDate.toLocalDate()} to ${dasha.endDate.toLocalDate()}", PDF_MARGIN.toFloat() + 150f, yPos + 14f, paint)
+
+            // Status
+            val statusText = when {
+                dasha.isCurrent -> "CURRENT"
+                dasha.startDate.isAfter(java.time.LocalDateTime.now()) -> "UPCOMING"
+                else -> "COMPLETED"
+            }
+            paint.color = when (statusText) {
+                "CURRENT" -> COLOR_SUCCESS
+                "UPCOMING" -> COLOR_WARNING
+                else -> COLOR_TEXT_MUTED
+            }
+            canvas.drawText(statusText, pageWidth - PDF_MARGIN - 60f, yPos + 14f, paint)
+
+            yPos += rowHeight
+        }
+
+        addPageFooter(canvas, options.pageSize, pageNumber, paint)
+        document.finishPage(page)
+        return pageNumber + 1
+    }
+
+    /**
+     * Page: Nakshatra Analysis
+     * Shows Moon nakshatra, all planet nakshatras, and their significations
+     */
+    private fun addNakshatraPage(
+        document: PdfDocument,
+        chart: VedicChart,
+        options: PdfExportOptions,
+        pageNumber: Int
+    ): Int {
+        val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
+        val page = document.startPage(pageInfo)
+        val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isSubpixelText = true
+        }
+
+        var yPos = PDF_MARGIN_TOP.toFloat()
+
+        // Title
+        drawPageHeader(canvas, paint, pageWidth, yPos, "Nakshatra Analysis")
+        yPos += 48f
+
+        // Find Moon position for primary nakshatra
+        val moonPosition = chart.planetPositions.find { it.planet == Planet.MOON }
+
+        // Moon Nakshatra Card (Primary)
+        if (moonPosition != null) {
+            val cardHeight = 80f
+            val cardPaint = Paint().apply {
+                color = COLOR_CARD_BG
+                style = Paint.Style.FILL
+            }
+            val borderPaint = Paint().apply {
+                color = COLOR_BORDER
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+            }
+            val accentPaint = Paint().apply {
+                color = COLOR_ACCENT
+                style = Paint.Style.FILL
+            }
+
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, cardPaint)
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, borderPaint)
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + cardHeight, accentPaint)
+
+            paint.textSize = 10f
+            paint.color = COLOR_TEXT_MUTED
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText("Birth Star (Janma Nakshatra)", PDF_MARGIN.toFloat() + 16f, yPos + 18f, paint)
+
+            paint.textSize = 14f
+            paint.color = COLOR_PRIMARY
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(moonPosition.nakshatra.displayName, PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
+
+            paint.textSize = 10f
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText("Pada: ${moonPosition.nakshatraPada + 1} | Ruling Planet: ${moonPosition.nakshatra.ruler.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+            canvas.drawText("Deity: ${moonPosition.nakshatra.deity}", PDF_MARGIN.toFloat() + 16f, yPos + 72f, paint)
+
+            yPos += cardHeight + 20f
+        }
+
+        // All Planet Nakshatras Table
+        paint.textSize = 11f
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.color = COLOR_PRIMARY
+        canvas.drawText("Planetary Nakshatra Positions", PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        yPos += 24f
+
+        // Table header
+        val headerPaint = Paint().apply {
+            color = COLOR_SECONDARY
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + 18f, headerPaint)
+
+        paint.textSize = 9f
+        paint.color = Color.WHITE
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Planet", PDF_MARGIN.toFloat() + 8f, yPos + 13f, paint)
+        canvas.drawText("Nakshatra", PDF_MARGIN.toFloat() + 70f, yPos + 13f, paint)
+        canvas.drawText("Pada", PDF_MARGIN.toFloat() + 180f, yPos + 13f, paint)
+        canvas.drawText("Ruler", PDF_MARGIN.toFloat() + 230f, yPos + 13f, paint)
+        canvas.drawText("Deity", PDF_MARGIN.toFloat() + 290f, yPos + 13f, paint)
+        yPos += 20f
+
+        // Planet rows
+        val mainPlanets = listOf(Planet.SUN, Planet.MOON, Planet.MARS, Planet.MERCURY, Planet.JUPITER, Planet.VENUS, Planet.SATURN, Planet.RAHU, Planet.KETU)
+
+        mainPlanets.forEachIndexed { index, planet ->
+            val position = chart.planetPositions.find { it.planet == planet } ?: return@forEachIndexed
+
+            if (index % 2 == 0) {
+                val rowBgPaint = Paint().apply {
+                    color = COLOR_CARD_BG
+                    style = Paint.Style.FILL
+                }
+                canvas.drawRect(PDF_MARGIN.toFloat(), yPos - 2f, (pageWidth - PDF_MARGIN), yPos + 16f, rowBgPaint)
+            }
+
+            paint.color = COLOR_PRIMARY
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(position.planet.displayName, PDF_MARGIN.toFloat() + 8f, yPos + 11f, paint)
+
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            canvas.drawText(position.nakshatra.displayName, PDF_MARGIN.toFloat() + 70f, yPos + 11f, paint)
+            canvas.drawText("${position.nakshatraPada + 1}", PDF_MARGIN.toFloat() + 180f, yPos + 11f, paint)
+            canvas.drawText(position.nakshatra.ruler.displayName, PDF_MARGIN.toFloat() + 230f, yPos + 11f, paint)
+
+            // Truncate deity name if too long
+            val deity = if (position.nakshatra.deity.length > 20) position.nakshatra.deity.substring(0, 17) + "..." else position.nakshatra.deity
+            canvas.drawText(deity, PDF_MARGIN.toFloat() + 290f, yPos + 11f, paint)
+
+            yPos += 18f
+        }
+
+        addPageFooter(canvas, options.pageSize, pageNumber, paint)
+        document.finishPage(page)
+        return pageNumber + 1
+    }
+
+    /**
+     * Page: Dosha Analysis
+     * Includes Manglik Dosha, Pitra Dosha, and Sade Sati status
+     */
+    private fun addDoshaAnalysisPage(
+        document: PdfDocument,
+        chart: VedicChart,
+        options: PdfExportOptions,
+        pageNumber: Int
+    ): Int {
+        val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
+        val page = document.startPage(pageInfo)
+        val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isSubpixelText = true
+        }
+
+        var yPos = PDF_MARGIN_TOP.toFloat()
+
+        // Title
+        drawPageHeader(canvas, paint, pageWidth, yPos, "Dosha & Special Conditions Analysis")
+        yPos += 48f
+
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+
+        // Manglik Dosha Analysis
+        val manglikAnalysis = ManglikDoshaCalculator.calculateManglikDosha(chart)
+        val manglikCardHeight = 100f
+
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + manglikCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + manglikCardHeight, borderPaint)
+
+        val manglikAccent = if (manglikAnalysis.isManglik) COLOR_WARNING else COLOR_SUCCESS
+        val manglikAccentPaint = Paint().apply {
+            color = manglikAccent
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + manglikCardHeight, manglikAccentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Manglik Dosha (Kuja Dosha)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+
+        paint.textSize = 14f
+        paint.color = manglikAccent
+        canvas.drawText(if (manglikAnalysis.isManglik) "PRESENT" else "NOT PRESENT", pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        if (manglikAnalysis.isManglik) {
+            canvas.drawText("Severity: ${manglikAnalysis.severity.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText("Mars Position: House ${manglikAnalysis.marsHouse}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+
+            // Cancellation factors
+            if (manglikAnalysis.cancellationFactors.isNotEmpty()) {
+                paint.color = COLOR_SUCCESS
+                val cancellation = manglikAnalysis.cancellationFactors.firstOrNull() ?: ""
+                val truncated = if (cancellation.length > 80) cancellation.substring(0, 77) + "..." else cancellation
+                canvas.drawText("Cancellation: $truncated", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
+            }
+        } else {
+            canvas.drawText("Mars is not placed in houses 1, 2, 4, 7, 8, or 12 in a way that causes Manglik Dosha.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+        }
+
+        yPos += manglikCardHeight + 20f
+
+        // Pitra Dosha Analysis
+        val pitraAnalysis = PitraDoshaCalculator.analyzePitraDosha(chart)
+        val pitraCardHeight = 100f
+
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + pitraCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + pitraCardHeight, borderPaint)
+
+        val pitraAccent = if (pitraAnalysis.hasPitraDosha) COLOR_WARNING else COLOR_SUCCESS
+        val pitraAccentPaint = Paint().apply {
+            color = pitraAccent
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + pitraCardHeight, pitraAccentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Pitra Dosha (Ancestral Karmic Debt)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+
+        paint.textSize = 14f
+        paint.color = pitraAccent
+        canvas.drawText(if (pitraAnalysis.hasPitraDosha) "INDICATED" else "NOT INDICATED", pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        if (pitraAnalysis.hasPitraDosha) {
+            canvas.drawText("Severity: ${pitraAnalysis.severity.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            if (pitraAnalysis.factors.isNotEmpty()) {
+                val factor = pitraAnalysis.factors.firstOrNull() ?: ""
+                val truncatedFactor = if (factor.length > 70) factor.substring(0, 67) + "..." else factor
+                canvas.drawText("Factor: $truncatedFactor", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+            }
+        } else {
+            canvas.drawText("No significant Pitra Dosha indicators found in the chart.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+        }
+
+        yPos += pitraCardHeight + 20f
+
+        // Sade Sati Status
+        val sadeSatiResult = SadeSatiCalculator.calculateSadeSati(chart)
+        val sadeSatiCardHeight = 100f
+
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + sadeSatiCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + sadeSatiCardHeight, borderPaint)
+
+        val sadeSatiAccent = if (sadeSatiResult.isActive) COLOR_WARNING else COLOR_SUCCESS
+        val sadeSatiAccentPaint = Paint().apply {
+            color = sadeSatiAccent
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + sadeSatiCardHeight, sadeSatiAccentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Sade Sati (Saturn Transit)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+
+        paint.textSize = 14f
+        paint.color = sadeSatiAccent
+        canvas.drawText(if (sadeSatiResult.isActive) "CURRENTLY ACTIVE" else "NOT ACTIVE", pageWidth - PDF_MARGIN - 120f, yPos + 22f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        if (sadeSatiResult.isActive) {
+            canvas.drawText("Phase: ${sadeSatiResult.phase.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText("Started: ${sadeSatiResult.startDate?.toLocalDate() ?: "N/A"}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+            canvas.drawText("Ends: ${sadeSatiResult.endDate?.toLocalDate() ?: "N/A"}", PDF_MARGIN.toFloat() + 200f, yPos + 58f, paint)
+        } else {
+            if (sadeSatiResult.nextStartDate != null) {
+                canvas.drawText("Next Sade Sati starts: ${sadeSatiResult.nextStartDate?.toLocalDate()}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            } else {
+                canvas.drawText("Saturn is not currently transiting near your Moon sign.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            }
+        }
+
+        addPageFooter(canvas, options.pageSize, pageNumber, paint)
+        document.finishPage(page)
+        return pageNumber + 1
+    }
+
+    /**
+     * Page: Life Predictions based on planetary placements
+     */
+    private fun addPredictionsPage(
+        document: PdfDocument,
+        chart: VedicChart,
+        options: PdfExportOptions,
+        pageNumber: Int
+    ): Int {
+        val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
+        val page = document.startPage(pageInfo)
+        val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isSubpixelText = true
+        }
+
+        var yPos = PDF_MARGIN_TOP.toFloat()
+
+        // Title
+        drawPageHeader(canvas, paint, pageWidth, yPos, "Life Area Predictions")
+        yPos += 48f
+
+        // Calculate horoscope data
+        val horoscope = HoroscopeCalculator.calculateDailyHoroscope(chart, java.time.LocalDate.now())
+
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+
+        // Life Areas with predictions
+        val lifeAreas = listOf(
+            Triple("Career & Profession", horoscope.careerInsight, COLOR_PRIMARY),
+            Triple("Relationships & Love", horoscope.loveInsight, Color.rgb(233, 30, 99)),
+            Triple("Health & Wellness", horoscope.healthInsight, COLOR_SUCCESS),
+            Triple("Finance & Wealth", horoscope.financeInsight, Color.rgb(255, 152, 0)),
+            Triple("Family & Home", horoscope.familyInsight, Color.rgb(0, 150, 136)),
+            Triple("Spirituality & Growth", horoscope.spiritualInsight, Color.rgb(103, 58, 183))
+        )
+
+        val cardHeight = 70f
+
+        lifeAreas.forEach { (title, insight, accentColor) ->
+            if (yPos > options.pageSize.height - 120) return@forEach
+
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, cardPaint)
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + cardHeight, borderPaint)
+
+            val accentPaint = Paint().apply {
+                color = accentColor
+                style = Paint.Style.FILL
+            }
+            canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + cardHeight, accentPaint)
+
+            paint.textSize = 11f
+            paint.color = accentColor
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            canvas.drawText(title, PDF_MARGIN.toFloat() + 16f, yPos + 18f, paint)
+
+            // Energy indicator
+            val energyLevel = insight.energyLevel
+            paint.textSize = 9f
+            paint.color = when {
+                energyLevel >= 7 -> COLOR_SUCCESS
+                energyLevel >= 4 -> COLOR_WARNING
+                else -> COLOR_ERROR
+            }
+            canvas.drawText("Energy: $energyLevel/10", pageWidth - PDF_MARGIN - 70f, yPos + 18f, paint)
+
+            // Prediction text
+            paint.textSize = 9f
+            paint.color = COLOR_TEXT
+            paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+            val prediction = insight.prediction
+            // Split long predictions into multiple lines
+            val words = prediction.split(" ")
+            var line1 = ""
+            var line2 = ""
+            val maxWidth = pageWidth - (PDF_MARGIN * 2) - 40f
+
+            for (word in words) {
+                val testLine = if (line1.isEmpty()) word else "$line1 $word"
+                if (paint.measureText(testLine) < maxWidth && line2.isEmpty()) {
+                    line1 = testLine
+                } else if (line2.isEmpty() || paint.measureText("$line2 $word") < maxWidth) {
+                    line2 = if (line2.isEmpty()) word else "$line2 $word"
+                }
+            }
+
+            canvas.drawText(line1, PDF_MARGIN.toFloat() + 16f, yPos + 38f, paint)
+            if (line2.isNotEmpty()) {
+                val truncated = if (line2.length > 100) line2.substring(0, 97) + "..." else line2
+                canvas.drawText(truncated, PDF_MARGIN.toFloat() + 16f, yPos + 52f, paint)
+            }
+
+            yPos += cardHeight + 12f
+        }
+
+        addPageFooter(canvas, options.pageSize, pageNumber, paint)
+        document.finishPage(page)
+        return pageNumber + 1
+    }
+
+    /**
+     * Page: Remedies and Recommendations
+     */
+    private fun addRemediesPage(
+        document: PdfDocument,
+        chart: VedicChart,
+        options: PdfExportOptions,
+        pageNumber: Int
+    ): Int {
+        val pageInfo = PdfDocument.PageInfo.Builder(options.pageSize.width, options.pageSize.height, pageNumber).create()
+        val page = document.startPage(pageInfo)
+        val canvas = page.canvas
+        val pageWidth = options.pageSize.width.toFloat()
+
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = COLOR_BACKGROUND
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, pageWidth, options.pageSize.height.toFloat(), bgPaint)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isSubpixelText = true
+        }
+
+        var yPos = PDF_MARGIN_TOP.toFloat()
+
+        // Title
+        drawPageHeader(canvas, paint, pageWidth, yPos, "Vedic Remedies & Recommendations")
+        yPos += 48f
+
+        // Calculate remedies
+        val remedies = RemediesCalculator.calculateRemedies(chart)
+
+        val cardPaint = Paint().apply {
+            color = COLOR_CARD_BG
+            style = Paint.Style.FILL
+        }
+        val borderPaint = Paint().apply {
+            color = COLOR_BORDER
+            style = Paint.Style.STROKE
+            strokeWidth = 1f
+        }
+        val accentPaint = Paint().apply {
+            color = COLOR_ACCENT
+            style = Paint.Style.FILL
+        }
+
+        // Gemstone Recommendations
+        val gemstoneCardHeight = 90f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + gemstoneCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + gemstoneCardHeight, borderPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + gemstoneCardHeight, accentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Recommended Gemstones", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        val primaryGem = remedies.primaryGemstone
+        if (primaryGem != null) {
+            canvas.drawText("Primary: ${primaryGem.name} (${primaryGem.planet.displayName})", PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
+            canvas.drawText("Weight: ${primaryGem.minimumWeight} carats | Metal: ${primaryGem.metal}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
+            canvas.drawText("Finger: ${primaryGem.finger} | Day: ${primaryGem.wearingDay}", PDF_MARGIN.toFloat() + 16f, yPos + 72f, paint)
+        }
+
+        // Secondary gemstones
+        if (remedies.secondaryGemstones.isNotEmpty()) {
+            val secondary = remedies.secondaryGemstones.take(2).joinToString(", ") { it.name }
+            canvas.drawText("Alternatives: $secondary", pageWidth / 2f, yPos + 40f, paint)
+        }
+
+        yPos += gemstoneCardHeight + 20f
+
+        // Mantras
+        val mantraCardHeight = 80f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + mantraCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + mantraCardHeight, borderPaint)
+
+        val mantraAccentPaint = Paint().apply {
+            color = Color.rgb(156, 39, 176) // Purple for spiritual
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + mantraCardHeight, mantraAccentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Recommended Mantras", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        if (remedies.mantras.isNotEmpty()) {
+            remedies.mantras.take(3).forEachIndexed { index, mantra ->
+                val mantraText = if (mantra.mantraText.length > 60) mantra.mantraText.substring(0, 57) + "..." else mantra.mantraText
+                canvas.drawText("${mantra.planet.displayName}: $mantraText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
+            }
+        }
+
+        yPos += mantraCardHeight + 20f
+
+        // Charitable Activities
+        val charityCardHeight = 80f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + charityCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + charityCardHeight, borderPaint)
+
+        val charityAccentPaint = Paint().apply {
+            color = COLOR_SUCCESS
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + charityCardHeight, charityAccentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Charitable Activities (Daan)", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        if (remedies.charitableActivities.isNotEmpty()) {
+            remedies.charitableActivities.take(3).forEachIndexed { index, charity ->
+                val charityText = if (charity.description.length > 70) charity.description.substring(0, 67) + "..." else charity.description
+                canvas.drawText("${charity.planet.displayName}: $charityText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
+            }
+        }
+
+        yPos += charityCardHeight + 20f
+
+        // Lucky Elements
+        val luckyCardHeight = 70f
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + luckyCardHeight, cardPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, (pageWidth - PDF_MARGIN), yPos + luckyCardHeight, borderPaint)
+        canvas.drawRect(PDF_MARGIN.toFloat(), yPos, PDF_MARGIN.toFloat() + 4f, yPos + luckyCardHeight, accentPaint)
+
+        paint.textSize = 12f
+        paint.color = COLOR_PRIMARY
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        canvas.drawText("Lucky Elements", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+
+        paint.textSize = 10f
+        paint.color = COLOR_TEXT
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+
+        val luckyElements = remedies.luckyElements
+        canvas.drawText("Lucky Numbers: ${luckyElements.numbers.joinToString(", ")}", PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
+        canvas.drawText("Lucky Colors: ${luckyElements.colors.joinToString(", ")}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
+        canvas.drawText("Lucky Days: ${luckyElements.days.joinToString(", ")}", pageWidth / 2f, yPos + 40f, paint)
+        canvas.drawText("Lucky Direction: ${luckyElements.direction}", pageWidth / 2f, yPos + 56f, paint)
 
         addPageFooter(canvas, options.pageSize, pageNumber, paint)
         document.finishPage(page)

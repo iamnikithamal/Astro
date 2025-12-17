@@ -14,10 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BarChart
@@ -591,12 +594,12 @@ enum class InsightFeature(
 }
 
 /**
- * Improved Empty State UI for Home Screen
+ * Minimal Empty State UI for Home Screen
  *
- * Professional, visually appealing design with:
- * - Centered content with clear visual hierarchy
- * - Prominent "Create Profile" call-to-action button
- * - Subtle feature highlights to showcase app capabilities
+ * Clean, minimal design with:
+ * - Simple icon and text
+ * - Fully rounded "Create Chart" button
+ * - No shadows, no extra decorations
  * - Theme-aware colors
  */
 @Composable
@@ -610,7 +613,7 @@ private fun EmptyHomeState(
         modifier = modifier
             .fillMaxSize()
             .background(colors.ScreenBackground)
-            .padding(24.dp),
+            .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -618,144 +621,74 @@ private fun EmptyHomeState(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Icon with accent background
+            // Simple circular icon container
             Box(
                 modifier = Modifier
-                    .size(96.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(colors.AccentGold.copy(alpha = 0.12f)),
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(colors.ChipBackground),
                 contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Stars,
-                    contentDescription = null,
-                    tint = colors.AccentGold,
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            Text(
-                text = stringResource(StringKey.NO_PROFILE_SELECTED),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = colors.TextPrimary,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = stringResource(StringKey.NO_PROFILE_MESSAGE),
-                style = MaterialTheme.typography.bodyLarge,
-                color = colors.TextMuted,
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp,
-                modifier = Modifier.widthIn(max = 300.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Create Profile Button - Primary CTA
-            Button(
-                onClick = onCreateProfile,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .widthIn(max = 280.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.AccentGold,
-                    contentColor = if (colors.isDark) colors.ScreenBackground else Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 4.dp,
-                    pressedElevation = 8.dp
-                )
             ) {
                 Icon(
                     imageVector = Icons.Outlined.PersonAddAlt,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp)
+                    tint = colors.TextMuted,
+                    modifier = Modifier.size(36.dp)
                 )
-                Spacer(modifier = Modifier.size(12.dp))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = stringResource(StringKey.NO_PROFILE_SELECTED),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.TextPrimary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(StringKey.NO_PROFILE_MESSAGE),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.TextMuted,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Minimal fully-rounded button with no shadow
+            Button(
+                onClick = onCreateProfile,
+                modifier = Modifier
+                    .height(52.dp)
+                    .widthIn(min = 200.dp),
+                shape = RoundedCornerShape(26.dp), // Fully rounded
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.AccentPrimary,
+                    contentColor = colors.ButtonText
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    hoveredElevation = 0.dp,
+                    focusedElevation = 0.dp
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Create Birth Chart",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(StringKey.BTN_CREATE_CHART),
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
             }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Feature highlights
-            Text(
-                text = "Discover with AstroStorm",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium,
-                color = colors.TextMuted,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                EmptyStateFeatureChip(
-                    icon = Icons.Outlined.GridView,
-                    label = "Charts",
-                    colors = colors
-                )
-                EmptyStateFeatureChip(
-                    icon = Icons.Outlined.Timeline,
-                    label = "Dashas",
-                    colors = colors
-                )
-                EmptyStateFeatureChip(
-                    icon = Icons.Outlined.AutoAwesome,
-                    label = "Yogas",
-                    colors = colors
-                )
-                EmptyStateFeatureChip(
-                    icon = Icons.Outlined.Sync,
-                    label = "Transits",
-                    colors = colors
-                )
-            }
         }
-    }
-}
-
-@Composable
-private fun EmptyStateFeatureChip(
-    icon: ImageVector,
-    label: String,
-    colors: com.astro.storm.ui.theme.AppThemeColors
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(colors.ChipBackground),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = colors.AccentPrimary,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.TextMuted,
-            fontWeight = FontWeight.Medium
-        )
     }
 }

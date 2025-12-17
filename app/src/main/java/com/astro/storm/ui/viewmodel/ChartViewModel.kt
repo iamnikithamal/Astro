@@ -12,6 +12,7 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.ChartRepository
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ephemeris.SwissEphemerisEngine
+import com.astro.storm.ui.chart.ChartColorConfig
 import com.astro.storm.ui.chart.ChartRenderer
 import com.astro.storm.util.ChartExporter
 import com.astro.storm.util.ExportUtils
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
+import java.util.Objects
 import java.util.concurrent.Executors
 
 /**
@@ -31,9 +33,27 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ChartRepository
     private val ephemerisEngine: SwissEphemerisEngine
-    val chartRenderer = ChartRenderer()
+    // Default chart renderer for light theme - for theme-aware rendering, use getChartRenderer(isDark)
+    val chartRenderer = ChartRenderer(ChartColorConfig.Light)
     private val prefs = application.getSharedPreferences("chart_prefs", Context.MODE_PRIVATE)
     private val chartExporter: ChartExporter
+
+    // Theme-aware chart renderer cache
+    private var darkChartRenderer: ChartRenderer? = null
+    private var lightChartRenderer: ChartRenderer? = null
+
+    /**
+     * Get a chart renderer configured for the current theme.
+     * @param isDarkTheme Whether the app is in dark theme mode
+     * @return ChartRenderer with appropriate color configuration
+     */
+    fun getChartRenderer(isDarkTheme: Boolean): ChartRenderer {
+        return if (isDarkTheme) {
+            darkChartRenderer ?: ChartRenderer(ChartColorConfig.Dark).also { darkChartRenderer = it }
+        } else {
+            lightChartRenderer ?: ChartRenderer(ChartColorConfig.Light).also { lightChartRenderer = it }
+        }
+    }
 
     // Single-threaded dispatcher for sequential state updates
     private val singleThreadContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
@@ -46,6 +66,9 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _selectedChartId = MutableStateFlow<Long?>(null)
     val selectedChartId: StateFlow<Long?> = _selectedChartId.asStateFlow()
+
+    // Guard against duplicate saves of the same chart during a single calculation cycle
+    private var lastSavedChartHash: Int? = null
 
     init {
         val database = ChartDatabase.getInstance(application)
@@ -86,6 +109,8 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
         houseSystem: HouseSystem = HouseSystem.DEFAULT
     ) {
         viewModelScope.launch(singleThreadContext) {
+            // Reset the save guard for new calculations
+            lastSavedChartHash = null
             _uiState.value = ChartUiState.Calculating
 
             try {
@@ -122,17 +147,45 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Save current chart
+     * Save current chart with duplicate prevention
+     * Uses a hash of birth data to prevent saving the same chart multiple times
+     * in rapid succession (e.g., due to recomposition or state changes)
      */
     fun saveChart(chart: VedicChart) {
         viewModelScope.launch(singleThreadContext) {
             try {
+                // Generate a hash based on birth data to identify unique charts
+                val chartHash = generateChartHash(chart)
+
+                // Skip if this exact chart was just saved (prevents duplicates)
+                if (lastSavedChartHash == chartHash) {
+                    // Already saved this chart, just update state without saving again
+                    _uiState.value = ChartUiState.Saved
+                    return@launch
+                }
+
                 repository.saveChart(chart)
+                lastSavedChartHash = chartHash
                 _uiState.value = ChartUiState.Saved
             } catch (e: Exception) {
                 _uiState.value = ChartUiState.Error("Failed to save chart: ${e.message}")
             }
         }
+    }
+
+    /**
+     * Generate a hash to uniquely identify a chart by its birth data
+     * This prevents saving duplicates of the exact same chart
+     */
+    private fun generateChartHash(chart: VedicChart): Int {
+        return Objects.hash(
+            chart.birthData.name,
+            chart.birthData.dateTime.toString(),
+            chart.birthData.latitude,
+            chart.birthData.longitude,
+            chart.birthData.timezone,
+            chart.birthData.location
+        )
     }
 
     /**

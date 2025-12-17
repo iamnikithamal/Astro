@@ -98,6 +98,7 @@ private data class ChartIdentity(
 @Composable
 fun InsightsTab(
     chart: VedicChart?,
+    onCreateChart: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
     val chartIdentity = remember(chart) { ChartIdentity.from(chart) }
@@ -127,7 +128,7 @@ fun InsightsTab(
                 onRetryFailed = onRetry
             )
         }
-        is InsightsUiState.Idle -> EmptyInsightsState()
+        is InsightsUiState.Idle -> EmptyInsightsState(onCreateChart = onCreateChart)
     }
 }
 
@@ -2080,28 +2081,41 @@ private fun TransitCard(influence: HoroscopeCalculator.PlanetaryInfluence) {
     }
 }
 
+/**
+ * Minimal Empty State UI for Insights Screen
+ * Matches the Home screen empty state style with Create Chart button
+ */
 @Composable
-private fun EmptyInsightsState() {
+private fun EmptyInsightsState(
+    onCreateChart: () -> Unit = {}
+) {
+    val colors = AppTheme.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.ScreenBackground)
+            .background(colors.ScreenBackground)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Simple circular icon container
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(AppTheme.ChipBackground),
+                    .background(colors.ChipBackground),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Insights,
                     contentDescription = null,
-                    tint = AppTheme.TextMuted,
-                    modifier = Modifier.size(40.dp)
+                    tint = colors.TextMuted,
+                    modifier = Modifier.size(36.dp)
                 )
             }
 
@@ -2111,7 +2125,8 @@ private fun EmptyInsightsState() {
                 text = stringResource(StringKey.NO_PROFILE_SELECTED),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = AppTheme.TextPrimary
+                color = colors.TextPrimary,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -2119,10 +2134,43 @@ private fun EmptyInsightsState() {
             Text(
                 text = stringResource(StringKey.NO_PROFILE_MESSAGE_LONG),
                 style = MaterialTheme.typography.bodyMedium,
-                color = AppTheme.TextMuted,
+                color = colors.TextMuted,
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Minimal fully-rounded button with no shadow
+            Button(
+                onClick = onCreateChart,
+                modifier = Modifier
+                    .height(52.dp)
+                    .widthIn(min = 200.dp),
+                shape = RoundedCornerShape(26.dp), // Fully rounded
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.AccentPrimary,
+                    contentColor = colors.ButtonText
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    hoveredElevation = 0.dp,
+                    focusedElevation = 0.dp
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(StringKey.BTN_CREATE_CHART),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }

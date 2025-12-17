@@ -36,6 +36,7 @@ import com.astro.storm.ephemeris.DivisionalChartCalculator
 import com.astro.storm.ephemeris.DivisionalChartData
 import com.astro.storm.ephemeris.DivisionalChartType
 import com.astro.storm.ephemeris.DashaCalculator
+import com.astro.storm.ui.chart.ChartColorConfig
 import com.astro.storm.ui.chart.ChartRenderer
 import com.astro.storm.ui.components.FullScreenChartDialog
 import com.astro.storm.ui.components.HouseDetailDialog
@@ -70,7 +71,11 @@ fun ChartAnalysisScreen(
 ) {
     var selectedTab by remember { mutableStateOf(mapFeatureToTab(initialFeature)) }
     val context = LocalContext.current
-    val chartRenderer = remember { ChartRenderer() }
+    // Use theme-aware chart colors - dark theme uses light-on-dark, light theme uses dark-on-light
+    val isDarkTheme = AppTheme.current.isDark
+    val chartRenderer = remember(isDarkTheme) {
+        ChartRenderer(if (isDarkTheme) ChartColorConfig.Dark else ChartColorConfig.Light)
+    }
 
     // Dialog states - managed at the top level for all tabs
     var showFullScreenChart by remember { mutableStateOf(false) }

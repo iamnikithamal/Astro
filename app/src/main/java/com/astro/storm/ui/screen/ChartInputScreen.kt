@@ -85,6 +85,8 @@ fun ChartInputScreen(
     var errorMessage by remember { mutableStateOf("") }
     var errorKey by remember { mutableStateOf<StringKey?>(null) }
     var chartCalculationInitiated by remember { mutableStateOf(false) }
+    // Guard to prevent duplicate saves - set to true after saveChart is called
+    var chartSaveRequested by remember { mutableStateOf(false) }
 
     val selectedDate = remember(selectedDateMillis) {
         java.time.Instant.ofEpochMilli(selectedDateMillis)
@@ -106,13 +108,16 @@ fun ChartInputScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is ChartUiState.Success -> {
-                if (chartCalculationInitiated) {
+                // Only save if calculation was initiated from this screen and save hasn't been requested yet
+                if (chartCalculationInitiated && !chartSaveRequested) {
+                    chartSaveRequested = true  // Prevent duplicate saves
                     viewModel.saveChart(state.chart)
                 }
             }
             is ChartUiState.Saved -> {
                 if (chartCalculationInitiated) {
                     chartCalculationInitiated = false
+                    chartSaveRequested = false
                     onChartCalculated()
                 }
             }
@@ -120,6 +125,7 @@ fun ChartInputScreen(
                 errorMessage = state.message
                 showErrorDialog = true
                 chartCalculationInitiated = false
+                chartSaveRequested = false
             }
             else -> {}
         }

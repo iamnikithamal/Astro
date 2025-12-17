@@ -231,6 +231,7 @@ fun MainScreen(
                     MainTab.INSIGHTS -> {
                         InsightsTab(
                             chart = currentChart,
+                            onCreateChart = onAddNewChart
                         )
                     }
                     MainTab.SETTINGS -> {

@@ -44,6 +44,7 @@ import com.astro.storm.ui.screen.KalachakraDashaScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
+import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartViewModel
 
 /**
@@ -471,9 +472,15 @@ fun AstroStormNavigation(
                 }
             }
 
+            // Use theme-aware chart renderer
+            val isDarkTheme = AppTheme.current.isDark
+            val themeAwareChartRenderer = remember(isDarkTheme) {
+                viewModel.getChartRenderer(isDarkTheme)
+            }
+
             BirthChartScreen(
                 chart = currentChart,
-                chartRenderer = viewModel.chartRenderer,
+                chartRenderer = themeAwareChartRenderer,
                 onBack = { navController.popBackStack() },
                 onCopyToClipboard = {
                     currentChart?.let {

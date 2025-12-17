@@ -24,7 +24,106 @@ import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
 
-class ChartRenderer {
+/**
+ * Color configuration for chart rendering.
+ * Allows charts to be rendered with different color schemes for dark/light themes
+ * or print-friendly PDF output.
+ */
+data class ChartColorConfig(
+    val backgroundColor: Color,
+    val chartFillColor: Color,
+    val borderColor: Color,
+    val lineColor: Color,
+    val houseNumberColor: Color,
+    val lagnaColor: Color,
+    val sunColor: Color,
+    val moonColor: Color,
+    val marsColor: Color,
+    val mercuryColor: Color,
+    val jupiterColor: Color,
+    val venusColor: Color,
+    val saturnColor: Color,
+    val rahuColor: Color,
+    val ketuColor: Color,
+    val uranusColor: Color,
+    val neptuneColor: Color,
+    val plutoColor: Color,
+    val exaltedColor: Color,
+    val ownSignColor: Color,
+    val moolTrikonaColor: Color,
+    val debilitatedColor: Color
+) {
+    companion object {
+        /**
+         * Light theme colors - cream/beige tones optimized for light mode and PDF printing
+         */
+        val Light = ChartColorConfig(
+            backgroundColor = Color(0xFFFAF8F5),
+            chartFillColor = Color(0xFFF5F2ED),
+            borderColor = Color(0xFF6B5D4D),
+            lineColor = Color(0xFF8B7355),
+            houseNumberColor = Color(0xFF5A4D3D),
+            lagnaColor = Color(0xFF6B5D4D),
+            sunColor = Color(0xFFCD6600),
+            moonColor = Color(0xFFB22222),
+            marsColor = Color(0xFFB22222),
+            mercuryColor = Color(0xFF006400),
+            jupiterColor = Color(0xFFB8860B),
+            venusColor = Color(0xFF7B68EE),
+            saturnColor = Color(0xFF3A5FCD),
+            rahuColor = Color(0xFF8B0000),
+            ketuColor = Color(0xFF8B0000),
+            uranusColor = Color(0xFF008B8B),
+            neptuneColor = Color(0xFF4682B4),
+            plutoColor = Color(0xFF800080),
+            exaltedColor = Color(0xFF1E8449),
+            ownSignColor = Color(0xFF2874A6),
+            moolTrikonaColor = Color(0xFF6C3483),
+            debilitatedColor = Color(0xFFC0392B)
+        )
+
+        /**
+         * Dark theme colors - warm brown tones optimized for dark mode
+         */
+        val Dark = ChartColorConfig(
+            backgroundColor = Color(0xFF1A1512),
+            chartFillColor = Color(0xFF2A201A),
+            borderColor = Color(0xFFB8A99A),
+            lineColor = Color(0xFF8B7355),
+            houseNumberColor = Color(0xFF9A8A7A),
+            lagnaColor = Color(0xFFB8A99A),
+            sunColor = Color(0xFFD2691E),
+            moonColor = Color(0xFFDC143C),
+            marsColor = Color(0xFFDC143C),
+            mercuryColor = Color(0xFF228B22),
+            jupiterColor = Color(0xFFDAA520),
+            venusColor = Color(0xFF9370DB),
+            saturnColor = Color(0xFF4169E1),
+            rahuColor = Color(0xFF8B0000),
+            ketuColor = Color(0xFF8B0000),
+            uranusColor = Color(0xFF20B2AA),
+            neptuneColor = Color(0xFF4682B4),
+            plutoColor = Color(0xFF800080),
+            exaltedColor = Color(0xFF81C784),
+            ownSignColor = Color(0xFF64B5F6),
+            moolTrikonaColor = Color(0xFFBA68C8),
+            debilitatedColor = Color(0xFFCF6679)
+        )
+
+        /**
+         * PDF-optimized colors - high contrast for print quality
+         */
+        val Print = Light.copy(
+            borderColor = Color(0xFF4A3F30),
+            lineColor = Color(0xFF6B5D4D),
+            houseNumberColor = Color(0xFF3D3228)
+        )
+    }
+}
+
+class ChartRenderer(
+    private val colorConfig: ChartColorConfig = ChartColorConfig.Light
+) {
 
     private val textPaint = android.graphics.Paint().apply {
         textAlign = android.graphics.Paint.Align.CENTER
@@ -90,31 +189,6 @@ class ChartRenderer {
         private val TYPEFACE_NORMAL = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         private val TYPEFACE_BOLD = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
 
-        private val BACKGROUND_COLOR = Color(0xFFFAF8F5)
-        private val CHART_FILL_COLOR = Color(0xFFF5F2ED)
-        private val BORDER_COLOR = Color(0xFF8B7355)
-        private val LINE_COLOR = Color(0xFFA69276)
-        private val HOUSE_NUMBER_COLOR = Color(0xFF6B5B4F)
-
-        private val SUN_COLOR = Color(0xFFE67E22)
-        private val MOON_COLOR = Color(0xFFE74C3C)
-        private val MARS_COLOR = Color(0xFFC0392B)
-        private val MERCURY_COLOR = Color(0xFF27AE60)
-        private val JUPITER_COLOR = Color(0xFFF39C12)
-        private val VENUS_COLOR = Color(0xFF9B59B6)
-        private val SATURN_COLOR = Color(0xFF3498DB)
-        private val RAHU_COLOR = Color(0xFF7B241C)
-        private val KETU_COLOR = Color(0xFF7B241C)
-        private val URANUS_COLOR = Color(0xFF1ABC9C)
-        private val NEPTUNE_COLOR = Color(0xFF2980B9)
-        private val PLUTO_COLOR = Color(0xFF8E44AD)
-        private val LAGNA_COLOR = Color(0xFF795548)
-
-        private val EXALTED_COLOR = Color(0xFF1E8449)
-        private val OWN_SIGN_COLOR = Color(0xFF2874A6)
-        private val MOOL_TRIKONA_COLOR = Color(0xFF6C3483)
-        private val DEBILITATED_COLOR = Color(0xFFC0392B)
-
         const val SYMBOL_RETROGRADE = "*"
         const val SYMBOL_COMBUST = "^"
         const val SYMBOL_VARGOTTAMA = "\u00A4"
@@ -127,19 +201,31 @@ class ChartRenderer {
         private const val CHART_PADDING_RATIO = 0.025f
     }
 
+    // Theme-aware color accessors
+    private val BACKGROUND_COLOR get() = colorConfig.backgroundColor
+    private val CHART_FILL_COLOR get() = colorConfig.chartFillColor
+    private val BORDER_COLOR get() = colorConfig.borderColor
+    private val LINE_COLOR get() = colorConfig.lineColor
+    private val HOUSE_NUMBER_COLOR get() = colorConfig.houseNumberColor
+    private val LAGNA_COLOR get() = colorConfig.lagnaColor
+    private val EXALTED_COLOR get() = colorConfig.exaltedColor
+    private val OWN_SIGN_COLOR get() = colorConfig.ownSignColor
+    private val MOOL_TRIKONA_COLOR get() = colorConfig.moolTrikonaColor
+    private val DEBILITATED_COLOR get() = colorConfig.debilitatedColor
+
     private fun getPlanetColor(planet: Planet): Color = when (planet) {
-        Planet.SUN -> SUN_COLOR
-        Planet.MOON -> MOON_COLOR
-        Planet.MARS -> MARS_COLOR
-        Planet.MERCURY -> MERCURY_COLOR
-        Planet.JUPITER -> JUPITER_COLOR
-        Planet.VENUS -> VENUS_COLOR
-        Planet.SATURN -> SATURN_COLOR
-        Planet.RAHU -> RAHU_COLOR
-        Planet.KETU -> KETU_COLOR
-        Planet.URANUS -> URANUS_COLOR
-        Planet.NEPTUNE -> NEPTUNE_COLOR
-        Planet.PLUTO -> PLUTO_COLOR
+        Planet.SUN -> colorConfig.sunColor
+        Planet.MOON -> colorConfig.moonColor
+        Planet.MARS -> colorConfig.marsColor
+        Planet.MERCURY -> colorConfig.mercuryColor
+        Planet.JUPITER -> colorConfig.jupiterColor
+        Planet.VENUS -> colorConfig.venusColor
+        Planet.SATURN -> colorConfig.saturnColor
+        Planet.RAHU -> colorConfig.rahuColor
+        Planet.KETU -> colorConfig.ketuColor
+        Planet.URANUS -> colorConfig.uranusColor
+        Planet.NEPTUNE -> colorConfig.neptuneColor
+        Planet.PLUTO -> colorConfig.plutoColor
     }
 
     private fun toSuperscript(degree: Int): String {
