@@ -30,6 +30,7 @@ import com.astro.storm.ephemeris.PitraDoshaCalculator
 import com.astro.storm.ephemeris.RemediesCalculator
 import com.astro.storm.ephemeris.SadeSatiCalculator
 import com.astro.storm.ephemeris.ShadbalaCalculator
+import com.astro.storm.ephemeris.VedicAstrologyUtils
 import com.astro.storm.ephemeris.YogaCalculator
 import com.astro.storm.ui.chart.ChartColorConfig
 import com.astro.storm.ui.chart.ChartRenderer
@@ -1478,7 +1479,7 @@ class ChartExporter(private val context: Context) {
             paint.textSize = 10f
             paint.color = COLOR_TEXT
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-            canvas.drawText("Duration: ${currentMahadasha.years} years", PDF_MARGIN.toFloat() + 200f, yPos + 38f, paint)
+            canvas.drawText("Duration: ${currentMahadasha.durationYears.toInt()} years", PDF_MARGIN.toFloat() + 200f, yPos + 38f, paint)
 
             if (currentAntardasha != null) {
                 paint.color = COLOR_SECONDARY
@@ -1487,7 +1488,7 @@ class ChartExporter(private val context: Context) {
 
                 paint.color = COLOR_TEXT
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-                canvas.drawText("Ends: ${currentAntardasha.endDate.toLocalDate()}", PDF_MARGIN.toFloat() + 200f, yPos + 56f, paint)
+                canvas.drawText("Ends: ${currentAntardasha.endDate}", PDF_MARGIN.toFloat() + 200f, yPos + 56f, paint)
             }
 
             if (currentPratyantardasha != null) {
@@ -1513,7 +1514,7 @@ class ChartExporter(private val context: Context) {
             if (yPos > options.pageSize.height - 80) return@forEachIndexed
 
             // Highlight current dasha
-            if (dasha.isCurrent) {
+            if (dasha.isActive) {
                 val highlightPaint = Paint().apply {
                     color = Color.argb(30, 212, 175, 55) // Light gold
                     style = Paint.Style.FILL
@@ -1522,7 +1523,7 @@ class ChartExporter(private val context: Context) {
             }
 
             // Alternating background
-            if (index % 2 == 0 && !dasha.isCurrent) {
+            if (index % 2 == 0 && !dasha.isActive) {
                 val rowBgPaint = Paint().apply {
                     color = COLOR_CARD_BG
                     style = Paint.Style.FILL
@@ -1531,23 +1532,23 @@ class ChartExporter(private val context: Context) {
             }
 
             // Planet name
-            paint.color = if (dasha.isCurrent) COLOR_ACCENT else COLOR_PRIMARY
+            paint.color = if (dasha.isActive) COLOR_ACCENT else COLOR_PRIMARY
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             canvas.drawText(dasha.planet.displayName, PDF_MARGIN.toFloat() + 8f, yPos + 14f, paint)
 
             // Duration
             paint.color = COLOR_TEXT
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-            canvas.drawText("${dasha.years} years", PDF_MARGIN.toFloat() + 80f, yPos + 14f, paint)
+            canvas.drawText("${dasha.durationYears.toInt()} years", PDF_MARGIN.toFloat() + 80f, yPos + 14f, paint)
 
             // Date range
             paint.color = COLOR_TEXT_MUTED
-            canvas.drawText("${dasha.startDate.toLocalDate()} to ${dasha.endDate.toLocalDate()}", PDF_MARGIN.toFloat() + 150f, yPos + 14f, paint)
+            canvas.drawText("${dasha.startDate} to ${dasha.endDate}", PDF_MARGIN.toFloat() + 150f, yPos + 14f, paint)
 
             // Status
             val statusText = when {
-                dasha.isCurrent -> "CURRENT"
-                dasha.startDate.isAfter(java.time.LocalDateTime.now()) -> "UPCOMING"
+                dasha.isActive -> "CURRENT"
+                dasha.startDate.isAfter(java.time.LocalDate.now()) -> "UPCOMING"
                 else -> "COMPLETED"
             }
             paint.color = when (statusText) {
@@ -1778,7 +1779,8 @@ class ChartExporter(private val context: Context) {
             // Cancellation factors
             if (manglikAnalysis.cancellationFactors.isNotEmpty()) {
                 paint.color = COLOR_SUCCESS
-                val cancellation = manglikAnalysis.cancellationFactors.firstOrNull() ?: ""
+                val cancellationFactor = manglikAnalysis.cancellationFactors.firstOrNull()
+                val cancellation = cancellationFactor?.getTitle(locManager.language.value) ?: ""
                 val truncated = if (cancellation.length > 80) cancellation.substring(0, 77) + "..." else cancellation
                 canvas.drawText("Cancellation: $truncated", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
             }
@@ -1918,9 +1920,9 @@ class ChartExporter(private val context: Context) {
         // Life Areas with predictions
         val areaColors = mapOf(
             HoroscopeCalculator.LifeArea.CAREER to COLOR_PRIMARY,
-            HoroscopeCalculator.LifeArea.RELATIONSHIPS to Color.rgb(233, 30, 99),
+            HoroscopeCalculator.LifeArea.LOVE to Color.rgb(233, 30, 99),
             HoroscopeCalculator.LifeArea.HEALTH to COLOR_SUCCESS,
-            HoroscopeCalculator.LifeArea.FINANCES to Color.rgb(255, 152, 0),
+            HoroscopeCalculator.LifeArea.FINANCE to Color.rgb(255, 152, 0),
             HoroscopeCalculator.LifeArea.FAMILY to Color.rgb(0, 150, 136),
             HoroscopeCalculator.LifeArea.SPIRITUALITY to Color.rgb(103, 58, 183)
         )
