@@ -1,5 +1,6 @@
 package com.astro.storm.ephemeris
 
+import android.content.Context
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringResources
@@ -275,11 +276,13 @@ object TarabalaCalculator {
     /**
      * Calculate complete Tarabala and Chandrabala analysis
      *
+     * @param context Android context for ephemeris engine
      * @param chart The birth chart
      * @param currentDateTime Current date/time for transit calculations
      * @return Complete analysis with daily and weekly forecasts
      */
     fun calculateAnalysis(
+        context: Context,
         chart: VedicChart,
         currentDateTime: LocalDateTime = LocalDateTime.now()
     ): TarabalaChandrabalaAnalysis? {
@@ -292,10 +295,10 @@ object TarabalaCalculator {
         val currentDate = currentDateTime.toLocalDate()
 
         // Calculate current transit Moon position
-        val transitMoonSign = calculateTransitMoonSign(currentDateTime, chart)
+        val transitMoonSign = calculateTransitMoonSign(context, currentDateTime, chart)
             ?: return null
 
-        val transitNakshatra = calculateTransitNakshatra(currentDateTime, chart)
+        val transitNakshatra = calculateTransitNakshatra(context, currentDateTime, chart)
             ?: return null
 
         // Calculate Tarabala for current nakshatra
@@ -313,6 +316,7 @@ object TarabalaCalculator {
 
         // Calculate weekly forecast
         val weeklyForecast = calculateWeeklyForecast(
+            context,
             chart,
             currentDate
         )
@@ -443,6 +447,7 @@ object TarabalaCalculator {
      * Calculate weekly forecast
      */
     fun calculateWeeklyForecast(
+        context: Context,
         chart: VedicChart,
         startDate: LocalDate
     ): WeeklyForecast {
@@ -467,8 +472,8 @@ object TarabalaCalculator {
             val dateTime = date.atStartOfDay()
 
             // Calculate transit positions for this date
-            val transitMoonSign = calculateTransitMoonSignForDate(date, chart) ?: natalMoonSign
-            val transitNakshatra = calculateTransitNakshatraForDate(date, chart) ?: birthNakshatra
+            val transitMoonSign = calculateTransitMoonSignForDate(context, date, chart) ?: natalMoonSign
+            val transitNakshatra = calculateTransitNakshatraForDate(context, date, chart) ?: birthNakshatra
 
             val tarabala = calculateTarabala(birthNakshatra, transitNakshatra)
             val chandrabala = calculateChandrabala(natalMoonSign, transitMoonSign)
@@ -497,9 +502,9 @@ object TarabalaCalculator {
     /**
      * Calculate current transit Moon sign using ephemeris
      */
-    private fun calculateTransitMoonSign(dateTime: LocalDateTime, chart: VedicChart): ZodiacSign? {
+    private fun calculateTransitMoonSign(context: Context, dateTime: LocalDateTime, chart: VedicChart): ZodiacSign? {
         return try {
-            val engineInstance = SwissEphemerisEngine.getInstance(null) ?: return null
+            val engineInstance = SwissEphemerisEngine.getInstance(context) ?: return null
             val moonPos = engineInstance.calculatePlanetPosition(
                 Planet.MOON, dateTime, chart.birthData.timezone,
                 chart.birthData.latitude, chart.birthData.longitude
@@ -515,9 +520,9 @@ object TarabalaCalculator {
     /**
      * Calculate transit Moon nakshatra
      */
-    private fun calculateTransitNakshatra(dateTime: LocalDateTime, chart: VedicChart): Nakshatra? {
+    private fun calculateTransitNakshatra(context: Context, dateTime: LocalDateTime, chart: VedicChart): Nakshatra? {
         return try {
-            val engineInstance = SwissEphemerisEngine.getInstance(null) ?: return null
+            val engineInstance = SwissEphemerisEngine.getInstance(context) ?: return null
             val moonPos = engineInstance.calculatePlanetPosition(
                 Planet.MOON, dateTime, chart.birthData.timezone,
                 chart.birthData.latitude, chart.birthData.longitude
@@ -534,15 +539,15 @@ object TarabalaCalculator {
     /**
      * Calculate transit Moon sign for a specific date
      */
-    private fun calculateTransitMoonSignForDate(date: LocalDate, chart: VedicChart): ZodiacSign? {
-        return calculateTransitMoonSign(date.atTime(12, 0), chart)
+    private fun calculateTransitMoonSignForDate(context: Context, date: LocalDate, chart: VedicChart): ZodiacSign? {
+        return calculateTransitMoonSign(context, date.atTime(12, 0), chart)
     }
 
     /**
      * Calculate transit nakshatra for a specific date
      */
-    private fun calculateTransitNakshatraForDate(date: LocalDate, chart: VedicChart): Nakshatra? {
-        return calculateTransitNakshatra(date.atTime(12, 0), chart)
+    private fun calculateTransitNakshatraForDate(context: Context, date: LocalDate, chart: VedicChart): Nakshatra? {
+        return calculateTransitNakshatra(context, date.atTime(12, 0), chart)
     }
 
     // ============================================================================

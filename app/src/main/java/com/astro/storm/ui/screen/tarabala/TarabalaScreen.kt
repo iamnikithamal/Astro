@@ -1,5 +1,6 @@
 package com.astro.storm.ui.screen.tarabala
 
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -56,6 +57,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TarabalaScreen(
+    context: Context,
     chart: VedicChart?,
     onBack: () -> Unit
 ) {
@@ -81,7 +83,7 @@ fun TarabalaScreen(
 
     // Calculate Tarabala analysis
     val tarabalaAnalysis = remember(chart) {
-        TarabalaCalculator.calculateAnalysis(chart, LocalDateTime.now())
+        TarabalaCalculator.calculateAnalysis(context, chart, LocalDateTime.now())
     }
 
     if (showInfoDialog) {

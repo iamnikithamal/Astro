@@ -949,6 +949,7 @@ fun AstroStormNavigation(
             }
 
             TarabalaScreen(
+                context = context,
                 chart = currentChart,
                 onBack = { navController.popBackStack() }
             )

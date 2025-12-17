@@ -1,5 +1,6 @@
 package com.astro.storm.ephemeris
 
+import android.content.Context
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringResources
@@ -872,11 +873,12 @@ object GocharaVedhaCalculator {
      * Calculate Vedha for current moment using Swiss Ephemeris
      */
     fun calculateCurrentVedha(
+        context: Context,
         chart: VedicChart,
         dateTime: LocalDateTime = LocalDateTime.now()
     ): CompleteVedhaAnalysis? {
         // Calculate current transit positions
-        val engineInstance = SwissEphemerisEngine.getInstance(null) ?: return null
+        val engineInstance = SwissEphemerisEngine.getInstance(context) ?: return null
 
         val transitPositions = mutableListOf<PlanetPosition>()
         val gocharaPlanets = listOf(
