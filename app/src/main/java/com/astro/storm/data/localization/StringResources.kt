@@ -61,6 +61,7 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     // ============================================
     TAB_HOME("Home", "गृह"),
     TAB_INSIGHTS("Insights", "अन्तर्दृष्टि"),
+    TAB_CHAT("Chat", "च्याट"),
     TAB_SETTINGS("Settings", "सेटिङ्स"),
 
     // ============================================
@@ -644,6 +645,9 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     // ============================================
     SETTINGS_PROFILE("Profile", "प्रोफाइल"),
     SETTINGS_EXPORT("Export", "निर्यात"),
+    SETTINGS_AI_CHAT("AI & Chat", "AI र च्याट"),
+    SETTINGS_AI_MODELS("AI Models", "AI मोडेलहरू"),
+    SETTINGS_AI_MODELS_DESC("Configure chat AI providers", "च्याट AI प्रदायकहरू कन्फिगर गर्नुहोस्"),
     SETTINGS_PREFERENCES("Preferences", "प्राथमिकताहरू"),
     SETTINGS_ABOUT("About", "बारेमा"),
 
