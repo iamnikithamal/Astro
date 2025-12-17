@@ -220,10 +220,10 @@ sealed class ChatResponse {
 /**
  * Exception thrown by AI providers
  */
-class AiProviderException(
+open class AiProviderException(
     message: String,
     val code: String? = null,
-    val isRetryable: Boolean = false,
+    open val isRetryable: Boolean = false,
     cause: Throwable? = null
 ) : Exception(message, cause)
 

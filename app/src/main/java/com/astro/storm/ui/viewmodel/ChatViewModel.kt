@@ -7,6 +7,8 @@ import com.astro.storm.data.ai.agent.AgentResponse
 import com.astro.storm.data.ai.agent.StormyAgent
 import com.astro.storm.data.ai.provider.AiModel
 import com.astro.storm.data.ai.provider.AiProviderRegistry
+import com.astro.storm.data.ai.provider.ChatMessage
+import com.astro.storm.data.ai.provider.MessageRole
 import com.astro.storm.data.local.ChartDatabase
 import com.astro.storm.data.local.chat.ChatConversation
 import com.astro.storm.data.local.chat.ChatMessageModel
@@ -101,9 +103,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val currentConversation: StateFlow<ChatConversation?> = _currentConversationId
         .flatMapLatest { id ->
             if (id != null) {
-                flow { emit(chatRepository.getConversationById(id)) }
+                flow<ChatConversation?> { emit(chatRepository.getConversationById(id)) }
             } else {
-                flowOf(null)
+                flowOf<ChatConversation?>(null)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

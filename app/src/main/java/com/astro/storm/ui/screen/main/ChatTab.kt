@@ -1,6 +1,11 @@
 package com.astro.storm.ui.screen.main
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -995,22 +1001,22 @@ private fun StreamingMessageBubble(
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     repeat(3) { index ->
-                        val alpha by remember {
-                            androidx.compose.animation.core.animateFloatAsState(
-                                targetValue = 1f,
-                                animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                                    animation = androidx.compose.animation.core.keyframes {
-                                        durationMillis = 1000
-                                        0.3f at 0
-                                        1f at 300
-                                        0.3f at 600
-                                    },
-                                    repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
-                                    initialStartOffset = androidx.compose.animation.core.StartOffset(index * 150)
-                                ),
-                                label = "typing_dot_$index"
-                            )
-                        }
+                        val infiniteTransition = rememberInfiniteTransition(label = "typing_animation_$index")
+                        val alpha by infiniteTransition.animateFloat(
+                            initialValue = 0.3f,
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = keyframes {
+                                    durationMillis = 1000
+                                    0.3f at 0
+                                    1f at 300
+                                    0.3f at 600
+                                },
+                                repeatMode = RepeatMode.Restart,
+                                initialStartOffset = StartOffset(index * 150)
+                            ),
+                            label = "typing_dot_$index"
+                        )
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
@@ -1112,22 +1118,22 @@ private fun LoadingIndicator() {
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             repeat(3) { index ->
-                val alpha by remember {
-                    androidx.compose.animation.core.animateFloatAsState(
-                        targetValue = 1f,
-                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                            animation = androidx.compose.animation.core.keyframes {
-                                durationMillis = 1000
-                                0.3f at 0
-                                1f at 300
-                                0.3f at 600
-                            },
-                            repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
-                            initialStartOffset = androidx.compose.animation.core.StartOffset(index * 150)
-                        ),
-                        label = "loading_dot_$index"
-                    )
-                }
+                val infiniteTransition = rememberInfiniteTransition(label = "loading_animation_$index")
+                val alpha by infiniteTransition.animateFloat(
+                    initialValue = 0.3f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = 1000
+                            0.3f at 0
+                            1f at 300
+                            0.3f at 600
+                        },
+                        repeatMode = RepeatMode.Restart,
+                        initialStartOffset = StartOffset(index * 150)
+                    ),
+                    label = "loading_dot_$index"
+                )
                 Box(
                     modifier = Modifier
                         .size(8.dp)

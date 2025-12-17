@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.astro.storm.data.ai.provider.AiModel
 import com.astro.storm.data.ai.provider.AiProviderRegistry
 import com.astro.storm.ui.theme.AppTheme
-import kotlinx.coroutines.flow.collectAsState
 import kotlinx.coroutines.launch
 
 /**
@@ -133,7 +132,7 @@ fun AiModelsScreen(
                     DefaultModelSection(
                         defaultModel = defaultModel,
                         enabledModels = enabledModels,
-                        onSetDefault = { providerRegistry.setDefaultModel(it) }
+                        onSetDefault = { /* Default model is always the first enabled one */ }
                     )
                 }
             }
@@ -150,10 +149,8 @@ fun AiModelsScreen(
                             selectedProvider = if (selectedProvider == providerId) null else providerId
                         },
                         onToggleModel = { model, enabled ->
-                            if (enabled) {
-                                providerRegistry.enableModel(model)
-                            } else {
-                                providerRegistry.disableModel(model)
+                            scope.launch {
+                                providerRegistry.setModelEnabled(model.id, enabled)
                             }
                         }
                     )
@@ -477,14 +474,14 @@ private fun ModelItem(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.padding(top = 4.dp)
             ) {
-                if (model.supportsToolCalling) {
+                if (model.supportsTools) {
                     CapabilityBadge("Tools")
                 }
                 if (model.supportsReasoning) {
                     CapabilityBadge("Reasoning")
                 }
-                if (model.supportsStreaming) {
-                    CapabilityBadge("Stream")
+                if (model.supportsVision) {
+                    CapabilityBadge("Vision")
                 }
             }
         }

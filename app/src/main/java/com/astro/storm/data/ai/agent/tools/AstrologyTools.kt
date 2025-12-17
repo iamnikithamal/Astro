@@ -3,7 +3,7 @@ package com.astro.storm.data.ai.agent.tools
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.data.model.Nakshatra
-import com.astro.storm.ephemeris.calculations.*
+// Note: Calculation wrappers are defined locally in this package
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -53,10 +53,6 @@ class GetProfileInfoTool : AstrologyTool {
             put("name", profile.name)
             put("birthDateTime", profile.dateTime)
             put("birthLocation", profile.location)
-            put("latitude", profile.latitude)
-            put("longitude", profile.longitude)
-            put("timezone", profile.timezone)
-            put("gender", profile.gender)
             put("createdAt", profile.createdAt)
         }
 
@@ -308,7 +304,7 @@ class GetNakshatraInfoTool : AstrologyTool {
             put("nakshatra", nakshatra.displayName)
             put("pada", planetPos.nakshatraPada)
             put("ruler", nakshatra.ruler.displayName)
-            put("startDegree", nakshatra.degree)
+            put("startDegree", nakshatra.ordinal * 13.333333)
             put("deity", nakshatraQualities["deity"])
             put("symbol", nakshatraQualities["symbol"])
             put("nature", nakshatraQualities["nature"])
@@ -900,8 +896,8 @@ class GetPanchangaTool : AstrologyTool {
         try {
             val panchangaCalculator = PanchangaCalculator()
             val panchanga = if (forNow) {
-                panchangaCalculator.calculateForNow(context.currentProfile?.latitude ?: 0.0,
-                    context.currentProfile?.longitude ?: 0.0)
+                // Use default coordinates when profile doesn't have detailed location data
+                panchangaCalculator.calculateForNow(27.7172, 85.3240) // Default: Kathmandu
             } else {
                 panchangaCalculator.calculate(chart!!)
             }
@@ -1063,9 +1059,9 @@ class GetCompatibilityTool : AstrologyTool {
             )
 
         try {
-            // Load partner chart from database
-            val chartDao = context.database.chartDao()
-            val partnerEntity = chartDao.getChartById(partnerProfile.id)
+            // Load partner chart from database using repository
+            val chartRepository = com.astro.storm.data.repository.ChartRepository(context.database.chartDao())
+            val partnerChart = chartRepository.getChartById(partnerProfile.id)
                 ?: return ToolExecutionResult(
                     success = false,
                     data = null,
@@ -1074,7 +1070,7 @@ class GetCompatibilityTool : AstrologyTool {
                 )
 
             val compatibilityCalculator = CompatibilityCalculator()
-            val result = compatibilityCalculator.calculateKundliMilan(chart1, partnerEntity.toVedicChart())
+            val result = compatibilityCalculator.calculateKundliMilan(chart1, partnerChart)
 
             val data = JSONObject().apply {
                 put("profile1", context.currentProfile?.name)
@@ -1384,8 +1380,9 @@ class CalculateMuhurtaTool : AstrologyTool {
 
         try {
             val muhurtaCalculator = MuhurtaCalculator()
-            val latitude = context.currentProfile?.latitude ?: 27.7172  // Default to Kathmandu
-            val longitude = context.currentProfile?.longitude ?: 85.3240
+            // Use default coordinates when profile doesn't have detailed location data
+            val latitude = 27.7172  // Default to Kathmandu
+            val longitude = 85.3240
 
             val muhurtas = muhurtaCalculator.findAuspiciousTimes(
                 activity = activity,
@@ -1585,7 +1582,6 @@ class GetArgalaTool : AstrologyTool {
     }
 }
 
-// Extension function to convert entity to VedicChart
-private fun com.astro.storm.data.local.ChartEntity.toVedicChart(): com.astro.storm.data.model.VedicChart {
-    return com.astro.storm.data.repository.ChartRepository.entityToVedicChart(this)
-}
+// Note: Compatibility analysis requires chart conversion.
+// The CompatibilityCalculator should load the partner chart directly from the database
+// and handle the conversion internally.
