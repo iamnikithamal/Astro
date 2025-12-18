@@ -135,7 +135,7 @@ object GrahaYuddhaCalculator {
         val (winner, loser, advantage) = determineWinner(p1, p2)
 
         val intensity = calculateWarIntensity(separation)
-        val sign = ZodiacSign.fromDegree(p1.longitude)
+        val sign = ZodiacSign.fromLongitude(p1.longitude)
         val house = p1.house
 
         val winnerEffects = generateWinnerEffects(winner, loser, sign, house)

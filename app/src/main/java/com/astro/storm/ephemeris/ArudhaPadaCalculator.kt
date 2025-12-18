@@ -1171,14 +1171,15 @@ object ArudhaPadaCalculator {
                 careerStrength + gainsIndicator) / 5
 
         // Add yoga bonuses
-        val yogaBonus = yogas.sumOf {
-            when (it.strength) {
+        val yogaBonus: Int = yogas.sumOf { yoga: ArudhaYoga ->
+            val bonus: Int = when (yoga.strength) {
                 YogaStrength.EXCEPTIONAL -> 10
                 YogaStrength.STRONG -> 7
                 YogaStrength.MODERATE -> 4
                 YogaStrength.MILD -> 2
                 YogaStrength.WEAK -> 0
             }
+            bonus
         }.coerceAtMost(20)
 
         val keyThemes = mutableListOf<String>()
