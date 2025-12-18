@@ -484,14 +484,15 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
                 if (delta != null) {
                     // Check for reasoning content (for models like DeepSeek R1, Kimi K2, QwQ, etc.)
                     // These models may send reasoning_content AND content in same response or different
-                    val reasoningContent = delta.optString("reasoning_content", null)
-                        ?: delta.optString("reasoning", null)
-                        ?: delta.optString("thinking", null)
+                    // Use safeGetString to handle JSON null values properly
+                    val reasoningContent = safeGetString(delta, "reasoning_content")
+                        ?: safeGetString(delta, "reasoning")
+                        ?: safeGetString(delta, "thinking")
 
-                    // Regular content
-                    val content = delta.optString("content", null)
+                    // Regular content - use safeGetString to avoid "null" string
+                    val content = safeGetString(delta, "content")
 
-                    // Emit reasoning first if present
+                    // Emit reasoning first if present and not empty/null
                     if (!reasoningContent.isNullOrEmpty()) {
                         responses.add(ChatResponse.Reasoning(reasoningContent))
                     }
@@ -530,10 +531,10 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
                 // Also check for message object (for some providers - non-streaming or final response)
                 val message = choice.optJSONObject("message")
                 if (message != null) {
-                    val reasoningContent = message.optString("reasoning_content", null)
-                        ?: message.optString("reasoning", null)
-                        ?: message.optString("thinking", null)
-                    val content = message.optString("content", null)
+                    val reasoningContent = safeGetString(message, "reasoning_content")
+                        ?: safeGetString(message, "reasoning")
+                        ?: safeGetString(message, "thinking")
+                    val content = safeGetString(message, "content")
 
                     // Emit both if present
                     if (!reasoningContent.isNullOrEmpty()) {
@@ -566,6 +567,19 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
     }
 
     /**
+     * Safely get a string value from JSONObject, returning null for JSON null values.
+     * This prevents the issue where optString returns "null" as a string when the JSON value is null.
+     */
+    private fun safeGetString(json: JSONObject, key: String): String? {
+        if (!json.has(key) || json.isNull(key)) {
+            return null
+        }
+        val value = json.optString(key, "")
+        // Also handle the case where the value is literally the string "null"
+        return if (value.isEmpty() || value == "null") null else value
+    }
+
+    /**
      * Parse a non-streaming response
      */
     protected open fun parseNonStreamResponse(responseBody: String): List<ChatResponse> {
@@ -588,15 +602,15 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
                 val message = choice.optJSONObject("message")
 
                 if (message != null) {
-                    // Check for reasoning content
-                    val reasoningContent = message.optString("reasoning_content", null)
-                        ?: message.optString("reasoning", null)
+                    // Check for reasoning content - use safeGetString
+                    val reasoningContent = safeGetString(message, "reasoning_content")
+                        ?: safeGetString(message, "reasoning")
                     if (!reasoningContent.isNullOrEmpty()) {
                         responses.add(ChatResponse.Reasoning(reasoningContent, isComplete = true))
                     }
 
-                    // Regular content
-                    val content = message.optString("content", null)
+                    // Regular content - use safeGetString
+                    val content = safeGetString(message, "content")
                     if (!content.isNullOrEmpty()) {
                         responses.add(ChatResponse.Content(content, isComplete = true))
                     }

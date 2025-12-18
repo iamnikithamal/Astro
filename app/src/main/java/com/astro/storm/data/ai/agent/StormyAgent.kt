@@ -220,8 +220,13 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
         var toolIterations = 0
         var continueProcessing = true
         val toolsUsed = mutableListOf<String>()
-        val allContent = StringBuilder()
+
+        // Track content from each iteration separately to detect duplicates
+        val contentByIteration = mutableListOf<String>()
         val allReasoning = StringBuilder()
+
+        // Keep track of what we've already emitted to avoid duplicates
+        var totalEmittedContent = StringBuilder()
 
         while (continueProcessing && iteration < MAX_TOTAL_ITERATIONS && toolIterations < MAX_TOOL_ITERATIONS) {
             iteration++
@@ -297,8 +302,26 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
                 }
             }
 
-            // Accumulate all content and reasoning across iterations
-            allContent.append(currentContent.toString().cleanToolCallBlocks())
+            // Clean current content of tool call blocks
+            val cleanedCurrentContent = currentContent.toString().cleanToolCallBlocks().trim()
+
+            // Only add this iteration's content if it's not a duplicate of previous content
+            // This prevents the model from repeating the same response multiple times
+            if (cleanedCurrentContent.isNotEmpty()) {
+                val isDuplicate = contentByIteration.any { previousContent ->
+                    // Check if this content is substantially similar to any previous iteration
+                    // Either identical, or one contains the other (common in multi-turn)
+                    previousContent.trim() == cleanedCurrentContent ||
+                    previousContent.contains(cleanedCurrentContent) ||
+                    cleanedCurrentContent.contains(previousContent.trim())
+                }
+
+                if (!isDuplicate) {
+                    contentByIteration.add(cleanedCurrentContent)
+                }
+            }
+
+            // Accumulate reasoning (reasoning can be additive across iterations)
             if (currentReasoning.isNotEmpty()) {
                 if (allReasoning.isNotEmpty()) {
                     allReasoning.append("\n\n")
@@ -352,8 +375,16 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
                 // Continue processing to let AI respond to tool results
                 // The agent will autonomously continue until it has enough info
             } else {
-                // No tool calls - check if we have content to emit
-                val finalContent = allContent.toString().trim()
+                // No tool calls - combine unique content from all iterations
+                // Use only the last (most complete) response if there are multiple iterations with content
+                // This handles the case where models repeat content after tool calls
+                val finalContent = if (contentByIteration.isNotEmpty()) {
+                    // Take the last non-empty content as it's typically the most complete response
+                    // after all tool results have been processed
+                    contentByIteration.last()
+                } else {
+                    ""
+                }
                 val finalReasoning = allReasoning.toString().trim()
 
                 // Check if we only have reasoning but no content
@@ -374,8 +405,8 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
                             content = "Please provide your analysis and answer based on the tool results above."
                         ))
 
-                        // Clear accumulators for the continuation
-                        allContent.clear()
+                        // Clear content for the continuation
+                        contentByIteration.clear()
                         allReasoning.clear()
 
                         // Continue for one more iteration
@@ -414,8 +445,12 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
         }
 
         if (iteration >= MAX_TOTAL_ITERATIONS || toolIterations >= MAX_TOOL_ITERATIONS) {
-            // Still emit what we have
-            val finalContent = allContent.toString().trim()
+            // Still emit what we have - use the last content iteration
+            val finalContent = if (contentByIteration.isNotEmpty()) {
+                contentByIteration.last()
+            } else {
+                ""
+            }
             val finalReasoning = allReasoning.toString().trim()
 
             if (finalContent.isNotEmpty() || finalReasoning.isNotEmpty()) {

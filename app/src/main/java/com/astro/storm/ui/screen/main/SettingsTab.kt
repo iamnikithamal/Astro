@@ -52,7 +52,8 @@ import com.astro.storm.ui.theme.AppTheme
 fun SettingsTab(
     currentChart: VedicChart?,
     savedCharts: List<SavedChart>,
-    onEditProfile: () -> Unit,
+    selectedChartId: Long?,
+    onEditProfile: (Long) -> Unit,
     onDeleteProfile: (Long) -> Unit,
     onExportChart: (ExportFormat) -> Unit,
     onManageProfiles: () -> Unit,
@@ -83,12 +84,12 @@ fun SettingsTab(
         }
 
         item {
-            if (currentChart != null) {
+            if (currentChart != null && selectedChartId != null) {
                 SettingsItem(
                     icon = Icons.Outlined.Edit,
                     titleKey = StringKey.SETTINGS_EDIT_PROFILE,
                     subtitleKey = StringKey.SETTINGS_EDIT_PROFILE_DESC,
-                    onClick = onEditProfile
+                    onClick = { onEditProfile(selectedChartId) }
                 )
             } else {
                 SettingsItem(

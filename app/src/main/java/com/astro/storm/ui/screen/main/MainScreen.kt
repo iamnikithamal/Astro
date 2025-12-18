@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +65,7 @@ fun MainScreen(
     onNavigateToTransits: () -> Unit = {},
     onNavigateToAshtakavarga: () -> Unit = {},
     onNavigateToPanchanga: () -> Unit = {},
-    onNavigateToProfileEdit: () -> Unit = {},
+    onNavigateToProfileEdit: (Long) -> Unit = {},
     onNavigateToSynastry: () -> Unit = {},
     onNavigateToNakshatra: () -> Unit = {},
     onNavigateToShadbala: () -> Unit = {},
@@ -87,7 +88,8 @@ fun MainScreen(
     onExportChart: (ExportFormat) -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    var selectedTab by remember { mutableStateOf(MainTab.HOME) }
+    // Use rememberSaveable to persist tab selection across navigation (e.g., back from chat)
+    var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     var showProfileSwitcher by remember { mutableStateOf(false) }
     val profileSheetState = rememberModalBottomSheetState()
     val language = LocalLanguage.current
@@ -255,6 +257,7 @@ fun MainScreen(
                         SettingsTab(
                             currentChart = currentChart,
                             savedCharts = savedCharts,
+                            selectedChartId = selectedChartId,
                             onEditProfile = onNavigateToProfileEdit,
                             onDeleteProfile = { chartId ->
                                 viewModel.deleteChart(chartId)
@@ -287,6 +290,16 @@ fun MainScreen(
                     showProfileSwitcher = false
                 }
                 onAddNewChart()
+            },
+            onEditChart = { chart ->
+                scope.launch {
+                    profileSheetState.hide()
+                    showProfileSwitcher = false
+                }
+                onNavigateToProfileEdit(chart.id)
+            },
+            onDeleteChart = { chart ->
+                viewModel.deleteChart(chart.id)
             },
             onDismiss = { showProfileSwitcher = false },
             sheetState = profileSheetState

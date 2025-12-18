@@ -793,3 +793,355 @@ class ArgalaCalculatorWrapper {
         }
     }
 }
+
+// ============================================
+// PRASHNA (HORARY) WRAPPER
+// ============================================
+
+class PrashnaCalculatorWrapper(private val context: android.content.Context) {
+
+    data class PrashnaAnalysisResult(
+        val question: String,
+        val category: String,
+        val verdict: String,
+        val verdictScore: Int,
+        val confidence: Int,
+        val moonAnalysis: MoonAnalysis,
+        val lagnaAnalysis: LagnaAnalysis,
+        val houseAnalysis: HouseAnalysis,
+        val specialYogas: List<SpecialYoga>,
+        val omens: List<Omen>,
+        val timingPrediction: TimingPrediction,
+        val recommendations: List<String>,
+        val detailedInterpretation: String
+    )
+
+    data class MoonAnalysis(
+        val sign: String,
+        val nakshatra: String,
+        val house: Int,
+        val strength: String,
+        val isFavorable: Boolean,
+        val interpretation: String
+    )
+
+    data class LagnaAnalysis(
+        val sign: String,
+        val lord: String,
+        val lordHouse: Int,
+        val lordStrength: String,
+        val interpretation: String
+    )
+
+    data class HouseAnalysis(
+        val relevantHouse: Int,
+        val houseLord: String,
+        val houseLordPosition: Int,
+        val planetsInHouse: List<String>,
+        val aspects: List<String>,
+        val strength: String,
+        val interpretation: String
+    )
+
+    data class SpecialYoga(
+        val name: String,
+        val isFavorable: Boolean,
+        val effect: String
+    )
+
+    data class Omen(
+        val type: String,
+        val description: String,
+        val significance: String
+    )
+
+    data class TimingPrediction(
+        val shortTerm: String,
+        val mediumTerm: String,
+        val longTerm: String,
+        val favorableDays: List<String>,
+        val unfavorableDays: List<String>
+    )
+
+    fun analyzePrashna(
+        question: String,
+        category: String,
+        latitude: Double,
+        longitude: Double,
+        timezone: String
+    ): PrashnaAnalysisResult {
+        return try {
+            val calculator = PrashnaCalculator(context)
+            val prashnaCategory = when (category.uppercase()) {
+                "YES_NO" -> PrashnaCalculator.PrashnaCategory.YES_NO
+                "CAREER" -> PrashnaCalculator.PrashnaCategory.CAREER
+                "MARRIAGE" -> PrashnaCalculator.PrashnaCategory.MARRIAGE
+                "CHILDREN" -> PrashnaCalculator.PrashnaCategory.CHILDREN
+                "HEALTH" -> PrashnaCalculator.PrashnaCategory.HEALTH
+                "WEALTH" -> PrashnaCalculator.PrashnaCategory.WEALTH
+                "PROPERTY" -> PrashnaCalculator.PrashnaCategory.PROPERTY
+                "TRAVEL" -> PrashnaCalculator.PrashnaCategory.TRAVEL
+                "EDUCATION" -> PrashnaCalculator.PrashnaCategory.EDUCATION
+                "LEGAL" -> PrashnaCalculator.PrashnaCategory.LEGAL
+                "LOST_OBJECT" -> PrashnaCalculator.PrashnaCategory.LOST_OBJECT
+                "RELATIONSHIP" -> PrashnaCalculator.PrashnaCategory.RELATIONSHIP
+                "BUSINESS" -> PrashnaCalculator.PrashnaCategory.BUSINESS
+                "SPIRITUAL" -> PrashnaCalculator.PrashnaCategory.SPIRITUAL
+                else -> PrashnaCalculator.PrashnaCategory.GENERAL
+            }
+
+            val result = calculator.generatePrashnaChart(
+                question = question,
+                category = prashnaCategory,
+                latitude = latitude,
+                longitude = longitude,
+                timezone = timezone
+            )
+
+            // Convert verdict to score
+            val verdictScore = when (result.judgment.verdict) {
+                PrashnaCalculator.PrashnaVerdict.STRONGLY_YES -> 95
+                PrashnaCalculator.PrashnaVerdict.YES -> 80
+                PrashnaCalculator.PrashnaVerdict.LIKELY_YES -> 65
+                PrashnaCalculator.PrashnaVerdict.UNCERTAIN -> 50
+                PrashnaCalculator.PrashnaVerdict.LIKELY_NO -> 35
+                PrashnaCalculator.PrashnaVerdict.NO -> 20
+                PrashnaCalculator.PrashnaVerdict.STRONGLY_NO -> 5
+                PrashnaCalculator.PrashnaVerdict.TIMING_DEPENDENT -> 50
+            }
+
+            // Extract relevant house information from the map
+            val primaryRelevantHouse = result.houseAnalysis.relevantHouses.firstOrNull() ?: 1
+            val houseCondition = result.houseAnalysis.houseConditions[primaryRelevantHouse]
+            val houseLordPosition = result.houseAnalysis.houseLords[primaryRelevantHouse]
+            val planetsInRelevantHouse = result.houseAnalysis.planetsInHouses[primaryRelevantHouse] ?: emptyList()
+
+            // Determine if moon is favorable based on strength
+            val isMoonFavorable = result.moonAnalysis.moonStrength.score >= 3
+
+            PrashnaAnalysisResult(
+                question = question,
+                category = prashnaCategory.displayName,
+                verdict = result.judgment.verdict.displayName,
+                verdictScore = verdictScore,
+                confidence = result.confidence,
+                moonAnalysis = MoonAnalysis(
+                    sign = result.moonAnalysis.moonSign.displayName,
+                    nakshatra = result.moonAnalysis.nakshatra.displayName,
+                    house = result.moonAnalysis.moonHouse,
+                    strength = result.moonAnalysis.moonStrength.displayName,
+                    isFavorable = isMoonFavorable,
+                    interpretation = result.moonAnalysis.interpretation
+                ),
+                lagnaAnalysis = LagnaAnalysis(
+                    sign = result.lagnaAnalysis.lagnaSign.displayName,
+                    lord = result.lagnaAnalysis.lagnaLord.displayName,
+                    lordHouse = result.lagnaAnalysis.lagnaLordPosition.house,
+                    lordStrength = result.lagnaAnalysis.lagnaLordStrength.overallStrength.displayName,
+                    interpretation = result.lagnaAnalysis.interpretation
+                ),
+                houseAnalysis = HouseAnalysis(
+                    relevantHouse = primaryRelevantHouse,
+                    houseLord = houseCondition?.lord?.displayName ?: "Unknown",
+                    houseLordPosition = houseCondition?.lordPosition ?: 1,
+                    planetsInHouse = planetsInRelevantHouse.map { it.planet.displayName },
+                    aspects = houseCondition?.aspectsToHouse?.map { "${it.aspectingPlanet.displayName} aspects" } ?: emptyList(),
+                    strength = houseCondition?.condition?.displayName ?: "Unknown",
+                    interpretation = result.houseAnalysis.interpretation
+                ),
+                specialYogas = result.specialYogas.map { yoga ->
+                    SpecialYoga(
+                        name = yoga.name,
+                        isFavorable = yoga.isPositive,
+                        effect = yoga.interpretation
+                    )
+                },
+                omens = result.omens.map { omen ->
+                    Omen(
+                        type = omen.type.displayName,
+                        description = omen.description,
+                        significance = omen.indication
+                    )
+                },
+                timingPrediction = TimingPrediction(
+                    shortTerm = if (result.timingPrediction.willEventOccur) "Favorable" else "Uncertain",
+                    mediumTerm = result.timingPrediction.estimatedTime,
+                    longTerm = result.timingPrediction.explanation,
+                    favorableDays = emptyList(),
+                    unfavorableDays = emptyList()
+                ),
+                recommendations = result.recommendations,
+                detailedInterpretation = result.detailedInterpretation
+            )
+        } catch (e: Exception) {
+            // Return default result on error
+            PrashnaAnalysisResult(
+                question = question,
+                category = category,
+                verdict = "Unable to analyze",
+                verdictScore = 50,
+                confidence = 0,
+                moonAnalysis = MoonAnalysis(
+                    sign = "Unknown",
+                    nakshatra = "Unknown",
+                    house = 1,
+                    strength = "Unknown",
+                    isFavorable = false,
+                    interpretation = "Unable to analyze Moon position"
+                ),
+                lagnaAnalysis = LagnaAnalysis(
+                    sign = "Unknown",
+                    lord = "Unknown",
+                    lordHouse = 1,
+                    lordStrength = "Unknown",
+                    interpretation = "Unable to analyze Lagna"
+                ),
+                houseAnalysis = HouseAnalysis(
+                    relevantHouse = 1,
+                    houseLord = "Unknown",
+                    houseLordPosition = 1,
+                    planetsInHouse = emptyList(),
+                    aspects = emptyList(),
+                    strength = "Unknown",
+                    interpretation = "Unable to analyze relevant house"
+                ),
+                specialYogas = emptyList(),
+                omens = emptyList(),
+                timingPrediction = TimingPrediction(
+                    shortTerm = "Unable to predict",
+                    mediumTerm = "Unable to predict",
+                    longTerm = "Unable to predict",
+                    favorableDays = emptyList(),
+                    unfavorableDays = emptyList()
+                ),
+                recommendations = listOf("Please try again with a valid question"),
+                detailedInterpretation = "Error: ${e.message ?: "Unknown error occurred"}"
+            )
+        }
+    }
+}
+
+// ============================================
+// COMPATIBILITY DEEP DIVE WRAPPER
+// ============================================
+
+class CompatibilityDeepDiveWrapper {
+
+    data class DeepCompatibilityResult(
+        val totalScore: Double,
+        val maxScore: Double,
+        val rating: String,
+        val gunaAnalysis: List<GunaDetail>,
+        val manglikAnalysis: ManglikAnalysisResult,
+        val additionalFactors: AdditionalFactorsResult,
+        val specialConsiderations: List<String>,
+        val remedies: List<String>,
+        val summary: String,
+        val detailedAnalysis: String
+    )
+
+    data class GunaDetail(
+        val name: String,
+        val obtainedPoints: Double,
+        val maxPoints: Double,
+        val description: String,
+        val brideValue: String,
+        val groomValue: String,
+        val assessment: String
+    )
+
+    data class ManglikAnalysisResult(
+        val brideIsManglik: Boolean,
+        val groomIsManglik: Boolean,
+        val brideManglikStrength: String,
+        val groomManglikStrength: String,
+        val manglikCompatibility: String
+    )
+
+    data class AdditionalFactorsResult(
+        val vedhaPresent: Boolean,
+        val vedhaDetails: String,
+        val rajjuCompatible: Boolean,
+        val rajjuDetails: String,
+        val streeDeergha: Boolean,
+        val streeDeerghaCount: Int,
+        val mahendra: Boolean,
+        val mahendraDetails: String
+    )
+
+    fun analyzeDeepCompatibility(
+        chart1: VedicChart,
+        chart2: VedicChart
+    ): DeepCompatibilityResult {
+        return try {
+            val result = MatchmakingCalculator.calculateMatchmaking(chart1, chart2)
+
+            DeepCompatibilityResult(
+                totalScore = result.totalPoints,
+                maxScore = result.maxPoints,
+                rating = result.rating.displayName,
+                gunaAnalysis = result.gunaAnalyses.map { guna ->
+                    GunaDetail(
+                        name = guna.name,
+                        obtainedPoints = guna.obtainedPoints,
+                        maxPoints = guna.maxPoints,
+                        description = guna.description,
+                        brideValue = guna.brideValue,
+                        groomValue = guna.groomValue,
+                        assessment = guna.analysis
+                    )
+                },
+                manglikAnalysis = ManglikAnalysisResult(
+                    brideIsManglik = result.brideManglik.effectiveDosha != com.astro.storm.data.model.ManglikDosha.NONE,
+                    groomIsManglik = result.groomManglik.effectiveDosha != com.astro.storm.data.model.ManglikDosha.NONE,
+                    brideManglikStrength = result.brideManglik.effectiveDosha.displayName,
+                    groomManglikStrength = result.groomManglik.effectiveDosha.displayName,
+                    manglikCompatibility = result.manglikCompatibility
+                ),
+                additionalFactors = AdditionalFactorsResult(
+                    vedhaPresent = result.additionalFactors.vedhaPresent,
+                    vedhaDetails = result.additionalFactors.vedhaDetails,
+                    rajjuCompatible = result.additionalFactors.rajjuCompatible,
+                    rajjuDetails = result.additionalFactors.rajjuDetails,
+                    streeDeergha = result.additionalFactors.streeDeerghaSatisfied,
+                    streeDeerghaCount = result.additionalFactors.streeDeerghaDiff,
+                    mahendra = result.additionalFactors.mahendraSatisfied,
+                    mahendraDetails = result.additionalFactors.mahendraDetails
+                ),
+                specialConsiderations = result.specialConsiderations,
+                remedies = result.remedies,
+                summary = result.summary,
+                detailedAnalysis = result.detailedAnalysis
+            )
+        } catch (e: Exception) {
+            // Return default result on error
+            DeepCompatibilityResult(
+                totalScore = 0.0,
+                maxScore = 36.0,
+                rating = "Unable to calculate",
+                gunaAnalysis = emptyList(),
+                manglikAnalysis = ManglikAnalysisResult(
+                    brideIsManglik = false,
+                    groomIsManglik = false,
+                    brideManglikStrength = "Unknown",
+                    groomManglikStrength = "Unknown",
+                    manglikCompatibility = "Unable to analyze"
+                ),
+                additionalFactors = AdditionalFactorsResult(
+                    vedhaPresent = false,
+                    vedhaDetails = "Unable to analyze",
+                    rajjuCompatible = true,
+                    rajjuDetails = "Unable to analyze",
+                    streeDeergha = false,
+                    streeDeerghaCount = 0,
+                    mahendra = false,
+                    mahendraDetails = "Unable to analyze"
+                ),
+                specialConsiderations = emptyList(),
+                remedies = emptyList(),
+                summary = "Error analyzing compatibility",
+                detailedAnalysis = "Error: ${e.message ?: "Unknown error occurred"}"
+            )
+        }
+    }
+}

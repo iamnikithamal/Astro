@@ -1,14 +1,76 @@
 package com.astro.storm.data.ai.agent.tools
 
-import com.astro.storm.data.model.Planet
-import com.astro.storm.data.model.ZodiacSign
+import com.astro.storm.data.local.ChartEntity
+import com.astro.storm.data.model.BirthData
+import com.astro.storm.data.model.Gender
+import com.astro.storm.data.model.HouseSystem
 import com.astro.storm.data.model.Nakshatra
+import com.astro.storm.data.model.Planet
+import com.astro.storm.data.model.PlanetPosition
+import com.astro.storm.data.model.VedicChart
+import com.astro.storm.data.model.ZodiacSign
 // Note: Calculation wrappers are defined locally in this package
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+
+/**
+ * Extension function to convert ChartEntity to VedicChart
+ * Used by tools that need to access full chart data from the database
+ */
+fun ChartEntity.toVedicChart(): VedicChart {
+    val planetPositions = JSONArray(planetPositionsJson).let { array ->
+        (0 until array.length()).map { i ->
+            val obj = array.getJSONObject(i)
+            PlanetPosition(
+                planet = Planet.valueOf(obj.getString("planet")),
+                longitude = obj.getDouble("longitude"),
+                latitude = obj.getDouble("latitude"),
+                distance = obj.getDouble("distance"),
+                speed = obj.getDouble("speed"),
+                sign = ZodiacSign.valueOf(obj.getString("sign")),
+                degree = obj.getDouble("degree"),
+                minutes = obj.getDouble("minutes"),
+                seconds = obj.getDouble("seconds"),
+                isRetrograde = obj.getBoolean("isRetrograde"),
+                nakshatra = Nakshatra.valueOf(obj.getString("nakshatra")),
+                nakshatraPada = obj.getInt("nakshatraPada"),
+                house = obj.getInt("house")
+            )
+        }
+    }
+
+    val houseCuspsList = JSONArray(houseCuspsJson).let { array ->
+        (0 until array.length()).map { i ->
+            array.getDouble(i)
+        }
+    }
+
+    return VedicChart(
+        birthData = BirthData(
+            name = name,
+            dateTime = LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            latitude = latitude,
+            longitude = longitude,
+            timezone = timezone,
+            location = location,
+            gender = Gender.fromString(gender)
+        ),
+        julianDay = julianDay,
+        ayanamsa = ayanamsa,
+        ayanamsaName = ayanamsaName,
+        ascendant = ascendant,
+        midheaven = midheaven,
+        planetPositions = planetPositions,
+        houseCusps = houseCuspsList,
+        houseSystem = HouseSystem.valueOf(houseSystem),
+        calculationTime = createdAt
+    )
+}
 
 // ============================================
 // PROFILE & CHART ACCESS TOOLS
@@ -1585,3 +1647,314 @@ class GetArgalaTool : AstrologyTool {
 // Note: Compatibility analysis requires chart conversion.
 // The CompatibilityCalculator should load the partner chart directly from the database
 // and handle the conversion internally.
+
+// ============================================
+// PRASHNA (HORARY) ASTROLOGY TOOL
+// ============================================
+
+/**
+ * Tool to perform Prashna (Horary) astrology analysis.
+ * Generates a chart for the moment the question is asked and provides guidance.
+ */
+class GetPrashnaAnalysisTool : AstrologyTool {
+    override val name = "get_prashna_analysis"
+    override val description = "Perform Prashna (Horary) astrology analysis. Generates a chart for the current moment to answer a specific question. Provides verdict, confidence, and detailed interpretation based on Lagna, Moon, and relevant house analysis."
+    override val parameters = listOf(
+        ToolParameter(
+            name = "question",
+            description = "The specific question being asked (e.g., 'Will I get the job?', 'Should I invest in this property?')",
+            type = ParameterType.STRING,
+            required = true
+        ),
+        ToolParameter(
+            name = "category",
+            description = "Category of question: YES_NO, CAREER, MARRIAGE, CHILDREN, HEALTH, WEALTH, PROPERTY, TRAVEL, EDUCATION, LEGAL, LOST_OBJECT, RELATIONSHIP, BUSINESS, SPIRITUAL, GENERAL",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "GENERAL"
+        ),
+        ToolParameter(
+            name = "latitude",
+            description = "Latitude of the querent's location. If not provided, uses profile's birth location.",
+            type = ParameterType.NUMBER,
+            required = false
+        ),
+        ToolParameter(
+            name = "longitude",
+            description = "Longitude of the querent's location. If not provided, uses profile's birth location.",
+            type = ParameterType.NUMBER,
+            required = false
+        )
+    )
+
+    override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
+        val question = arguments.optString("question", "").trim()
+        if (question.isEmpty()) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = "Question is required for Prashna analysis",
+                summary = "Please provide a specific question"
+            )
+        }
+
+        val category = arguments.optString("category", "GENERAL").uppercase()
+
+        // Get location from arguments or from profile's birth data
+        val latitude = if (arguments.has("latitude")) {
+            arguments.getDouble("latitude")
+        } else {
+            context.currentChart?.birthData?.latitude ?: 28.6139 // Default to Delhi
+        }
+
+        val longitude = if (arguments.has("longitude")) {
+            arguments.getDouble("longitude")
+        } else {
+            context.currentChart?.birthData?.longitude ?: 77.2090 // Default to Delhi
+        }
+
+        val timezone = context.currentChart?.birthData?.timezone
+            ?: java.util.TimeZone.getDefault().id
+
+        try {
+            val calculator = PrashnaCalculatorWrapper(context.context)
+            val result = calculator.analyzePrashna(
+                question = question,
+                category = category,
+                latitude = latitude,
+                longitude = longitude,
+                timezone = timezone
+            )
+
+            val data = JSONObject().apply {
+                put("question", result.question)
+                put("category", result.category)
+                put("verdict", result.verdict)
+                put("verdictScore", result.verdictScore)
+                put("confidence", result.confidence)
+
+                put("moonAnalysis", JSONObject().apply {
+                    put("sign", result.moonAnalysis.sign)
+                    put("nakshatra", result.moonAnalysis.nakshatra)
+                    put("house", result.moonAnalysis.house)
+                    put("strength", result.moonAnalysis.strength)
+                    put("isFavorable", result.moonAnalysis.isFavorable)
+                    put("interpretation", result.moonAnalysis.interpretation)
+                })
+
+                put("lagnaAnalysis", JSONObject().apply {
+                    put("sign", result.lagnaAnalysis.sign)
+                    put("lord", result.lagnaAnalysis.lord)
+                    put("lordHouse", result.lagnaAnalysis.lordHouse)
+                    put("lordStrength", result.lagnaAnalysis.lordStrength)
+                    put("interpretation", result.lagnaAnalysis.interpretation)
+                })
+
+                put("houseAnalysis", JSONObject().apply {
+                    put("relevantHouse", result.houseAnalysis.relevantHouse)
+                    put("houseLord", result.houseAnalysis.houseLord)
+                    put("houseLordPosition", result.houseAnalysis.houseLordPosition)
+                    put("planetsInHouse", JSONArray(result.houseAnalysis.planetsInHouse))
+                    put("aspects", JSONArray(result.houseAnalysis.aspects))
+                    put("strength", result.houseAnalysis.strength)
+                    put("interpretation", result.houseAnalysis.interpretation)
+                })
+
+                put("specialYogas", JSONArray().apply {
+                    result.specialYogas.forEach { yoga ->
+                        put(JSONObject().apply {
+                            put("name", yoga.name)
+                            put("isFavorable", yoga.isFavorable)
+                            put("effect", yoga.effect)
+                        })
+                    }
+                })
+
+                put("omens", JSONArray().apply {
+                    result.omens.forEach { omen ->
+                        put(JSONObject().apply {
+                            put("type", omen.type)
+                            put("description", omen.description)
+                            put("significance", omen.significance)
+                        })
+                    }
+                })
+
+                put("timingPrediction", JSONObject().apply {
+                    put("shortTerm", result.timingPrediction.shortTerm)
+                    put("mediumTerm", result.timingPrediction.mediumTerm)
+                    put("longTerm", result.timingPrediction.longTerm)
+                    put("favorableDays", JSONArray(result.timingPrediction.favorableDays))
+                    put("unfavorableDays", JSONArray(result.timingPrediction.unfavorableDays))
+                })
+
+                put("recommendations", JSONArray(result.recommendations))
+                put("detailedInterpretation", result.detailedInterpretation)
+            }
+
+            return ToolExecutionResult(
+                success = true,
+                data = data,
+                summary = "Prashna analysis for '${question.take(50)}${if (question.length > 50) "..." else ""}': ${result.verdict} (${result.confidence}% confidence)"
+            )
+        } catch (e: Exception) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message,
+                summary = "Failed to perform Prashna analysis"
+            )
+        }
+    }
+}
+
+// ============================================
+// COMPATIBILITY DEEP DIVE TOOL
+// ============================================
+
+/**
+ * Tool for deep compatibility analysis between two profiles.
+ * Goes beyond basic Guna Milan to include Manglik, doshas, and remedies.
+ */
+class GetCompatibilityDeepDiveTool : AstrologyTool {
+    override val name = "get_compatibility_deep_dive"
+    override val description = "Perform comprehensive compatibility analysis (Kundli Milan) between two profiles. Includes all 8 Gunas, Manglik analysis, Vedha Dosha, Rajju Dosha, Stree Deergha, Mahendra, special considerations, and remedies."
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile1_id",
+            description = "ID of the first profile (typically bride). Use 'current' for active profile.",
+            type = ParameterType.STRING,
+            required = true
+        ),
+        ToolParameter(
+            name = "profile2_id",
+            description = "ID of the second profile (typically groom).",
+            type = ParameterType.STRING,
+            required = true
+        )
+    )
+
+    override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
+        val profile1Id = arguments.optString("profile1_id", "current")
+        val profile2Id = arguments.optString("profile2_id", "")
+
+        if (profile2Id.isEmpty()) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = "Second profile ID is required",
+                summary = "Please provide both profile IDs for compatibility analysis"
+            )
+        }
+
+        // Get profiles
+        val profile1 = if (profile1Id == "current") {
+            context.currentProfile
+        } else {
+            context.allProfiles.find { it.id.toString() == profile1Id }
+        }
+
+        val profile2 = context.allProfiles.find { it.id.toString() == profile2Id }
+
+        if (profile1 == null) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = "First profile not found",
+                summary = "Profile with ID '$profile1Id' not found"
+            )
+        }
+
+        if (profile2 == null) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = "Second profile not found",
+                summary = "Profile with ID '$profile2Id' not found"
+            )
+        }
+
+        try {
+            // Load charts from database
+            val chartDao = context.database.chartDao()
+            val chartEntity1 = chartDao.getChartById(profile1.id)
+            val chartEntity2 = chartDao.getChartById(profile2.id)
+
+            if (chartEntity1 == null || chartEntity2 == null) {
+                return ToolExecutionResult(
+                    success = false,
+                    data = null,
+                    error = "Chart data not found for one or both profiles",
+                    summary = "Unable to load chart data"
+                )
+            }
+
+            val chart1 = chartEntity1.toVedicChart()
+            val chart2 = chartEntity2.toVedicChart()
+
+            val wrapper = CompatibilityDeepDiveWrapper()
+            val result = wrapper.analyzeDeepCompatibility(chart1, chart2)
+
+            val data = JSONObject().apply {
+                put("profile1Name", profile1.name)
+                put("profile2Name", profile2.name)
+                put("totalScore", result.totalScore)
+                put("maxScore", result.maxScore)
+                put("percentage", (result.totalScore / result.maxScore * 100).toInt())
+                put("rating", result.rating)
+
+                put("gunaAnalysis", JSONArray().apply {
+                    result.gunaAnalysis.forEach { guna ->
+                        put(JSONObject().apply {
+                            put("name", guna.name)
+                            put("obtainedPoints", guna.obtainedPoints)
+                            put("maxPoints", guna.maxPoints)
+                            put("description", guna.description)
+                            put("brideValue", guna.brideValue)
+                            put("groomValue", guna.groomValue)
+                            put("assessment", guna.assessment)
+                        })
+                    }
+                })
+
+                put("manglikAnalysis", JSONObject().apply {
+                    put("brideIsManglik", result.manglikAnalysis.brideIsManglik)
+                    put("groomIsManglik", result.manglikAnalysis.groomIsManglik)
+                    put("brideManglikStrength", result.manglikAnalysis.brideManglikStrength)
+                    put("groomManglikStrength", result.manglikAnalysis.groomManglikStrength)
+                    put("manglikCompatibility", result.manglikAnalysis.manglikCompatibility)
+                })
+
+                put("additionalFactors", JSONObject().apply {
+                    put("vedhaPresent", result.additionalFactors.vedhaPresent)
+                    put("vedhaDetails", result.additionalFactors.vedhaDetails)
+                    put("rajjuCompatible", result.additionalFactors.rajjuCompatible)
+                    put("rajjuDetails", result.additionalFactors.rajjuDetails)
+                    put("streeDeergha", result.additionalFactors.streeDeergha)
+                    put("streeDeerghaCount", result.additionalFactors.streeDeerghaCount)
+                    put("mahendra", result.additionalFactors.mahendra)
+                    put("mahendraDetails", result.additionalFactors.mahendraDetails)
+                })
+
+                put("specialConsiderations", JSONArray(result.specialConsiderations))
+                put("remedies", JSONArray(result.remedies))
+
+                put("summary", result.summary)
+                put("detailedAnalysis", result.detailedAnalysis)
+            }
+
+            return ToolExecutionResult(
+                success = true,
+                data = data,
+                summary = "Compatibility analysis: ${profile1.name} & ${profile2.name} - ${result.totalScore}/${result.maxScore} (${result.rating})"
+            )
+        } catch (e: Exception) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message,
+                summary = "Failed to perform compatibility analysis"
+            )
+        }
+    }
+}

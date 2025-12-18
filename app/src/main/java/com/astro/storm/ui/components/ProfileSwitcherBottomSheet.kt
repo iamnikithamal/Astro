@@ -36,21 +36,30 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,9 +80,7 @@ import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.theme.AppTheme
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 private val SpringSpec = spring<Color>(stiffness = Spring.StiffnessMedium)
 private val SpringSpecDp = spring<Dp>(stiffness = Spring.StiffnessMedium)
@@ -95,11 +102,16 @@ fun ProfileSwitcherBottomSheet(
     selectedChartId: Long?,
     onChartSelected: (SavedChart) -> Unit,
     onAddNewChart: () -> Unit,
+    onEditChart: (SavedChart) -> Unit = {},
+    onDeleteChart: (SavedChart) -> Unit = {},
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val colors = AppTheme.current
+
+    // State for delete confirmation dialog
+    var chartToDelete by remember { mutableStateOf<SavedChart?>(null) }
 
     // Deduplicate charts by ID to prevent duplicate entries
     val uniqueCharts = remember(savedCharts) {
@@ -137,6 +149,14 @@ fun ProfileSwitcherBottomSheet(
                     onChartSelected = { chart ->
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onChartSelected(chart)
+                    },
+                    onEditChart = { chart ->
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onEditChart(chart)
+                    },
+                    onDeleteChart = { chart ->
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        chartToDelete = chart
                     }
                 )
             }
@@ -157,6 +177,66 @@ fun ProfileSwitcherBottomSheet(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+
+    // Delete confirmation dialog
+    chartToDelete?.let { chart ->
+        DeleteChartConfirmationDialog(
+            chartName = chart.name,
+            onConfirm = {
+                onDeleteChart(chart)
+                chartToDelete = null
+            },
+            onDismiss = { chartToDelete = null }
+        )
+    }
+}
+
+/**
+ * Confirmation dialog for deleting a birth chart/profile
+ */
+@Composable
+private fun DeleteChartConfirmationDialog(
+    chartName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val colors = AppTheme.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.CardBackground,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text(
+                text = stringResource(StringKey.PROFILE_DELETE_TITLE),
+                color = colors.TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(StringKey.PROFILE_DELETE_MESSAGE).replace("{name}", chartName),
+                color = colors.TextSecondary
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(StringKey.BTN_DELETE),
+                    color = colors.ErrorColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(StringKey.BTN_CANCEL),
+                    color = colors.TextSecondary
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -229,7 +309,9 @@ private fun ProfileSwitcherEmptyState() {
 private fun ProfileChartsList(
     charts: List<SavedChart>,
     selectedChartId: Long?,
-    onChartSelected: (SavedChart) -> Unit
+    onChartSelected: (SavedChart) -> Unit,
+    onEditChart: (SavedChart) -> Unit,
+    onDeleteChart: (SavedChart) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -244,7 +326,9 @@ private fun ProfileChartsList(
             ProfileItem(
                 chart = chart,
                 isSelected = chart.id == selectedChartId,
-                onClick = { onChartSelected(chart) }
+                onClick = { onChartSelected(chart) },
+                onEdit = { onEditChart(chart) },
+                onDelete = { onDeleteChart(chart) }
             )
         }
     }
@@ -254,7 +338,9 @@ private fun ProfileChartsList(
 private fun ProfileItem(
     chart: SavedChart,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) {
@@ -281,6 +367,9 @@ private fun ProfileItem(
         if (isSelected) append(", $selectedText")
     }
 
+    // State for showing action menu
+    var showActionMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -296,7 +385,7 @@ private fun ProfileItem(
                 selected = isSelected
                 role = Role.Button
             }
-            .padding(horizontal = 24.dp, vertical = 14.dp),
+            .padding(start = 24.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ProfileAvatar(
@@ -329,6 +418,7 @@ private fun ProfileItem(
             )
         }
 
+        // Selected checkmark
         AnimatedVisibility(
             visible = isSelected,
             enter = fadeIn(spring(stiffness = Spring.StiffnessMedium)) +
@@ -350,6 +440,32 @@ private fun ProfileItem(
                     modifier = Modifier.size(14.dp)
                 )
             }
+        }
+
+        // Edit button
+        IconButton(
+            onClick = onEdit,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = stringResource(StringKey.BTN_EDIT),
+                tint = AppTheme.TextMuted,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        // Delete button
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = stringResource(StringKey.BTN_DELETE),
+                tint = AppTheme.ErrorColor.copy(alpha = 0.7f),
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
@@ -576,13 +692,7 @@ private fun extractInitials(name: String): String {
 
 private fun formatChartDetails(chart: SavedChart, fallback: String): String {
     val formattedDate = try {
-        val dateTime = LocalDateTime.parse(
-            chart.dateTime,
-            DateTimeFormatter.ISO_LOCAL_DATE_TIME
-        )
-        dateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
-    } catch (_: DateTimeParseException) {
-        null
+        chart.dateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
     } catch (_: Exception) {
         null
     }

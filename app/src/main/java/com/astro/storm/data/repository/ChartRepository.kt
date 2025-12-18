@@ -33,6 +33,14 @@ class ChartRepository(private val chartDao: ChartDao) {
         chartDao.deleteChartById(id)
     }
 
+    /**
+     * Update an existing chart with new data
+     */
+    suspend fun updateChart(id: Long, chart: VedicChart) {
+        val entity = chart.toEntity().copy(id = id)
+        chartDao.updateChart(entity)
+    }
+
     fun searchCharts(query: String): Flow<List<SavedChart>> {
         return chartDao.searchCharts(query).map { entities ->
             entities.map { it.toSavedChart() }
@@ -141,20 +149,29 @@ class ChartRepository(private val chartDao: ChartDao) {
         return SavedChart(
             id = id,
             name = name,
-            dateTime = dateTime,
+            dateTime = LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
             location = location,
-            createdAt = createdAt
+            createdAt = createdAt,
+            latitude = latitude,
+            longitude = longitude,
+            timezone = timezone,
+            gender = Gender.fromString(gender)
         )
     }
 }
 
 /**
- * Simplified chart data for list display
+ * Simplified chart data for list display and editing
  */
 data class SavedChart(
     val id: Long,
     val name: String,
-    val dateTime: String,
+    val dateTime: LocalDateTime,
     val location: String,
-    val createdAt: Long
+    val createdAt: Long,
+    // Fields needed for editing
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val timezone: String = "UTC",
+    val gender: Gender = Gender.OTHER
 )

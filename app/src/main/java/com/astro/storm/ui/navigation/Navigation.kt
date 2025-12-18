@@ -25,7 +25,6 @@ import com.astro.storm.ui.screen.PanchangaScreen
 import com.astro.storm.ui.screen.PlanetsScreen
 import com.astro.storm.ui.screen.PrashnaScreen
 import com.astro.storm.ui.screen.PredictionsScreen
-import com.astro.storm.ui.screen.ProfileEditScreen
 import com.astro.storm.ui.screen.RemediesScreen
 import com.astro.storm.ui.screen.ShadbalaScreen
 import com.astro.storm.ui.screen.ShodashvargaScreen
@@ -48,6 +47,7 @@ import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
 import com.astro.storm.ui.screen.main.MainScreen
 import com.astro.storm.ui.theme.AppTheme
+import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChartViewModel
 import com.astro.storm.ui.viewmodel.ChatViewModel
 import com.astro.storm.data.ai.provider.AiProviderRegistry
@@ -272,10 +272,8 @@ fun AstroStormNavigation(
                         navController.navigate(Screen.Panchanga.createRoute(chartId))
                     }
                 },
-                onNavigateToProfileEdit = {
-                    selectedChartId?.let { chartId ->
-                        navController.navigate(Screen.ProfileEdit.createRoute(chartId))
-                    }
+                onNavigateToProfileEdit = { chartId ->
+                    navController.navigate(Screen.ProfileEdit.createRoute(chartId))
                 },
                 onNavigateToSynastry = {
                     navController.navigate(Screen.Synastry.route)
@@ -647,7 +645,7 @@ fun AstroStormNavigation(
             )
         }
 
-        // Profile Edit screen
+        // Profile Edit screen - uses ChartInputScreen in edit mode
         composable(
             route = Screen.ProfileEdit.route,
             arguments = listOf(navArgument("chartId") { type = NavType.LongType })
@@ -660,11 +658,11 @@ fun AstroStormNavigation(
                 }
             }
 
-            ProfileEditScreen(
-                chart = currentChart,
+            ChartInputScreen(
                 viewModel = viewModel,
-                onBack = { navController.popBackStack() },
-                onSaveComplete = { navController.popBackStack() }
+                editChartId = chartId,
+                onNavigateBack = { navController.popBackStack() },
+                onChartCalculated = { navController.popBackStack() }
             )
         }
 
@@ -1012,6 +1010,7 @@ fun AstroStormNavigation(
             val streamingContent by chatViewModel.streamingContent.collectAsState()
             val streamingReasoning by chatViewModel.streamingReasoning.collectAsState()
             val toolsInProgress by chatViewModel.toolsInProgress.collectAsState()
+            val aiStatus by chatViewModel.aiStatus.collectAsState()
             val thinkingEnabled by chatViewModel.thinkingEnabled.collectAsState()
             val webSearchEnabled by chatViewModel.webSearchEnabled.collectAsState()
 
@@ -1040,6 +1039,7 @@ fun AstroStormNavigation(
                 streamingReasoning = streamingReasoning,
                 isStreaming = isStreaming,
                 toolsInProgress = toolsInProgress,
+                aiStatus = aiStatus,
                 uiState = uiState,
                 selectedModel = selectedModel,
                 availableModels = availableModels,

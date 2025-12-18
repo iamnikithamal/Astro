@@ -50,7 +50,10 @@ import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.SavedChart
+import com.astro.storm.ui.components.ContentCleaner
+import com.astro.storm.ui.components.MarkdownText
 import com.astro.storm.ui.theme.AppTheme
+import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChatUiState
 import com.astro.storm.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.delay
@@ -119,7 +122,6 @@ private fun ConversationsListScreen(
 ) {
     val colors = AppTheme.current
     val language = LocalLanguage.current
-    var showModelSelector by remember { mutableStateOf(false) }
     var conversationToDelete by remember { mutableStateOf<ChatConversation?>(null) }
 
     Box(
@@ -130,12 +132,7 @@ private fun ConversationsListScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Model selector row
-            ModelSelectorRow(
-                selectedModel = selectedModel,
-                onClick = { showModelSelector = true },
-                onNavigateToModels = onNavigateToModels
-            )
+            // Model selector row removed - users can select model in individual chat screens
 
             if (conversations.isEmpty()) {
                 // Empty state
@@ -182,23 +179,6 @@ private fun ConversationsListScreen(
                 )
             }
         }
-    }
-
-    // Model selector bottom sheet
-    if (showModelSelector) {
-        ModelSelectorBottomSheet(
-            models = availableModels,
-            selectedModel = selectedModel,
-            onSelectModel = {
-                onSelectModel(it)
-                showModelSelector = false
-            },
-            onDismiss = { showModelSelector = false },
-            onNavigateToModels = {
-                showModelSelector = false
-                onNavigateToModels()
-            }
-        )
     }
 
     // Delete confirmation dialog
@@ -484,6 +464,7 @@ fun ChatScreen(
     streamingReasoning: String,
     isStreaming: Boolean,
     toolsInProgress: List<String>,
+    aiStatus: AiStatus,
     uiState: ChatUiState,
     selectedModel: AiModel?,
     availableModels: List<AiModel>,
@@ -508,9 +489,9 @@ fun ChatScreen(
     var showModelOptions by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    // Auto-scroll to bottom on new messages
-    LaunchedEffect(messages.size, streamingContent) {
-        if (messages.isNotEmpty() || streamingContent.isNotEmpty()) {
+    // Auto-scroll to bottom on new messages or when streaming status changes
+    LaunchedEffect(messages.size, streamingContent, aiStatus) {
+        if (messages.isNotEmpty() || isStreaming) {
             listState.animateScrollToItem(
                 (messages.size + if (isStreaming) 1 else 0).coerceAtLeast(0)
             )
@@ -585,6 +566,16 @@ fun ChatScreen(
                 .padding(paddingValues)
         ) {
             // Messages list
+            // Filter out streaming messages from the database list to avoid duplicates
+            // The streaming message is rendered separately below
+            val displayMessages = remember(messages, isStreaming) {
+                if (isStreaming) {
+                    messages.filter { !it.isStreaming }
+                } else {
+                    messages
+                }
+            }
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -594,47 +585,61 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Welcome message if empty
-                if (messages.isEmpty() && !isStreaming) {
+                if (displayMessages.isEmpty() && !isStreaming) {
                     item {
-                        WelcomeMessage()
+                        WelcomeMessage(
+                            onSuggestionClick = { suggestion ->
+                                messageText = suggestion
+                            }
+                        )
                     }
                 }
 
-                // Messages
+                // Messages (excluding streaming ones to avoid duplicates)
                 items(
-                    items = messages,
+                    items = displayMessages,
                     key = { it.id }
                 ) { message ->
                     MessageBubble(
                         message = message,
-                        onRegenerate = if (message.role == MessageRole.ASSISTANT && message == messages.lastOrNull()) {
+                        onRegenerate = if (message.role == MessageRole.ASSISTANT && message == displayMessages.lastOrNull { it.role == MessageRole.ASSISTANT } && !isStreaming) {
                             onRegenerateResponse
                         } else null
                     )
                 }
 
-                // Streaming message
-                if (isStreaming && streamingContent.isNotEmpty()) {
-                    item {
-                        StreamingMessageBubble(
-                            content = streamingContent,
-                            reasoningContent = streamingReasoning,
-                            toolsInProgress = toolsInProgress
-                        )
+                // Streaming message or AI status indicator
+                if (isStreaming) {
+                    item(key = "streaming_message") {
+                        when {
+                            // Show content bubble if we have content
+                            streamingContent.isNotEmpty() -> {
+                                StreamingMessageBubble(
+                                    content = streamingContent,
+                                    reasoningContent = streamingReasoning,
+                                    aiStatus = aiStatus
+                                )
+                            }
+                            // Show reasoning bubble if we only have reasoning
+                            streamingReasoning.isNotEmpty() -> {
+                                StreamingMessageBubble(
+                                    content = "",
+                                    reasoningContent = streamingReasoning,
+                                    aiStatus = aiStatus
+                                )
+                            }
+                            // Show AI status indicator based on current status
+                            else -> {
+                                AiStatusIndicator(aiStatus = aiStatus)
+                            }
+                        }
                     }
                 }
 
-                // Tools in progress indicator
-                if (isStreaming && toolsInProgress.isNotEmpty() && streamingContent.isEmpty()) {
-                    item {
-                        ToolsProgressIndicator(tools = toolsInProgress)
-                    }
-                }
-
-                // Loading indicator
-                if (uiState == ChatUiState.Sending) {
-                    item {
-                        LoadingIndicator()
+                // Sending indicator (before streaming starts)
+                if (uiState == ChatUiState.Sending && !isStreaming) {
+                    item(key = "sending_indicator") {
+                        AiStatusIndicator(aiStatus = AiStatus.Thinking)
                     }
                 }
             }
@@ -841,7 +846,9 @@ fun ChatScreen(
 }
 
 @Composable
-private fun WelcomeMessage() {
+private fun WelcomeMessage(
+    onSuggestionClick: (String) -> Unit = {}
+) {
     val colors = AppTheme.current
 
     Column(
@@ -893,24 +900,36 @@ private fun WelcomeMessage() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Suggestion chips
+        // Suggestion chips - clickable to populate input field
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SuggestionChip(text = "What's my current dasha period?")
-            SuggestionChip(text = "Analyze my birth chart")
-            SuggestionChip(text = "What yogas are present in my chart?")
+            SuggestionChip(
+                text = "What's my current dasha period?",
+                onClick = { onSuggestionClick("What's my current dasha period?") }
+            )
+            SuggestionChip(
+                text = "Analyze my birth chart",
+                onClick = { onSuggestionClick("Analyze my birth chart") }
+            )
+            SuggestionChip(
+                text = "What yogas are present in my chart?",
+                onClick = { onSuggestionClick("What yogas are present in my chart?") }
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SuggestionChip(text: String) {
+private fun SuggestionChip(
+    text: String,
+    onClick: () -> Unit = {}
+) {
     val colors = AppTheme.current
 
     SuggestionChip(
-        onClick = { /* TODO: Implement suggestion click */ },
+        onClick = onClick,
         label = {
             Text(
                 text = text,
@@ -934,6 +953,14 @@ private fun MessageBubble(
     val isUser = message.role == MessageRole.USER
     var showReasoning by remember { mutableStateOf(false) }
 
+    // Clean message content from tool call artifacts
+    val cleanedContent = remember(message.content) {
+        if (isUser) message.content else ContentCleaner.cleanForDisplay(message.content)
+    }
+    val cleanedReasoning = remember(message.reasoningContent) {
+        message.reasoningContent?.let { ContentCleaner.cleanReasoning(it) }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
@@ -950,7 +977,7 @@ private fun MessageBubble(
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 // Reasoning toggle at TOP for assistant messages
-                if (!isUser && !message.reasoningContent.isNullOrBlank()) {
+                if (!isUser && !cleanedReasoning.isNullOrBlank()) {
                     Surface(
                         onClick = { showReasoning = !showReasoning },
                         color = colors.ChipBackground.copy(alpha = 0.5f),
@@ -990,7 +1017,7 @@ private fun MessageBubble(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = message.reasoningContent ?: "",
+                                text = cleanedReasoning ?: "",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.TextMuted,
                                 modifier = Modifier.padding(8.dp)
@@ -1017,12 +1044,24 @@ private fun MessageBubble(
                             color = colors.ErrorColor
                         )
                     }
-                } else {
-                    Text(
-                        text = message.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (isUser) colors.ScreenBackground else colors.TextPrimary
-                    )
+                } else if (cleanedContent.isNotEmpty()) {
+                    // Use Markdown rendering for assistant messages, plain text for user
+                    if (isUser) {
+                        Text(
+                            text = cleanedContent,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.ScreenBackground
+                        )
+                    } else {
+                        MarkdownText(
+                            markdown = cleanedContent,
+                            modifier = Modifier.fillMaxWidth(),
+                            textColor = colors.TextPrimary,
+                            linkColor = colors.AccentPrimary,
+                            textSize = 14f,
+                            cleanContent = false // Already cleaned above
+                        )
+                    }
                 }
 
                 // Tools used
@@ -1073,10 +1112,20 @@ private fun MessageBubble(
 private fun StreamingMessageBubble(
     content: String,
     reasoningContent: String,
-    toolsInProgress: List<String>
+    aiStatus: AiStatus
 ) {
     val colors = AppTheme.current
     var showReasoning by remember { mutableStateOf(false) }
+
+    // Clean content from tool call artifacts during streaming
+    val cleanedContent = remember(content) {
+        ContentCleaner.cleanForDisplay(content)
+    }
+    val cleanedReasoning = remember(reasoningContent) {
+        if (reasoningContent.isNotBlank()) {
+            ContentCleaner.cleanReasoning(reasoningContent)
+        } else ""
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1094,7 +1143,7 @@ private fun StreamingMessageBubble(
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 // Reasoning toggle at TOP
-                if (reasoningContent.isNotBlank()) {
+                if (cleanedReasoning.isNotBlank()) {
                     Surface(
                         onClick = { showReasoning = !showReasoning },
                         color = colors.ChipBackground.copy(alpha = 0.5f),
@@ -1134,7 +1183,7 @@ private fun StreamingMessageBubble(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = reasoningContent,
+                                text = cleanedReasoning,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.TextMuted,
                                 modifier = Modifier.padding(8.dp)
@@ -1145,43 +1194,50 @@ private fun StreamingMessageBubble(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Message content
-                if (content.isNotEmpty()) {
-                    Text(
-                        text = content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.TextPrimary
+                // Message content with Markdown rendering
+                if (cleanedContent.isNotEmpty()) {
+                    MarkdownText(
+                        markdown = cleanedContent,
+                        modifier = Modifier.fillMaxWidth(),
+                        textColor = colors.TextPrimary,
+                        linkColor = colors.AccentPrimary,
+                        textSize = 14f,
+                        cleanContent = false // Already cleaned above
                     )
                 }
 
-                // Typing indicator
+                // Typing indicator with status text
+                Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(top = 4.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    repeat(3) { index ->
-                        val infiniteTransition = rememberInfiniteTransition(label = "typing_animation_$index")
-                        val alpha by infiniteTransition.animateFloat(
-                            initialValue = 0.3f,
-                            targetValue = 1f,
-                            animationSpec = infiniteRepeatable(
-                                animation = keyframes {
-                                    durationMillis = 1000
-                                    0.3f at 0
-                                    1f at 300
-                                    0.3f at 600
-                                },
-                                repeatMode = RepeatMode.Restart,
-                                initialStartOffset = StartOffset(index * 150)
-                            ),
-                            label = "typing_dot_$index"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(colors.TextMuted.copy(alpha = alpha))
-                        )
+                    // Animated dots
+                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        repeat(3) { index ->
+                            val infiniteTransition = rememberInfiniteTransition(label = "typing_animation_$index")
+                            val alpha by infiniteTransition.animateFloat(
+                                initialValue = 0.3f,
+                                targetValue = 1f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = keyframes {
+                                        durationMillis = 1000
+                                        0.3f at 0
+                                        1f at 300
+                                        0.3f at 600
+                                    },
+                                    repeatMode = RepeatMode.Restart,
+                                    initialStartOffset = StartOffset(index * 150)
+                                ),
+                                label = "typing_dot_$index"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(colors.TextMuted.copy(alpha = alpha))
+                            )
+                        }
                     }
                 }
             }
@@ -1189,81 +1245,84 @@ private fun StreamingMessageBubble(
     }
 }
 
+/**
+ * Displays the current AI processing status with appropriate icons and messages.
+ * Shows different states: thinking, reasoning, calling tools, typing, etc.
+ */
 @Composable
-private fun ToolsProgressIndicator(tools: List<String>) {
+private fun AiStatusIndicator(aiStatus: AiStatus) {
     val colors = AppTheme.current
 
-    Surface(
-        color = colors.CardBackground,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.widthIn(max = 280.dp)
+    // Determine status text and icon based on current AI status
+    val (statusText, statusIcon) = when (aiStatus) {
+        is AiStatus.Idle -> return // Don't show anything for idle
+        is AiStatus.Thinking -> "Stormy is thinking..." to Icons.Outlined.Psychology
+        is AiStatus.Reasoning -> "Stormy is reasoning..." to Icons.Outlined.Lightbulb
+        is AiStatus.CallingTool -> "Calling ${formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
+        is AiStatus.ExecutingTools -> "Using tools: ${aiStatus.tools.joinToString(", ") { formatToolName(it) }}" to Icons.Outlined.Build
+        is AiStatus.Typing -> "Stormy is typing..." to Icons.Outlined.Edit
+        is AiStatus.Complete -> return // Don't show anything for complete
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            color = colors.CardBackground,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-                color = colors.AccentPrimary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = "Using tools...",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.TextPrimary
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Animated loading indicator
+                Box(
+                    modifier = Modifier.size(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = colors.AccentPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // Status icon
+                Icon(
+                    imageVector = statusIcon,
+                    contentDescription = null,
+                    tint = colors.AccentPrimary,
+                    modifier = Modifier.size(16.dp)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Status text
                 Text(
-                    text = tools.joinToString(", "),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.TextMuted
+                    text = statusText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.TextSecondary
                 )
             }
         }
     }
 }
 
-@Composable
-private fun LoadingIndicator() {
-    val colors = AppTheme.current
-
-    Surface(
-        color = colors.CardBackground,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.widthIn(max = 100.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            repeat(3) { index ->
-                val infiniteTransition = rememberInfiniteTransition(label = "loading_animation_$index")
-                val alpha by infiniteTransition.animateFloat(
-                    initialValue = 0.3f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = keyframes {
-                            durationMillis = 1000
-                            0.3f at 0
-                            1f at 300
-                            0.3f at 600
-                        },
-                        repeatMode = RepeatMode.Restart,
-                        initialStartOffset = StartOffset(index * 150)
-                    ),
-                    label = "loading_dot_$index"
-                )
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(colors.TextMuted.copy(alpha = alpha))
-                )
-            }
+/**
+ * Format tool name for display (e.g., "get_planet_positions" -> "Planet Positions")
+ */
+private fun formatToolName(toolName: String): String {
+    return toolName
+        .removePrefix("get_")
+        .replace("_", " ")
+        .split(" ")
+        .joinToString(" ") { word ->
+            word.replaceFirstChar { it.uppercase() }
         }
-    }
 }
 
 @Composable
@@ -1301,11 +1360,11 @@ private fun ChatInputArea(
                     Text(
                         text = "Ask Stormy...",
                         color = colors.TextSubtle,
-                        fontSize = 16.sp
+                        fontSize = 14.sp
                     )
                 },
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     color = colors.TextPrimary
                 ),
                 colors = OutlinedTextFieldDefaults.colors(

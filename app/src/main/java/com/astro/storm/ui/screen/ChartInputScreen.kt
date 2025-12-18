@@ -55,14 +55,24 @@ import com.astro.storm.ui.theme.LocalAppThemeColors
 @Composable
 fun ChartInputScreen(
     viewModel: ChartViewModel,
+    editChartId: Long? = null,
     onNavigateBack: () -> Unit,
     onChartCalculated: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val savedCharts by viewModel.savedCharts.collectAsState()
     val focusManager = LocalFocusManager.current
     val language = LocalLanguage.current
     val dateSystem = LocalDateSystem.current
     val colors = LocalAppThemeColors.current
+
+    // Determine if we're in edit mode
+    val isEditMode = editChartId != null
+
+    // Find the chart to edit (if in edit mode)
+    val chartToEdit = remember(editChartId, savedCharts) {
+        editChartId?.let { id -> savedCharts.find { it.id == id } }
+    }
 
     var name by rememberSaveable { mutableStateOf("") }
     var selectedGender by rememberSaveable { mutableStateOf(Gender.OTHER) }
@@ -75,6 +85,9 @@ fun ChartInputScreen(
     var latitude by rememberSaveable { mutableStateOf("") }
     var longitude by rememberSaveable { mutableStateOf("") }
     var selectedTimezone by rememberSaveable { mutableStateOf(ZoneId.systemDefault().id) }
+
+    // Track if we've initialized from edit data (to prevent re-initialization)
+    var hasInitializedFromEdit by rememberSaveable { mutableStateOf(false) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showBSDatePicker by remember { mutableStateOf(false) }
@@ -100,9 +113,29 @@ fun ChartInputScreen(
     val latitudeFocusRequester = remember { FocusRequester() }
     val longitudeFocusRequester = remember { FocusRequester() }
 
+    // Pre-populate fields when editing an existing chart
+    LaunchedEffect(chartToEdit) {
+        if (chartToEdit != null && !hasInitializedFromEdit) {
+            name = chartToEdit.name
+            selectedGender = chartToEdit.gender
+            locationLabel = chartToEdit.location
+            selectedDateMillis = chartToEdit.dateTime.toLocalDate()
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+            selectedHour = chartToEdit.dateTime.hour
+            selectedMinute = chartToEdit.dateTime.minute
+            latitude = String.format(java.util.Locale.US, "%.6f", chartToEdit.latitude)
+            longitude = String.format(java.util.Locale.US, "%.6f", chartToEdit.longitude)
+            selectedTimezone = chartToEdit.timezone
+            hasInitializedFromEdit = true
+        }
+    }
 
     LaunchedEffect(Unit) {
-        viewModel.resetState()
+        if (!isEditMode) {
+            viewModel.resetState()
+        }
     }
 
     LaunchedEffect(uiState) {
@@ -147,7 +180,10 @@ fun ChartInputScreen(
                 .padding(horizontal = 24.dp)
                 .padding(top = 16.dp, bottom = 32.dp)
         ) {
-            ChartInputHeader(onNavigateBack = onNavigateBack)
+            ChartInputHeader(
+                onNavigateBack = onNavigateBack,
+                isEditMode = isEditMode
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -212,6 +248,7 @@ fun ChartInputScreen(
 
             GenerateButton(
                 isCalculating = isCalculating,
+                isEditMode = isEditMode,
                 onClick = {
                     val validationKey = validateInputLocalized(latitude, longitude)
                     if (validationKey != null) {
@@ -236,7 +273,13 @@ fun ChartInputScreen(
                     )
 
                     chartCalculationInitiated = true
-                    viewModel.calculateChart(birthData)
+                    if (isEditMode && editChartId != null) {
+                        // Update existing chart
+                        viewModel.calculateChartForUpdate(birthData, editChartId)
+                    } else {
+                        // Create new chart
+                        viewModel.calculateChart(birthData)
+                    }
                 }
             )
         }
@@ -360,7 +403,10 @@ private fun validateInputLocalized(latitude: String, longitude: String): StringK
 }
 
 @Composable
-private fun ChartInputHeader(onNavigateBack: () -> Unit) {
+private fun ChartInputHeader(
+    onNavigateBack: () -> Unit,
+    isEditMode: Boolean = false
+) {
     val colors = LocalAppThemeColors.current
     val goBackText = stringResource(StringKey.BTN_BACK)
     Row(
@@ -382,7 +428,7 @@ private fun ChartInputHeader(onNavigateBack: () -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Text(
-            text = stringResource(StringKey.INPUT_NEW_CHART),
+            text = if (isEditMode) stringResource(StringKey.INPUT_EDIT_CHART) else stringResource(StringKey.INPUT_NEW_CHART),
             fontSize = 22.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.TextPrimary,
@@ -627,10 +673,12 @@ private fun CoordinatesSection(
 @Composable
 private fun GenerateButton(
     isCalculating: Boolean,
+    isEditMode: Boolean = false,
     onClick: () -> Unit
 ) {
     val colors = LocalAppThemeColors.current
-    val buttonContentDesc = stringResource(StringKey.BTN_GENERATE_SAVE)
+    val buttonText = if (isEditMode) stringResource(StringKey.BTN_UPDATE_SAVE) else stringResource(StringKey.BTN_GENERATE_SAVE)
+    val buttonContentDesc = buttonText
     Button(
         onClick = onClick,
         modifier = Modifier
@@ -665,7 +713,7 @@ private fun GenerateButton(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        stringResource(StringKey.BTN_GENERATE_SAVE),
+                        buttonText,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )

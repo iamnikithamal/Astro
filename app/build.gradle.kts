@@ -112,6 +112,13 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
+    // Markwon for Markdown rendering
+    val markwonVersion = "4.6.2"
+    implementation("io.noties.markwon:core:$markwonVersion")
+    implementation("io.noties.markwon:ext-strikethrough:$markwonVersion")
+    implementation("io.noties.markwon:ext-tables:$markwonVersion")
+    implementation("io.noties.markwon:linkify:$markwonVersion")
+
     // Permissions
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 

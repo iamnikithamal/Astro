@@ -15,9 +15,23 @@ import com.astro.storm.data.local.chat.ChatMessageModel
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.ChatRepository
 import com.astro.storm.data.repository.SavedChart
+import com.astro.storm.ui.components.ContentCleaner
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
+/**
+ * AI processing status for detailed UI feedback
+ */
+sealed class AiStatus {
+    object Idle : AiStatus()
+    object Thinking : AiStatus()
+    object Reasoning : AiStatus()
+    data class CallingTool(val toolName: String) : AiStatus()
+    data class ExecutingTools(val tools: List<String>) : AiStatus()
+    object Typing : AiStatus()
+    object Complete : AiStatus()
+}
 
 /**
  * ViewModel for Chat feature
@@ -63,6 +77,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _toolsInProgress = MutableStateFlow<List<String>>(emptyList())
     val toolsInProgress: StateFlow<List<String>> = _toolsInProgress.asStateFlow()
 
+    // Detailed AI processing status for UI feedback
+    private val _aiStatus = MutableStateFlow<AiStatus>(AiStatus.Idle)
+    val aiStatus: StateFlow<AiStatus> = _aiStatus.asStateFlow()
+
     // Model options - thinking and web search toggles
     private val _thinkingEnabled = MutableStateFlow(true)
     val thinkingEnabled: StateFlow<Boolean> = _thinkingEnabled.asStateFlow()
@@ -73,6 +91,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     // Current streaming message ID
     private var currentMessageId: Long? = null
     private var streamingJob: Job? = null
+
+    // Raw content accumulators for proper cleaning
+    private var rawContentAccumulator = StringBuilder()
+    private var rawReasoningAccumulator = StringBuilder()
 
     // ============================================
     // DATA FLOWS
@@ -133,8 +155,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     // CONVERSATION MANAGEMENT
     // ============================================
 
+    // Track pending conversation context for lazy creation
+    private var pendingConversationContext: PendingConversationContext? = null
+
+    private data class PendingConversationContext(
+        val currentChart: VedicChart?,
+        val savedCharts: List<SavedChart>,
+        val selectedChartId: Long?
+    )
+
     /**
-     * Create a new conversation
+     * Prepare a new conversation (lazy creation - actually creates when first message is sent)
      */
     fun createConversation(
         currentChart: VedicChart?,
@@ -148,17 +179,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            val conversationId = chatRepository.createConversation(
-                title = "New Chat",
-                modelId = model.id,
-                providerId = model.providerId,
-                profileId = selectedChartId
+            // Store context for lazy creation - don't create conversation in database yet
+            pendingConversationContext = PendingConversationContext(
+                currentChart = currentChart,
+                savedCharts = savedCharts,
+                selectedChartId = selectedChartId
             )
+
+            // Clear current conversation ID (signals we're in "new chat" mode)
+            _currentConversationId.value = null
 
             // Initialize agent with context
             initializeAgent(currentChart, savedCharts, selectedChartId)
-
-            _currentConversationId.value = conversationId
         }
     }
 
@@ -196,6 +228,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun closeConversation() {
         cancelStreaming()
         _currentConversationId.value = null
+        pendingConversationContext = null
         stormyAgent = null
     }
 
@@ -273,7 +306,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         savedCharts: List<SavedChart>,
         selectedChartId: Long?
     ) {
-        val conversationId = _currentConversationId.value ?: return
         val model = _selectedModel.value ?: return
 
         // Cancel any existing streaming
@@ -285,7 +317,35 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _streamingContent.value = ""
                 _streamingReasoning.value = ""
                 _toolsInProgress.value = emptyList()
+                _aiStatus.value = AiStatus.Thinking
                 _uiState.value = ChatUiState.Sending
+
+                // Reset accumulators
+                rawContentAccumulator.clear()
+                rawReasoningAccumulator.clear()
+
+                // Get or create conversation ID
+                // If we're in "new chat" mode, create the conversation now (lazy creation)
+                val conversationId = _currentConversationId.value ?: run {
+                    val context = pendingConversationContext
+                    if (context == null) {
+                        _uiState.value = ChatUiState.Error("No conversation context")
+                        _isStreaming.value = false
+                        _aiStatus.value = AiStatus.Idle
+                        return@launch
+                    }
+
+                    // Create conversation in database now that we have a message
+                    val newConversationId = chatRepository.createConversation(
+                        title = "New Chat",
+                        modelId = model.id,
+                        providerId = model.providerId,
+                        profileId = context.selectedChartId
+                    )
+                    _currentConversationId.value = newConversationId
+                    pendingConversationContext = null
+                    newConversationId
+                }
 
                 // Add user message
                 chatRepository.addUserMessage(conversationId, content)
@@ -303,6 +363,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                 val agent = stormyAgent ?: run {
                     _uiState.value = ChatUiState.Error("Failed to initialize AI agent")
+                    _aiStatus.value = AiStatus.Idle
                     return@launch
                 }
 
@@ -325,6 +386,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 var finalContent = ""
                 var finalReasoning: String? = null
                 val toolsUsed = mutableListOf<String>()
+                var hasReceivedContent = false
 
                 streamingJob = launch {
                     agent.processMessage(
@@ -336,33 +398,54 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     ).collect { response ->
                         when (response) {
                             is AgentResponse.ContentChunk -> {
-                                _streamingContent.value = _streamingContent.value + response.text
+                                // Accumulate raw content
+                                rawContentAccumulator.append(response.text)
 
-                                // Update database periodically
+                                // Clean and update display content
+                                val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
+                                _streamingContent.value = cleanedContent
+
+                                // Update AI status
+                                if (!hasReceivedContent && cleanedContent.isNotEmpty()) {
+                                    hasReceivedContent = true
+                                    _aiStatus.value = AiStatus.Typing
+                                }
+
+                                // Update database periodically with cleaned content
                                 currentMessageId?.let { msgId ->
+                                    val cleanedReasoning = if (rawReasoningAccumulator.isNotEmpty()) {
+                                        ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
+                                    } else null
+
                                     chatRepository.updateAssistantMessageContent(
                                         messageId = msgId,
-                                        content = _streamingContent.value,
-                                        reasoningContent = _streamingReasoning.value.takeIf { it.isNotEmpty() },
+                                        content = cleanedContent,
+                                        reasoningContent = cleanedReasoning?.takeIf { it.isNotEmpty() },
                                         isStreaming = true
                                     )
                                 }
                             }
                             is AgentResponse.ReasoningChunk -> {
-                                // Filter out "null" text artifacts that some models emit
-                                val cleanText = response.text
-                                    .replace("null", "")
-                                    .replace("undefined", "")
-                                if (cleanText.isNotBlank()) {
-                                    _streamingReasoning.value = _streamingReasoning.value + cleanText
+                                // Accumulate raw reasoning
+                                rawReasoningAccumulator.append(response.text)
 
-                                    // Also update database periodically with reasoning
-                                    // This ensures the user sees progress even when only reasoning is being streamed
+                                // Clean and update display reasoning
+                                val cleanedReasoning = ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
+                                if (cleanedReasoning.isNotEmpty()) {
+                                    _streamingReasoning.value = cleanedReasoning
+
+                                    // Update AI status to show reasoning
+                                    if (_aiStatus.value == AiStatus.Thinking) {
+                                        _aiStatus.value = AiStatus.Reasoning
+                                    }
+
+                                    // Update database with reasoning
                                     currentMessageId?.let { msgId ->
+                                        val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
                                         chatRepository.updateAssistantMessageContent(
                                             messageId = msgId,
-                                            content = _streamingContent.value,
-                                            reasoningContent = _streamingReasoning.value,
+                                            content = cleanedContent,
+                                            reasoningContent = cleanedReasoning,
                                             isStreaming = true
                                         )
                                     }
@@ -371,6 +454,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             is AgentResponse.ToolCallsStarted -> {
                                 _toolsInProgress.value = response.toolNames
                                 toolsUsed.addAll(response.toolNames)
+                                _aiStatus.value = AiStatus.ExecutingTools(response.toolNames)
                             }
                             is AgentResponse.ToolExecuting -> {
                                 if (!_toolsInProgress.value.contains(response.toolName)) {
@@ -379,21 +463,26 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 if (!toolsUsed.contains(response.toolName)) {
                                     toolsUsed.add(response.toolName)
                                 }
+                                _aiStatus.value = AiStatus.CallingTool(response.toolName)
                             }
                             is AgentResponse.ToolResult -> {
                                 _toolsInProgress.value = _toolsInProgress.value - response.toolName
+                                if (_toolsInProgress.value.isEmpty()) {
+                                    // Tools done, back to thinking for next iteration
+                                    _aiStatus.value = AiStatus.Thinking
+                                }
                             }
                             is AgentResponse.Complete -> {
-                                finalContent = response.content
-                                // Clean reasoning from null artifacts
-                                finalReasoning = response.reasoning
-                                    ?.replace("null", "")
-                                    ?.replace("undefined", "")
-                                    ?.trim()
-                                    ?.takeIf { it.isNotBlank() }
+                                // Clean final content
+                                finalContent = ContentCleaner.cleanForDisplay(response.content)
+                                finalReasoning = response.reasoning?.let {
+                                    ContentCleaner.cleanReasoning(it)
+                                }?.takeIf { it.isNotBlank() }
+                                _aiStatus.value = AiStatus.Complete
                             }
                             is AgentResponse.Error -> {
                                 _uiState.value = ChatUiState.Error(response.message)
+                                _aiStatus.value = AiStatus.Idle
                                 currentMessageId?.let { msgId ->
                                     chatRepository.setMessageError(msgId, response.message)
                                 }
@@ -405,9 +494,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 // Model info - could log if needed
                             }
                             is AgentResponse.RetryInfo -> {
-                                // Show retry info to user via streaming content
-                                val retryText = "\n[Retrying: ${response.reason} - Attempt ${response.attempt}/${response.maxAttempts}]\n"
-                                _streamingContent.value = _streamingContent.value + retryText
+                                // Don't add retry info to content - just update status
+                                // The UI can show this via aiStatus if needed
                             }
                         }
                     }
@@ -415,36 +503,28 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                 streamingJob?.join()
 
-                // Finalize message
+                // Finalize message with cleaned content
                 currentMessageId?.let { msgId ->
-                    // Use the final content from agent, but fall back to streaming content if empty
-                    // This handles edge cases where agent Complete event might have empty content
-                    val contentToSave = if (finalContent.isNotEmpty()) {
-                        finalContent
-                    } else if (_streamingContent.value.isNotEmpty()) {
-                        _streamingContent.value
-                    } else if (_streamingReasoning.value.isNotEmpty()) {
-                        // Last resort: if only reasoning was received, use it as content
-                        _streamingReasoning.value
-                    } else {
-                        ""
+                    // Use the final cleaned content from agent, but fall back to streaming content if empty
+                    val contentToSave = when {
+                        finalContent.isNotEmpty() -> finalContent
+                        _streamingContent.value.isNotEmpty() -> _streamingContent.value
+                        _streamingReasoning.value.isNotEmpty() -> _streamingReasoning.value
+                        else -> ""
                     }
 
                     // Determine reasoning - only include if we have both content AND separate reasoning
-                    val reasoningToSave = if (finalReasoning != null && finalContent.isNotEmpty()) {
-                        finalReasoning
-                    } else if (_streamingReasoning.value.isNotEmpty() && _streamingContent.value.isNotEmpty()) {
-                        _streamingReasoning.value
-                    } else {
-                        // If we used reasoning as content, don't save it separately
-                        null
+                    val reasoningToSave = when {
+                        finalReasoning != null && finalContent.isNotEmpty() -> finalReasoning
+                        _streamingReasoning.value.isNotEmpty() && _streamingContent.value.isNotEmpty() -> _streamingReasoning.value
+                        else -> null
                     }
 
                     chatRepository.finalizeAssistantMessage(
                         messageId = msgId,
                         content = contentToSave,
                         reasoningContent = reasoningToSave,
-                        toolsUsed = toolsUsed.takeIf { it.isNotEmpty() }
+                        toolsUsed = toolsUsed.distinct().takeIf { it.isNotEmpty() }
                     )
                 }
 
@@ -457,12 +537,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                 _isStreaming.value = false
                 _toolsInProgress.value = emptyList()
+                _aiStatus.value = AiStatus.Idle
                 _uiState.value = ChatUiState.Idle
                 currentMessageId = null
 
             } catch (e: Exception) {
                 _isStreaming.value = false
                 _toolsInProgress.value = emptyList()
+                _aiStatus.value = AiStatus.Idle
                 _uiState.value = ChatUiState.Error(e.message ?: "Unknown error occurred")
 
                 currentMessageId?.let { msgId ->
@@ -483,6 +565,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _streamingContent.value = ""
         _streamingReasoning.value = ""
         _toolsInProgress.value = emptyList()
+        _aiStatus.value = AiStatus.Idle
+
+        // Clear accumulators
+        rawContentAccumulator.clear()
+        rawReasoningAccumulator.clear()
 
         // Mark current message as incomplete
         viewModelScope.launch {

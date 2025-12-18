@@ -125,6 +125,34 @@ class ChartViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * Calculate chart for updating an existing profile
+     * Re-calculates the chart with new birth data and updates the existing record
+     */
+    fun calculateChartForUpdate(
+        birthData: BirthData,
+        existingChartId: Long,
+        houseSystem: HouseSystem = HouseSystem.DEFAULT
+    ) {
+        viewModelScope.launch(singleThreadContext) {
+            lastSavedChartHash = null
+            _uiState.value = ChartUiState.Calculating
+
+            try {
+                val chart = withContext(Dispatchers.Default) {
+                    ephemerisEngine.calculateVedicChart(birthData, houseSystem)
+                }
+                // Update the existing chart instead of creating a new one
+                repository.updateChart(existingChartId, chart)
+                _uiState.value = ChartUiState.Saved
+                // Reload the updated chart
+                loadChart(existingChartId)
+            } catch (e: Exception) {
+                _uiState.value = ChartUiState.Error(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    /**
      * Load a saved chart
      */
     fun loadChart(chartId: Long) {
