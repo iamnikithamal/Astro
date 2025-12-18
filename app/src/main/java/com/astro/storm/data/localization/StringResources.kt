@@ -319,6 +319,7 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     BTN_OK("OK", "ठीक छ"),
     BTN_CANCEL("Cancel", "रद्द गर्नुहोस्"),
     BTN_DELETE("Delete", "मेट्नुहोस्"),
+    BTN_EDIT("Edit", "सम्पादन गर्नुहोस्"),
     BTN_SAVE("Save", "सेभ गर्नुहोस्"),
     BTN_GENERATE("Generate", "उत्पन्न गर्नुहोस्"),
     BTN_GENERATE_SAVE("Generate & Save", "उत्पन्न गर्नुहोस् र सेभ गर्नुहोस्"),
@@ -921,6 +922,9 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     PROFILE_CURRENT_A11Y("Current profile: %s. Tap to switch profiles", "हालको प्रोफाइल: %s। प्रोफाइलहरू बदल्न ट्याप गर्नुहोस्"),
     PROFILE_NO_SELECTED_A11Y("No profile selected. Tap to select a profile", "कुनै प्रोफाइल छानिएको छैन। प्रोफाइल छान्न ट्याप गर्नुहोस्"),
     PROFILE_BIRTH_CHART("Birth chart", "जन्म कुण्डली"),
+    PROFILE_DELETE_TITLE("Delete Birth Chart", "जन्म कुण्डली मेट्नुहोस्"),
+    PROFILE_DELETE_MESSAGE("Are you sure you want to delete \"{name}\"? This action cannot be undone and all associated data will be permanently removed.", "के तपाईं \"{name}\" मेट्न निश्चित हुनुहुन्छ? यो कार्य पूर्ववत गर्न सकिँदैन र सबै सम्बन्धित डाटा स्थायी रूपमा हटाइनेछ।"),
+    PROFILE_EDIT_CHART("Edit Chart", "कुण्डली सम्पादन गर्नुहोस्"),
 
     // ============================================
     // TRANSITS SCREEN

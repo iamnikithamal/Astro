@@ -288,6 +288,16 @@ fun MainScreen(
                 }
                 onAddNewChart()
             },
+            onEditChart = { chart ->
+                scope.launch {
+                    profileSheetState.hide()
+                    showProfileSwitcher = false
+                }
+                onNavigateToProfileEdit()
+            },
+            onDeleteChart = { chart ->
+                viewModel.deleteChart(chart.id)
+            },
             onDismiss = { showProfileSwitcher = false },
             sheetState = profileSheetState
         )
