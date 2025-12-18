@@ -573,6 +573,20 @@ enum class InsightFeature(
         icon = Icons.Outlined.Stars,
         color = DarkAppThemeColors.PlanetMoon,
         isImplemented = true
+    ),
+    ARUDHA_PADA(
+        titleKey = StringKey.FEATURE_ARUDHA_PADA,
+        descriptionKey = StringKey.FEATURE_ARUDHA_PADA_DESC,
+        icon = Icons.Outlined.AdsClick,
+        color = DarkAppThemeColors.LifeAreaSpiritual,
+        isImplemented = true
+    ),
+    GRAHA_YUDDHA(
+        titleKey = StringKey.FEATURE_GRAHA_YUDDHA,
+        descriptionKey = StringKey.FEATURE_GRAHA_YUDDHA_DESC,
+        icon = Icons.Outlined.CompareArrows,
+        color = DarkAppThemeColors.WarningColor,
+        isImplemented = true
     );
 
     /**

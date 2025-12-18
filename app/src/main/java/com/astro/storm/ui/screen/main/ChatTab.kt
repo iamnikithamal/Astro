@@ -29,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -56,6 +57,9 @@ import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChatUiState
 import com.astro.storm.ui.viewmodel.ChatViewModel
+import com.astro.storm.ui.viewmodel.StreamingMessageState
+import com.astro.storm.ui.viewmodel.ToolExecutionStep
+import com.astro.storm.ui.viewmodel.ToolStepStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -470,6 +474,8 @@ fun ChatScreen(
     availableModels: List<AiModel>,
     thinkingEnabled: Boolean = true,
     webSearchEnabled: Boolean = false,
+    streamingMessageState: StreamingMessageState? = null,
+    streamingMessageId: Long? = null,
     onSendMessage: (String) -> Unit,
     onCancelStreaming: () -> Unit,
     onRegenerateResponse: () -> Unit,
@@ -566,11 +572,14 @@ fun ChatScreen(
                 .padding(paddingValues)
         ) {
             // Messages list
-            // Filter out streaming messages from the database list to avoid duplicates
-            // The streaming message is rendered separately below
-            val displayMessages = remember(messages, isStreaming) {
-                if (isStreaming) {
-                    messages.filter { !it.isStreaming }
+            // Filter out the streaming message from the database list to avoid duplicates
+            // The streaming message is rendered separately below using streamingMessageState
+            val displayMessages = remember(messages, streamingMessageId, isStreaming) {
+                if (streamingMessageId != null || isStreaming) {
+                    // Exclude the streaming message by ID (most reliable) or by isStreaming flag
+                    messages.filter { msg ->
+                        msg.id != streamingMessageId && !msg.isStreaming
+                    }
                 } else {
                     messages
                 }
@@ -608,36 +617,20 @@ fun ChatScreen(
                     )
                 }
 
-                // Streaming message or AI status indicator
-                if (isStreaming) {
+                // Streaming message with agentic UI - shows tool calls, thinking, and content
+                if (isStreaming || streamingMessageState != null) {
                     item(key = "streaming_message") {
-                        when {
-                            // Show content bubble if we have content
-                            streamingContent.isNotEmpty() -> {
-                                StreamingMessageBubble(
-                                    content = streamingContent,
-                                    reasoningContent = streamingReasoning,
-                                    aiStatus = aiStatus
-                                )
-                            }
-                            // Show reasoning bubble if we only have reasoning
-                            streamingReasoning.isNotEmpty() -> {
-                                StreamingMessageBubble(
-                                    content = "",
-                                    reasoningContent = streamingReasoning,
-                                    aiStatus = aiStatus
-                                )
-                            }
-                            // Show AI status indicator based on current status
-                            else -> {
-                                AiStatusIndicator(aiStatus = aiStatus)
-                            }
-                        }
+                        AgenticStreamingMessage(
+                            streamingState = streamingMessageState,
+                            streamingContent = streamingContent,
+                            streamingReasoning = streamingReasoning,
+                            aiStatus = aiStatus
+                        )
                     }
                 }
 
                 // Sending indicator (before streaming starts)
-                if (uiState == ChatUiState.Sending && !isStreaming) {
+                if (uiState == ChatUiState.Sending && !isStreaming && streamingMessageState == null) {
                     item(key = "sending_indicator") {
                         AiStatusIndicator(aiStatus = AiStatus.Thinking)
                     }
@@ -1241,6 +1234,361 @@ private fun StreamingMessageBubble(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Agentic Streaming Message - Shows tool executions, reasoning, and content
+ * in a structured, incremental way similar to modern AI coding agents.
+ *
+ * This prevents the duplicate message issue by showing streaming content
+ * separately from database messages and displaying tool calls as collapsible sections.
+ */
+@Composable
+private fun AgenticStreamingMessage(
+    streamingState: StreamingMessageState?,
+    streamingContent: String,
+    streamingReasoning: String,
+    aiStatus: AiStatus
+) {
+    val colors = AppTheme.current
+    var showReasoning by remember { mutableStateOf(false) }
+    var showToolSteps by remember { mutableStateOf(true) }
+
+    // Use streamingState if available, otherwise fall back to individual streams
+    val content = streamingState?.content?.ifEmpty { streamingContent } ?: streamingContent
+    val reasoning = streamingState?.reasoning?.ifEmpty { streamingReasoning } ?: streamingReasoning
+    val toolSteps = streamingState?.toolSteps ?: emptyList()
+
+    // Clean content from tool call artifacts
+    val cleanedContent = remember(content) {
+        if (content.isNotEmpty()) ContentCleaner.cleanForDisplay(content) else ""
+    }
+    val cleanedReasoning = remember(reasoning) {
+        if (reasoning.isNotBlank()) ContentCleaner.cleanReasoning(reasoning) else ""
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Tool Execution Steps - collapsible section showing what tools were called
+        if (toolSteps.isNotEmpty()) {
+            ToolExecutionSection(
+                toolSteps = toolSteps,
+                isExpanded = showToolSteps,
+                onToggle = { showToolSteps = !showToolSteps }
+            )
+        }
+
+        // Main message content bubble
+        Surface(
+            color = colors.CardBackground,
+            shape = RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = 4.dp,
+                bottomEnd = 16.dp
+            ),
+            modifier = Modifier.widthIn(max = 340.dp)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                // Reasoning toggle at TOP (if we have reasoning)
+                if (cleanedReasoning.isNotBlank()) {
+                    Surface(
+                        onClick = { showReasoning = !showReasoning },
+                        color = colors.AccentPrimary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Psychology,
+                                contentDescription = null,
+                                tint = colors.AccentPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = if (showReasoning) "Hide thinking" else "Show thinking",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.AccentPrimary
+                            )
+                            Icon(
+                                imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = colors.AccentPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = showReasoning,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            color = colors.ChipBackground,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = cleanedReasoning,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.TextMuted,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Message content with Markdown rendering
+                if (cleanedContent.isNotEmpty()) {
+                    MarkdownText(
+                        markdown = cleanedContent,
+                        modifier = Modifier.fillMaxWidth(),
+                        textColor = colors.TextPrimary,
+                        linkColor = colors.AccentPrimary,
+                        textSize = 14f,
+                        cleanContent = false
+                    )
+                } else if (aiStatus != AiStatus.Idle && aiStatus != AiStatus.Complete) {
+                    // Show status when no content yet
+                    AgenticStatusIndicator(aiStatus = aiStatus)
+                }
+
+                // Typing indicator (show only when actively receiving content)
+                if (aiStatus == AiStatus.Typing ||
+                    (aiStatus != AiStatus.Idle && aiStatus != AiStatus.Complete && cleanedContent.isNotEmpty())) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TypingDotsIndicator()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Tool Execution Section - Shows tool calls with status indicators
+ */
+@Composable
+private fun ToolExecutionSection(
+    toolSteps: List<ToolExecutionStep>,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
+) {
+    val colors = AppTheme.current
+    val completedCount = toolSteps.count { it.status == ToolStepStatus.COMPLETED }
+    val totalCount = toolSteps.size
+
+    Surface(
+        onClick = onToggle,
+        color = colors.CardBackground,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.widthIn(max = 340.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Header row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Build,
+                        contentDescription = null,
+                        tint = colors.AccentTeal,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Tools ($completedCount/$totalCount)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.TextPrimary
+                    )
+                }
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = colors.TextMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Expandable tool list
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    toolSteps.forEach { step ->
+                        ToolStepItem(step = step)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Individual tool step item with status icon
+ */
+@Composable
+private fun ToolStepItem(step: ToolExecutionStep) {
+    val colors = AppTheme.current
+
+    val (icon, iconColor) = when (step.status) {
+        ToolStepStatus.PENDING -> Icons.Outlined.Schedule to colors.TextMuted
+        ToolStepStatus.EXECUTING -> Icons.Outlined.Sync to colors.AccentTeal
+        ToolStepStatus.COMPLETED -> Icons.Default.CheckCircle to colors.SuccessColor
+        ToolStepStatus.FAILED -> Icons.Outlined.ErrorOutline to colors.ErrorColor
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Status icon with animation for executing state
+        if (step.status == ToolStepStatus.EXECUTING) {
+            val infiniteTransition = rememberInfiniteTransition(label = "tool_executing")
+            val rotation by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 1000
+                    },
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "tool_rotation"
+            )
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier
+                    .size(16.dp)
+                    .rotate(rotation)
+            )
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = step.displayName,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                color = colors.TextPrimary
+            )
+            step.result?.let { result ->
+                Text(
+                    text = result,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Compact status indicator for inside the message bubble
+ */
+@Composable
+private fun AgenticStatusIndicator(aiStatus: AiStatus) {
+    val colors = AppTheme.current
+
+    val (statusText, statusIcon) = when (aiStatus) {
+        is AiStatus.Idle, is AiStatus.Complete -> return
+        is AiStatus.Thinking -> "Thinking..." to Icons.Outlined.Psychology
+        is AiStatus.Reasoning -> "Reasoning..." to Icons.Outlined.Lightbulb
+        is AiStatus.CallingTool -> "Using ${formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
+        is AiStatus.ExecutingTools -> "Using tools..." to Icons.Outlined.Build
+        is AiStatus.Typing -> "Typing..." to Icons.Outlined.Edit
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        // Small loading spinner
+        CircularProgressIndicator(
+            modifier = Modifier.size(14.dp),
+            strokeWidth = 2.dp,
+            color = colors.AccentPrimary
+        )
+        Icon(
+            imageVector = statusIcon,
+            contentDescription = null,
+            tint = colors.TextMuted,
+            modifier = Modifier.size(14.dp)
+        )
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.TextMuted
+        )
+    }
+}
+
+/**
+ * Animated typing dots indicator
+ */
+@Composable
+private fun TypingDotsIndicator() {
+    val colors = AppTheme.current
+
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        repeat(3) { index ->
+            val infiniteTransition = rememberInfiniteTransition(label = "typing_dot_$index")
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 0.3f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 1000
+                        0.3f at 0
+                        1f at 300
+                        0.3f at 600
+                    },
+                    repeatMode = RepeatMode.Restart,
+                    initialStartOffset = StartOffset(index * 150)
+                ),
+                label = "typing_alpha_$index"
+            )
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(colors.TextMuted.copy(alpha = alpha))
+            )
         }
     }
 }

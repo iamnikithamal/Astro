@@ -34,6 +34,36 @@ sealed class AiStatus {
 }
 
 /**
+ * Represents a tool execution step for the agentic UI
+ */
+data class ToolExecutionStep(
+    val toolName: String,
+    val displayName: String,
+    val status: ToolStepStatus,
+    val startTime: Long = System.currentTimeMillis(),
+    val endTime: Long? = null,
+    val result: String? = null
+)
+
+enum class ToolStepStatus {
+    PENDING, EXECUTING, COMPLETED, FAILED
+}
+
+/**
+ * Streaming message state for the agentic UI
+ * This tracks the current streaming response with all its components
+ */
+data class StreamingMessageState(
+    val messageId: Long,
+    val content: String = "",
+    val reasoning: String = "",
+    val toolSteps: List<ToolExecutionStep> = emptyList(),
+    val isComplete: Boolean = false,
+    val hasError: Boolean = false,
+    val errorMessage: String? = null
+)
+
+/**
  * ViewModel for Chat feature
  *
  * Manages:
@@ -88,6 +118,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _webSearchEnabled = MutableStateFlow(false)
     val webSearchEnabled: StateFlow<Boolean> = _webSearchEnabled.asStateFlow()
 
+    // Streaming message state for agentic UI - replaces separate content/reasoning flows
+    private val _streamingMessageState = MutableStateFlow<StreamingMessageState?>(null)
+    val streamingMessageState: StateFlow<StreamingMessageState?> = _streamingMessageState.asStateFlow()
+
+    // Track the ID of the message being streamed to exclude from regular message list
+    private val _streamingMessageId = MutableStateFlow<Long?>(null)
+    val streamingMessageId: StateFlow<Long?> = _streamingMessageId.asStateFlow()
+
     // Current streaming message ID
     private var currentMessageId: Long? = null
     private var streamingJob: Job? = null
@@ -95,6 +133,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     // Raw content accumulators for proper cleaning
     private var rawContentAccumulator = StringBuilder()
     private var rawReasoningAccumulator = StringBuilder()
+
+    // Tool steps accumulator for agentic UI
+    private var currentToolSteps = mutableListOf<ToolExecutionStep>()
 
     // ============================================
     // DATA FLOWS
@@ -323,6 +364,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 // Reset accumulators
                 rawContentAccumulator.clear()
                 rawReasoningAccumulator.clear()
+                currentToolSteps.clear()
 
                 // Get or create conversation ID
                 // If we're in "new chat" mode, create the conversation now (lazy creation)
@@ -355,6 +397,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     conversationId,
                     model.id
                 )
+
+                // Set the streaming message ID to exclude from regular message list
+                _streamingMessageId.value = currentMessageId
+
+                // Initialize streaming message state for agentic UI
+                currentMessageId?.let { msgId ->
+                    _streamingMessageState.value = StreamingMessageState(
+                        messageId = msgId,
+                        content = "",
+                        reasoning = "",
+                        toolSteps = emptyList(),
+                        isComplete = false
+                    )
+                }
 
                 // Ensure agent is initialized
                 if (stormyAgent == null) {
@@ -455,6 +511,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 _toolsInProgress.value = response.toolNames
                                 toolsUsed.addAll(response.toolNames)
                                 _aiStatus.value = AiStatus.ExecutingTools(response.toolNames)
+
+                                // Add tool steps to streaming state for agentic UI
+                                response.toolNames.forEach { toolName ->
+                                    val step = ToolExecutionStep(
+                                        toolName = toolName,
+                                        displayName = formatToolNameForDisplay(toolName),
+                                        status = ToolStepStatus.PENDING
+                                    )
+                                    if (currentToolSteps.none { it.toolName == toolName }) {
+                                        currentToolSteps.add(step)
+                                    }
+                                }
+                                updateStreamingMessageState()
                             }
                             is AgentResponse.ToolExecuting -> {
                                 if (!_toolsInProgress.value.contains(response.toolName)) {
@@ -464,6 +533,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     toolsUsed.add(response.toolName)
                                 }
                                 _aiStatus.value = AiStatus.CallingTool(response.toolName)
+
+                                // Update tool step status to executing
+                                val stepIndex = currentToolSteps.indexOfFirst { it.toolName == response.toolName }
+                                if (stepIndex >= 0) {
+                                    currentToolSteps[stepIndex] = currentToolSteps[stepIndex].copy(
+                                        status = ToolStepStatus.EXECUTING
+                                    )
+                                } else {
+                                    currentToolSteps.add(ToolExecutionStep(
+                                        toolName = response.toolName,
+                                        displayName = formatToolNameForDisplay(response.toolName),
+                                        status = ToolStepStatus.EXECUTING
+                                    ))
+                                }
+                                updateStreamingMessageState()
                             }
                             is AgentResponse.ToolResult -> {
                                 _toolsInProgress.value = _toolsInProgress.value - response.toolName
@@ -471,6 +555,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     // Tools done, back to thinking for next iteration
                                     _aiStatus.value = AiStatus.Thinking
                                 }
+
+                                // Update tool step status to completed/failed
+                                val stepIndex = currentToolSteps.indexOfFirst { it.toolName == response.toolName }
+                                if (stepIndex >= 0) {
+                                    currentToolSteps[stepIndex] = currentToolSteps[stepIndex].copy(
+                                        status = if (response.success) ToolStepStatus.COMPLETED else ToolStepStatus.FAILED,
+                                        endTime = System.currentTimeMillis(),
+                                        result = response.summary
+                                    )
+                                }
+                                updateStreamingMessageState()
                             }
                             is AgentResponse.Complete -> {
                                 // Clean final content
@@ -479,6 +574,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     ContentCleaner.cleanReasoning(it)
                                 }?.takeIf { it.isNotBlank() }
                                 _aiStatus.value = AiStatus.Complete
+
+                                // Update streaming state to complete
+                                _streamingMessageState.value = _streamingMessageState.value?.copy(
+                                    content = finalContent,
+                                    reasoning = finalReasoning ?: "",
+                                    isComplete = true
+                                )
                             }
                             is AgentResponse.Error -> {
                                 _uiState.value = ChatUiState.Error(response.message)
@@ -486,6 +588,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 currentMessageId?.let { msgId ->
                                     chatRepository.setMessageError(msgId, response.message)
                                 }
+
+                                // Update streaming state with error
+                                _streamingMessageState.value = _streamingMessageState.value?.copy(
+                                    hasError = true,
+                                    errorMessage = response.message
+                                )
                             }
                             is AgentResponse.TokenUsage -> {
                                 // Token usage info - could log or track if needed
@@ -539,6 +647,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _toolsInProgress.value = emptyList()
                 _aiStatus.value = AiStatus.Idle
                 _uiState.value = ChatUiState.Idle
+
+                // Clear streaming message state and ID - this allows the message to appear in regular list
+                _streamingMessageId.value = null
+                _streamingMessageState.value = null
                 currentMessageId = null
 
             } catch (e: Exception) {
@@ -550,9 +662,43 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 currentMessageId?.let { msgId ->
                     chatRepository.setMessageError(msgId, e.message ?: "Unknown error")
                 }
+
+                // Clear streaming state on error
+                _streamingMessageId.value = null
+                _streamingMessageState.value = null
                 currentMessageId = null
             }
         }
+    }
+
+    /**
+     * Helper to update the streaming message state with current values
+     */
+    private fun updateStreamingMessageState() {
+        currentMessageId?.let { msgId ->
+            _streamingMessageState.value = StreamingMessageState(
+                messageId = msgId,
+                content = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString()),
+                reasoning = if (rawReasoningAccumulator.isNotEmpty()) {
+                    ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
+                } else "",
+                toolSteps = currentToolSteps.toList(),
+                isComplete = false
+            )
+        }
+    }
+
+    /**
+     * Format tool name for display (e.g., "get_planet_positions" -> "Planet Positions")
+     */
+    private fun formatToolNameForDisplay(toolName: String): String {
+        return toolName
+            .removePrefix("get_")
+            .replace("_", " ")
+            .split(" ")
+            .joinToString(" ") { word ->
+                word.replaceFirstChar { it.uppercase() }
+            }
     }
 
     /**
@@ -570,6 +716,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Clear accumulators
         rawContentAccumulator.clear()
         rawReasoningAccumulator.clear()
+        currentToolSteps.clear()
+
+        // Clear streaming state
+        _streamingMessageId.value = null
+        _streamingMessageState.value = null
 
         // Mark current message as incomplete
         viewModelScope.launch {
