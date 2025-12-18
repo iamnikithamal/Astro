@@ -83,6 +83,8 @@ fun MainScreen(
     onNavigateToUpachayaTransit: () -> Unit = {},
     onNavigateToKalachakraDasha: () -> Unit = {},
     onNavigateToTarabala: () -> Unit = {},
+    onNavigateToArudhaPada: () -> Unit = {},
+    onNavigateToGrahaYuddha: () -> Unit = {},
     onNavigateToAiModels: () -> Unit = {},
     onNavigateToChat: (Long?) -> Unit = {}, // null for new chat, Long for existing
     onExportChart: (ExportFormat) -> Unit
@@ -229,6 +231,8 @@ fun MainScreen(
                                         InsightFeature.UPACHAYA_TRANSIT -> if (currentChart != null) onNavigateToUpachayaTransit()
                                         InsightFeature.KALACHAKRA_DASHA -> if (currentChart != null) onNavigateToKalachakraDasha()
                                         InsightFeature.TARABALA -> if (currentChart != null) onNavigateToTarabala()
+                                        InsightFeature.ARUDHA_PADA -> if (currentChart != null) onNavigateToArudhaPada()
+                                        InsightFeature.GRAHA_YUDDHA -> if (currentChart != null) onNavigateToGrahaYuddha()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }

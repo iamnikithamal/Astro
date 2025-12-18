@@ -42,6 +42,8 @@ import com.astro.storm.ui.screen.UpachayaTransitScreen
 import com.astro.storm.ui.screen.KalachakraDashaScreen
 import com.astro.storm.ui.screen.tarabala.TarabalaScreen
 import com.astro.storm.ui.screen.AiModelsScreen
+import com.astro.storm.ui.screen.ArudhaPadaScreen
+import com.astro.storm.ui.screen.GrahaYuddhaScreen
 import com.astro.storm.ui.screen.main.ChatScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
@@ -50,6 +52,7 @@ import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChartViewModel
 import com.astro.storm.ui.viewmodel.ChatViewModel
+import com.astro.storm.ui.viewmodel.StreamingMessageState
 import com.astro.storm.data.ai.provider.AiProviderRegistry
 
 /**
@@ -153,6 +156,16 @@ sealed class Screen(val route: String) {
     }
     object Tarabala : Screen("tarabala/{chartId}") {
         fun createRoute(chartId: Long) = "tarabala/$chartId"
+    }
+
+    // Arudha Pada (Jaimini) screen
+    object ArudhaPada : Screen("arudha_pada/{chartId}") {
+        fun createRoute(chartId: Long) = "arudha_pada/$chartId"
+    }
+
+    // Graha Yuddha (Planetary War) screen
+    object GrahaYuddha : Screen("graha_yuddha/{chartId}") {
+        fun createRoute(chartId: Long) = "graha_yuddha/$chartId"
     }
 
     // AI Models configuration screen
@@ -356,6 +369,16 @@ fun AstroStormNavigation(
                 onNavigateToTarabala = {
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.Tarabala.createRoute(chartId))
+                    }
+                },
+                onNavigateToArudhaPada = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.ArudhaPada.createRoute(chartId))
+                    }
+                },
+                onNavigateToGrahaYuddha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.GrahaYuddha.createRoute(chartId))
                     }
                 },
                 onNavigateToAiModels = {
@@ -981,6 +1004,44 @@ fun AstroStormNavigation(
             )
         }
 
+        // Arudha Pada (Jaimini) screen
+        composable(
+            route = Screen.ArudhaPada.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            ArudhaPadaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Graha Yuddha (Planetary War) screen
+        composable(
+            route = Screen.GrahaYuddha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            GrahaYuddhaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         // AI Models configuration screen
         composable(Screen.AiModels.route) {
             AiModelsScreen(
@@ -1013,6 +1074,8 @@ fun AstroStormNavigation(
             val aiStatus by chatViewModel.aiStatus.collectAsState()
             val thinkingEnabled by chatViewModel.thinkingEnabled.collectAsState()
             val webSearchEnabled by chatViewModel.webSearchEnabled.collectAsState()
+            val streamingMessageState by chatViewModel.streamingMessageState.collectAsState()
+            val streamingMessageId by chatViewModel.streamingMessageId.collectAsState()
 
             // Initialize/open conversation
             LaunchedEffect(conversationId) {
@@ -1045,6 +1108,8 @@ fun AstroStormNavigation(
                 availableModels = availableModels,
                 thinkingEnabled = thinkingEnabled,
                 webSearchEnabled = webSearchEnabled,
+                streamingMessageState = streamingMessageState,
+                streamingMessageId = streamingMessageId,
                 onSendMessage = { message ->
                     chatViewModel.sendMessage(message, currentChart, savedCharts, selectedChartId)
                 },
