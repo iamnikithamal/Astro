@@ -1140,7 +1140,7 @@ private fun RemedyCard(remedy: WarRemedy) {
     val typeIcon = when (remedy.type) {
         RemedyType.MANTRA -> Icons.Outlined.RecordVoiceOver
         RemedyType.CHARITY -> Icons.Outlined.VolunteerActivism
-        RemedyType.WORSHIP -> Icons.Outlined.Temple
+        RemedyType.WORSHIP -> Icons.Outlined.SelfImprovement
         RemedyType.GEMSTONE -> Icons.Outlined.Diamond
         RemedyType.GENERAL -> Icons.Outlined.AutoAwesome
     }

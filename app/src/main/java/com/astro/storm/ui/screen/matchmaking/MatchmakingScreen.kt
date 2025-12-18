@@ -57,6 +57,7 @@ import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartViewModel
 import com.astro.storm.data.ai.provider.AiProviderRegistry
 import com.astro.storm.data.ai.provider.ChatMessage
+import com.astro.storm.data.ai.provider.ChatResponse
 import com.astro.storm.data.ai.provider.MessageRole
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CancellationException
@@ -2746,13 +2747,24 @@ Do NOT make absolute negative predictions. Always emphasize that relationships a
         )
     )
 
-    val response = provider.chat(messages, model)
+    val contentBuilder = StringBuilder()
+    var errorMessage: String? = null
 
-    if (response.error != null) {
-        throw Exception(response.error)
+    provider.chat(messages, model.id, stream = false).collect { response ->
+        when (response) {
+            is ChatResponse.Content -> contentBuilder.append(response.text)
+            is ChatResponse.Error -> errorMessage = response.message
+            else -> { /* Ignore other response types */ }
+        }
     }
 
-    response.content ?: throw Exception("No response received from AI")
+    if (errorMessage != null) {
+        throw Exception(errorMessage)
+    }
+
+    contentBuilder.toString().ifEmpty {
+        throw Exception("No response received from AI")
+    }
 }
 
 /**
@@ -2771,31 +2783,22 @@ private fun buildMatchmakingAiPrompt(
     sb.appendLine("**Groom:** ${groomChart?.birthData?.name ?: "Unknown"}")
     sb.appendLine()
     sb.appendLine("**Overall Compatibility:**")
-    sb.appendLine("- Total Score: ${result.totalPoints}/${result.maxPoints} (${String.format("%.1f", result.percentageScore)}%)")
-    sb.appendLine("- Compatibility: ${result.compatibility.displayName}")
-    sb.appendLine("- ${result.overallDescription}")
+    sb.appendLine("- Total Score: ${result.totalPoints}/${result.maxPoints} (${String.format("%.1f", result.percentage)}%)")
+    sb.appendLine("- Compatibility: ${result.rating.displayName}")
+    sb.appendLine("- ${result.summary}")
     sb.appendLine()
     sb.appendLine("**Guna Analysis (8 Aspects):**")
     result.gunaAnalyses.forEach { guna ->
-        sb.appendLine("- ${guna.gunaType.displayName}: ${guna.scoredPoints}/${guna.maxPoints} - ${guna.interpretation}")
+        sb.appendLine("- ${guna.gunaType.displayName}: ${guna.obtainedPoints}/${guna.maxPoints} - ${guna.analysis}")
     }
     sb.appendLine()
 
-    // Doshas
-    val activeDoshas = result.doshaAnalyses.filter { it.isPresent }
-    if (activeDoshas.isNotEmpty()) {
-        sb.appendLine("**Doshas Present:**")
-        activeDoshas.forEach { dosha ->
-            val severity = when {
-                dosha.severity > 0.7 -> "High"
-                dosha.severity > 0.4 -> "Moderate"
-                else -> "Low"
-            }
-            sb.appendLine("- ${dosha.doshaType.displayName} ($severity): ${dosha.description}")
-            if (dosha.remedies.isNotEmpty()) {
-                sb.appendLine("  Remedies: ${dosha.remedies.take(2).joinToString("; ")}")
-            }
-        }
+    // Manglik Analysis
+    if (result.brideManglik.isManglik || result.groomManglik.isManglik) {
+        sb.appendLine("**Manglik Analysis:**")
+        sb.appendLine("- Bride Manglik: ${result.brideManglik.isManglik}")
+        sb.appendLine("- Groom Manglik: ${result.groomManglik.isManglik}")
+        sb.appendLine("- Compatibility: ${result.manglikCompatibility}")
         sb.appendLine()
     }
 

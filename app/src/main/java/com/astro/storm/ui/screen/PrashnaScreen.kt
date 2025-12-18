@@ -117,12 +117,14 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.ai.provider.AiProviderRegistry
 import com.astro.storm.data.ai.provider.ChatMessage
+import com.astro.storm.data.ai.provider.ChatResponse
 import com.astro.storm.data.ai.provider.MessageRole
 import com.astro.storm.ephemeris.PrashnaCalculator
 import com.astro.storm.ui.theme.AppTheme
@@ -2081,13 +2083,24 @@ Be warm and supportive while maintaining astrological accuracy. Avoid absolute p
         )
     )
 
-    val response = provider.chat(messages, model)
+    val contentBuilder = StringBuilder()
+    var errorMessage: String? = null
 
-    if (response.error != null) {
-        throw Exception(response.error)
+    provider.chat(messages, model.id, stream = false).collect { response ->
+        when (response) {
+            is ChatResponse.Content -> contentBuilder.append(response.text)
+            is ChatResponse.Error -> errorMessage = response.message
+            else -> { /* Ignore other response types */ }
+        }
     }
 
-    response.content ?: throw Exception("No response received from AI")
+    if (errorMessage != null) {
+        throw Exception(errorMessage)
+    }
+
+    contentBuilder.toString().ifEmpty {
+        throw Exception("No response received from AI")
+    }
 }
 
 /**
