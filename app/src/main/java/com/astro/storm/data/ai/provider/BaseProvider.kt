@@ -1,6 +1,7 @@
 package com.astro.storm.data.ai.provider
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -18,6 +19,12 @@ import javax.net.ssl.HttpsURLConnection
  *
  * Many free AI providers (DeepInfra, PollinationsAI, etc.) use
  * OpenAI-compatible APIs, so this base class handles the common patterns.
+ *
+ * Features:
+ * - Automatic retry with exponential backoff for rate limits
+ * - Proper error handling and categorization
+ * - Streaming and non-streaming support
+ * - Tool calling support
  */
 abstract class BaseOpenAiCompatibleProvider : AiProvider {
 
@@ -38,6 +45,21 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
 
     protected open val connectTimeoutMs: Int = 30000
     protected open val readTimeoutMs: Int = 120000
+
+    /**
+     * Maximum number of retry attempts for rate-limited requests
+     */
+    protected open val maxRetries: Int = 3
+
+    /**
+     * Initial delay in milliseconds before first retry (exponential backoff)
+     */
+    protected open val initialRetryDelayMs: Long = 2000L
+
+    /**
+     * Maximum delay between retries in milliseconds
+     */
+    protected open val maxRetryDelayMs: Long = 30000L
 
     protected var cachedModels: List<AiModel>? = null
 
@@ -152,88 +174,207 @@ abstract class BaseOpenAiCompatibleProvider : AiProvider {
         maxTokens: Int?,
         stream: Boolean
     ): Flow<ChatResponse> = flow {
-        try {
-            emit(ChatResponse.ProviderInfo(providerId, resolveModel(model)))
+        var lastException: Exception? = null
+        var retryCount = 0
 
-            val requestBody = buildRequestBody(messages, model, temperature, maxTokens, stream)
-            val connection = createConnection(chatEndpoint)
+        while (retryCount <= maxRetries) {
+            try {
+                emit(ChatResponse.ProviderInfo(providerId, resolveModel(model)))
 
-            connection.requestMethod = "POST"
-            connection.doOutput = true
-            connection.outputStream.use { os ->
-                os.write(requestBody.toByteArray(Charsets.UTF_8))
-            }
+                val requestBody = buildRequestBody(messages, model, temperature, maxTokens, stream)
+                val connection = createConnection(chatEndpoint)
 
-            val responseCode = connection.responseCode
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                val errorBody = try {
-                    connection.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
-                } catch (e: Exception) {
-                    "Error reading response: ${e.message}"
+                connection.requestMethod = "POST"
+                connection.doOutput = true
+                connection.outputStream.use { os ->
+                    os.write(requestBody.toByteArray(Charsets.UTF_8))
                 }
-                handleErrorResponse(responseCode, errorBody)
-                return@flow
-            }
 
-            if (stream) {
-                val reader = BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8))
-                var line: String?
-                val contentBuilder = StringBuilder()
-                val reasoningBuilder = StringBuilder()
+                val responseCode = connection.responseCode
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    val errorBody = try {
+                        connection.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
+                    } catch (e: Exception) {
+                        "Error reading response: ${e.message}"
+                    }
+                    connection.disconnect()
 
-                while (reader.readLine().also { line = it } != null) {
-                    val trimmedLine = line?.trim() ?: continue
-                    if (trimmedLine.isEmpty() || trimmedLine == "data: [DONE]") {
-                        if (trimmedLine == "data: [DONE]") {
-                            if (contentBuilder.isNotEmpty()) {
-                                emit(ChatResponse.Content(contentBuilder.toString(), isComplete = true))
-                            }
-                            emit(ChatResponse.Done())
-                        }
+                    // Check if retryable
+                    if (responseCode == 429 && retryCount < maxRetries) {
+                        // Rate limit - retry with exponential backoff
+                        val delayMs = calculateRetryDelay(retryCount)
+                        emit(ChatResponse.RetryNotification(
+                            attempt = retryCount + 1,
+                            maxAttempts = maxRetries,
+                            delayMs = delayMs,
+                            reason = "Rate limit exceeded"
+                        ))
+                        delay(delayMs)
+                        retryCount++
                         continue
+                    } else if ((responseCode == 500 || responseCode == 502 || responseCode == 503 || responseCode == 504) && retryCount < maxRetries) {
+                        // Server error - retry with exponential backoff
+                        val delayMs = calculateRetryDelay(retryCount)
+                        emit(ChatResponse.RetryNotification(
+                            attempt = retryCount + 1,
+                            maxAttempts = maxRetries,
+                            delayMs = delayMs,
+                            reason = "Server error (HTTP $responseCode)"
+                        ))
+                        delay(delayMs)
+                        retryCount++
+                        continue
+                    } else if (responseCode == 402) {
+                        // Payment required - this model requires premium access
+                        throw AiProviderException(
+                            "This model requires premium access. Please select a different model.",
+                            "payment_required",
+                            isRetryable = false
+                        )
                     }
 
-                    if (trimmedLine.startsWith("data: ")) {
-                        val jsonStr = trimmedLine.removePrefix("data: ")
-                        try {
-                            val chunk = parseStreamChunk(jsonStr)
-                            chunk?.let { response ->
-                                when (response) {
-                                    is ChatResponse.Content -> {
-                                        contentBuilder.append(response.text)
-                                        emit(response)
-                                    }
-                                    is ChatResponse.Reasoning -> {
-                                        reasoningBuilder.append(response.text)
-                                        emit(response)
-                                    }
-                                    else -> emit(response)
+                    handleErrorResponse(responseCode, errorBody)
+                    return@flow
+                }
+
+                if (stream) {
+                    val reader = BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8))
+                    var line: String?
+                    val contentBuilder = StringBuilder()
+                    val reasoningBuilder = StringBuilder()
+
+                    while (reader.readLine().also { line = it } != null) {
+                        val trimmedLine = line?.trim() ?: continue
+                        if (trimmedLine.isEmpty() || trimmedLine == "data: [DONE]") {
+                            if (trimmedLine == "data: [DONE]") {
+                                if (contentBuilder.isNotEmpty()) {
+                                    emit(ChatResponse.Content(contentBuilder.toString(), isComplete = true))
                                 }
+                                emit(ChatResponse.Done())
                             }
-                        } catch (e: Exception) {
-                            // Skip malformed chunks
+                            continue
+                        }
+
+                        if (trimmedLine.startsWith("data: ")) {
+                            val jsonStr = trimmedLine.removePrefix("data: ")
+                            try {
+                                val chunk = parseStreamChunk(jsonStr)
+                                chunk?.let { response ->
+                                    when (response) {
+                                        is ChatResponse.Content -> {
+                                            contentBuilder.append(response.text)
+                                            emit(response)
+                                        }
+                                        is ChatResponse.Reasoning -> {
+                                            reasoningBuilder.append(response.text)
+                                            emit(response)
+                                        }
+                                        else -> emit(response)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                // Skip malformed chunks
+                            }
                         }
                     }
+                    reader.close()
+                } else {
+                    // Non-streaming response
+                    val responseBody = connection.inputStream.bufferedReader().readText()
+                    val responses = parseNonStreamResponse(responseBody)
+                    responses.forEach { emit(it) }
                 }
-                reader.close()
-            } else {
-                // Non-streaming response
-                val responseBody = connection.inputStream.bufferedReader().readText()
-                val responses = parseNonStreamResponse(responseBody)
-                responses.forEach { emit(it) }
-            }
 
-            connection.disconnect()
-        } catch (e: RateLimitException) {
-            emit(ChatResponse.Error(e.message ?: "Rate limit exceeded", "rate_limit", isRetryable = true))
-        } catch (e: AuthenticationException) {
-            emit(ChatResponse.Error(e.message ?: "Authentication failed", "auth_error", isRetryable = false))
-        } catch (e: AiProviderException) {
-            emit(ChatResponse.Error(e.message ?: "Provider error", e.code, e.isRetryable))
-        } catch (e: Exception) {
-            emit(ChatResponse.Error(e.message ?: "Unknown error", "unknown", isRetryable = true))
+                connection.disconnect()
+                return@flow // Success, exit the loop
+
+            } catch (e: RateLimitException) {
+                lastException = e
+                if (retryCount < maxRetries) {
+                    val delayMs = calculateRetryDelay(retryCount)
+                    emit(ChatResponse.RetryNotification(
+                        attempt = retryCount + 1,
+                        maxAttempts = maxRetries,
+                        delayMs = delayMs,
+                        reason = "Rate limit exceeded"
+                    ))
+                    delay(delayMs)
+                    retryCount++
+                } else {
+                    emit(ChatResponse.Error(
+                        "Rate limit exceeded after $maxRetries retries. Please try again later.",
+                        "rate_limit",
+                        isRetryable = false
+                    ))
+                    return@flow
+                }
+            } catch (e: AuthenticationException) {
+                emit(ChatResponse.Error(e.message ?: "Authentication failed", "auth_error", isRetryable = false))
+                return@flow
+            } catch (e: AiProviderException) {
+                if (e.isRetryable && retryCount < maxRetries) {
+                    lastException = e
+                    val delayMs = calculateRetryDelay(retryCount)
+                    emit(ChatResponse.RetryNotification(
+                        attempt = retryCount + 1,
+                        maxAttempts = maxRetries,
+                        delayMs = delayMs,
+                        reason = e.message ?: "Provider error"
+                    ))
+                    delay(delayMs)
+                    retryCount++
+                } else {
+                    emit(ChatResponse.Error(e.message ?: "Provider error", e.code, e.isRetryable))
+                    return@flow
+                }
+            } catch (e: Exception) {
+                // Network or other transient errors may be retryable
+                lastException = e
+                if (retryCount < maxRetries && isRetryableException(e)) {
+                    val delayMs = calculateRetryDelay(retryCount)
+                    emit(ChatResponse.RetryNotification(
+                        attempt = retryCount + 1,
+                        maxAttempts = maxRetries,
+                        delayMs = delayMs,
+                        reason = e.message ?: "Connection error"
+                    ))
+                    delay(delayMs)
+                    retryCount++
+                } else {
+                    emit(ChatResponse.Error(e.message ?: "Unknown error", "unknown", isRetryable = false))
+                    return@flow
+                }
+            }
         }
+
+        // If we exit the loop without returning, all retries failed
+        emit(ChatResponse.Error(
+            lastException?.message ?: "Request failed after $maxRetries retries",
+            "max_retries_exceeded",
+            isRetryable = false
+        ))
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Calculate retry delay with exponential backoff and jitter
+     */
+    protected fun calculateRetryDelay(retryCount: Int): Long {
+        val exponentialDelay = initialRetryDelayMs * (1L shl retryCount) // 2^retryCount
+        val withJitter = exponentialDelay + (Math.random() * exponentialDelay * 0.1).toLong()
+        return withJitter.coerceAtMost(maxRetryDelayMs)
+    }
+
+    /**
+     * Check if an exception is retryable (network errors, timeouts, etc.)
+     */
+    protected fun isRetryableException(e: Exception): Boolean {
+        return e is java.net.SocketTimeoutException ||
+               e is java.net.ConnectException ||
+               e is java.net.UnknownHostException ||
+               e is java.io.EOFException ||
+               e.message?.contains("Connection reset", ignoreCase = true) == true ||
+               e.message?.contains("timeout", ignoreCase = true) == true
+    }
 
     /**
      * Build the JSON request body

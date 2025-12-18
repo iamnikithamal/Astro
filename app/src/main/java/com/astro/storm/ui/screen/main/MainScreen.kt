@@ -142,6 +142,10 @@ fun MainScreen(
     // Find the current SavedChart for display
     val currentSavedChart = savedCharts.find { it.id == selectedChartId }
 
+    // Track if chat screen is open (full screen mode)
+    val currentConversationId by chatViewModel.currentConversationId.collectAsState()
+    val isChatScreenOpen = selectedTab == MainTab.CHAT && currentConversationId != null
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
@@ -164,17 +168,23 @@ fun MainScreen(
         },
         containerColor = colors.ScreenBackground,
         topBar = {
-            MainTopBar(
-                currentTab = selectedTab,
-                currentChart = currentSavedChart,
-                onProfileClick = { showProfileSwitcher = true }
-            )
+            // Hide top bar when in chat screen (it has its own)
+            if (!isChatScreenOpen) {
+                MainTopBar(
+                    currentTab = selectedTab,
+                    currentChart = currentSavedChart,
+                    onProfileClick = { showProfileSwitcher = true }
+                )
+            }
         },
         bottomBar = {
-            MainBottomNavigation(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
+            // Hide bottom navigation when chat screen is open
+            if (!isChatScreenOpen) {
+                MainBottomNavigation(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+            }
         }
     ) { paddingValues ->
         Box(
@@ -240,12 +250,14 @@ fun MainScreen(
                         )
                     }
                     MainTab.CHAT -> {
+                        // Chat tab uses full screen when conversation is open
                         ChatTab(
                             viewModel = chatViewModel,
                             currentChart = currentChart,
                             savedCharts = savedCharts,
                             selectedChartId = selectedChartId,
-                            onNavigateToModels = onNavigateToAiModels
+                            onNavigateToModels = onNavigateToAiModels,
+                            isFullScreen = isChatScreenOpen
                         )
                     }
                     MainTab.SETTINGS -> {

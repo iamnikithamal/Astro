@@ -152,6 +152,16 @@ fun AiModelsScreen(
                             scope.launch {
                                 providerRegistry.setModelEnabled(model.id, enabled)
                             }
+                        },
+                        onEnableAll = {
+                            scope.launch {
+                                providerRegistry.enableAllModels(providerId)
+                            }
+                        },
+                        onDisableAll = {
+                            scope.launch {
+                                providerRegistry.disableAllModels(providerId)
+                            }
                         }
                     )
                 }
@@ -342,12 +352,16 @@ private fun ProviderSection(
     enabledModels: List<AiModel>,
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit,
-    onToggleModel: (AiModel, Boolean) -> Unit
+    onToggleModel: (AiModel, Boolean) -> Unit,
+    onEnableAll: () -> Unit = {},
+    onDisableAll: () -> Unit = {}
 ) {
     val colors = AppTheme.current
     val enabledCount = models.count { model ->
         enabledModels.any { it.id == model.id && it.providerId == model.providerId }
     }
+    val allEnabled = enabledCount == models.size
+    val noneEnabled = enabledCount == 0
 
     val providerInfo = getProviderInfo(providerId)
 
@@ -416,6 +430,62 @@ private fun ProviderSection(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     HorizontalDivider(color = colors.DividerColor)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Enable/Disable All buttons
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onEnableAll,
+                            enabled = !allEnabled,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = colors.AccentPrimary,
+                                disabledContentColor = colors.TextMuted
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Enable All",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = onDisableAll,
+                            enabled = !noneEnabled,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = colors.TextSecondary,
+                                disabledContentColor = colors.TextMuted
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Cancel,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Disable All",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = colors.DividerColor.copy(alpha = 0.5f))
 
                     Spacer(modifier = Modifier.height(8.dp))
 

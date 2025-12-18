@@ -13,10 +13,13 @@ import java.net.HttpURLConnection
  * It aggregates multiple model providers and offers an OpenAI-compatible API.
  *
  * Features:
- * - No API key required
+ * - No API key required for free tier models
  * - Multiple model options
  * - Supports streaming
  * - Tool calling support on some models
+ *
+ * IMPORTANT: Only models available on the free/anonymous tier are included.
+ * Premium models require the "seed" tier and are excluded to prevent HTTP 402 errors.
  *
  * Implementation mirrors gpt4free's PollinationsAI provider.
  */
@@ -46,33 +49,53 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
 
     /**
      * Model aliases for user-friendly names
+     * Only includes free tier models
      */
     override val modelAliases: Map<String, String> = mapOf(
         "gpt-4.1-nano" to "openai-fast",
         "llama-4-scout" to "llamascout",
-        "deepseek-r1" to "deepseek-reasoning",
-        "openai-large" to "openai-large",
-        "claude" to "claude-hybridspace",
-        "mistral" to "mistral",
         "qwen" to "qwen-coder",
-        "gemini" to "gemini-flash"
+        "mistral" to "mistral"
     )
 
     /**
-     * Models with reasoning/thinking capabilities
+     * Models with reasoning/thinking capabilities (available on free tier)
+     * Note: DeepSeek reasoning models are premium only
      */
-    private val reasoningModels = setOf(
-        "deepseek-reasoning",
-        "deepseek-r1"
-    )
+    private val reasoningModels = setOf<String>()
 
     /**
-     * Models with vision capabilities
+     * Models with vision capabilities (available on free tier)
      */
     private val visionModels = setOf(
-        "openai",
+        "openai"
+    )
+
+    /**
+     * Models that are KNOWN to be free (anonymous tier)
+     * These have been verified to work without API key
+     */
+    private val freeModels = setOf(
+        "openai",          // GPT-4o-mini equivalent - VERIFIED FREE
+        "openai-fast",     // GPT-4.1-nano equivalent - VERIFIED FREE
+        "mistral",         // Mistral free tier - VERIFIED FREE
+        "llamascout",      // Llama 4 Scout - VERIFIED FREE
+        "qwen-coder",      // Qwen Coder free - VERIFIED FREE
+        "searchgpt"        // Search capability - VERIFIED FREE
+    )
+
+    /**
+     * Models that require premium (seed tier) - EXCLUDED
+     * HTTP 402: "Model not found or tier not high enough. Your tier: anonymous, required tier: seed"
+     */
+    private val premiumModels = setOf(
         "openai-large",
-        "gemini-flash"
+        "deepseek",
+        "deepseek-reasoning",
+        "deepseek-r1",
+        "gemini-flash",
+        "claude-hybridspace",
+        "claude"
     )
 
     private val textModelsEndpoint = "https://text.pollinations.ai/models"
@@ -86,7 +109,12 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
                 // Fallback to direct Pollinations endpoint
                 models = fetchFromEndpoint(textModelsEndpoint)
             }
-            models.ifEmpty { getDefaultModels() }
+            // Filter to only include free models
+            val filteredModels = models.filter { model ->
+                (model.id in freeModels || model.name in freeModels) &&
+                model.id !in premiumModels && model.name !in premiumModels
+            }
+            filteredModels.ifEmpty { getDefaultModels() }
         } catch (e: Exception) {
             getDefaultModels()
         }
@@ -111,6 +139,11 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
                     val modelName = modelJson.optString("name", "")
                     val modelId = modelJson.optString("id", modelName)
                     val aliases = modelJson.optJSONArray("aliases")
+
+                    // Skip premium models
+                    if (modelName in premiumModels || modelId in premiumModels) {
+                        continue
+                    }
 
                     if (modelName.isNotEmpty()) {
                         val displayName = if (aliases != null && aliases.length() > 0) {
@@ -157,21 +190,13 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
     }
 
     override fun getDefaultModels(): List<AiModel> = listOf(
+        // Only truly FREE models (anonymous tier) - VERIFIED WORKING
         AiModel(
             id = "openai",
             name = "OpenAI",
             providerId = providerId,
             displayName = "OpenAI GPT",
-            description = "OpenAI GPT model via Pollinations",
-            supportsVision = true,
-            supportsTools = true
-        ),
-        AiModel(
-            id = "openai-large",
-            name = "OpenAI Large",
-            providerId = providerId,
-            displayName = "OpenAI GPT Large",
-            description = "Larger OpenAI model",
+            description = "GPT-4o-mini equivalent via Pollinations (Free)",
             supportsVision = true,
             supportsTools = true
         ),
@@ -179,25 +204,8 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
             id = "openai-fast",
             name = "OpenAI Fast",
             providerId = providerId,
-            displayName = "OpenAI GPT Fast",
-            description = "Fast OpenAI model",
-            supportsTools = true
-        ),
-        AiModel(
-            id = "deepseek",
-            name = "DeepSeek",
-            providerId = providerId,
-            displayName = "DeepSeek",
-            description = "DeepSeek model",
-            supportsTools = true
-        ),
-        AiModel(
-            id = "deepseek-reasoning",
-            name = "DeepSeek Reasoning",
-            providerId = providerId,
-            displayName = "DeepSeek R1",
-            description = "DeepSeek reasoning model with chain-of-thought",
-            supportsReasoning = true,
+            displayName = "OpenAI Fast",
+            description = "Fast GPT model (GPT-4.1-nano equivalent)",
             supportsTools = true
         ),
         AiModel(
@@ -205,7 +213,7 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
             name = "Mistral",
             providerId = providerId,
             displayName = "Mistral",
-            description = "Mistral AI model",
+            description = "Mistral AI model (Free tier)",
             supportsTools = true
         ),
         AiModel(
@@ -213,7 +221,7 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
             name = "Llama Scout",
             providerId = providerId,
             displayName = "Llama 4 Scout",
-            description = "Meta's Llama 4 Scout model",
+            description = "Meta's Llama 4 Scout model (Free)",
             supportsTools = true
         ),
         AiModel(
@@ -221,24 +229,7 @@ class PollinationsProvider : BaseOpenAiCompatibleProvider() {
             name = "Qwen Coder",
             providerId = providerId,
             displayName = "Qwen Coder",
-            description = "Alibaba's Qwen model optimized for coding",
-            supportsTools = true
-        ),
-        AiModel(
-            id = "gemini-flash",
-            name = "Gemini Flash",
-            providerId = providerId,
-            displayName = "Gemini Flash",
-            description = "Google's fast Gemini model",
-            supportsVision = true,
-            supportsTools = true
-        ),
-        AiModel(
-            id = "claude-hybridspace",
-            name = "Claude Hybridspace",
-            providerId = providerId,
-            displayName = "Claude",
-            description = "Anthropic's Claude via Pollinations",
+            description = "Alibaba's Qwen Coder (Free tier)",
             supportsTools = true
         ),
         AiModel(

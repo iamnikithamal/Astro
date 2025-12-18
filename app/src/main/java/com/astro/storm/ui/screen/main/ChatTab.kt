@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.astro.storm.data.ai.provider.AiModel
 import com.astro.storm.data.ai.provider.MessageRole
 import com.astro.storm.data.local.chat.ChatConversation
@@ -61,6 +62,9 @@ import java.util.*
  * Shows either:
  * - Conversations list (when no conversation is open)
  * - Chat screen (when a conversation is open)
+ *
+ * When a conversation is open, the chat screen is displayed in full screen mode
+ * (without the main app's top bar and bottom navigation).
  */
 @Composable
 fun ChatTab(
@@ -68,7 +72,8 @@ fun ChatTab(
     currentChart: VedicChart?,
     savedCharts: List<SavedChart>,
     selectedChartId: Long?,
-    onNavigateToModels: () -> Unit
+    onNavigateToModels: () -> Unit,
+    isFullScreen: Boolean = false
 ) {
     val conversations by viewModel.conversations.collectAsState()
     val currentConversationId by viewModel.currentConversationId.collectAsState()
@@ -889,23 +894,31 @@ private fun MessageBubble(
                 }
 
                 // Reasoning toggle for assistant messages
-                if (!isUser && message.reasoningContent != null) {
+                if (!isUser && !message.reasoningContent.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.clickable { showReasoning = !showReasoning },
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        onClick = { showReasoning = !showReasoning },
+                        color = colors.ChipBackground.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        Icon(
-                            imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = null,
-                            tint = colors.TextMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = if (showReasoning) "Hide reasoning" else "Show reasoning",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.TextMuted
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = colors.TextMuted,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = if (showReasoning) "Hide reasoning" else "Show reasoning",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colors.TextMuted
+                            )
+                        }
                     }
 
                     AnimatedVisibility(visible = showReasoning) {
@@ -917,7 +930,7 @@ private fun MessageBubble(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = message.reasoningContent,
+                                text = message.reasoningContent ?: "",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.TextMuted,
                                 modifier = Modifier.padding(8.dp)
@@ -1032,23 +1045,31 @@ private fun StreamingMessageBubble(
                 }
 
                 // Reasoning toggle
-                if (reasoningContent.isNotEmpty()) {
+                if (reasoningContent.isNotBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.clickable { showReasoning = !showReasoning },
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        onClick = { showReasoning = !showReasoning },
+                        color = colors.ChipBackground.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        Icon(
-                            imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = null,
-                            tint = colors.TextMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = if (showReasoning) "Hide reasoning" else "Show reasoning",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.TextMuted
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = colors.TextMuted,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = if (showReasoning) "Hide reasoning" else "Show reasoning",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colors.TextMuted
+                            )
+                        }
                     }
 
                     AnimatedVisibility(visible = showReasoning) {
@@ -1182,9 +1203,16 @@ private fun ChatInputArea(
                 placeholder = {
                     Text(
                         text = "Ask Stormy...",
-                        color = colors.TextSubtle
+                        color = colors.TextSubtle,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 16.sp
+                        )
                     )
                 },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    color = colors.TextPrimary
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = colors.AccentPrimary,
                     unfocusedBorderColor = colors.BorderColor,

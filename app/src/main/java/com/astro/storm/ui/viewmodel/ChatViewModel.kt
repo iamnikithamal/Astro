@@ -324,7 +324,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 }
                             }
                             is AgentResponse.ReasoningChunk -> {
-                                _streamingReasoning.value = _streamingReasoning.value + response.text
+                                // Filter out "null" text artifacts that some models emit
+                                val cleanText = response.text
+                                    .replace("null", "")
+                                    .replace("undefined", "")
+                                if (cleanText.isNotBlank()) {
+                                    _streamingReasoning.value = _streamingReasoning.value + cleanText
+                                }
                             }
                             is AgentResponse.ToolCallsStarted -> {
                                 _toolsInProgress.value = response.toolNames
@@ -343,7 +349,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             }
                             is AgentResponse.Complete -> {
                                 finalContent = response.content
+                                // Clean reasoning from null artifacts
                                 finalReasoning = response.reasoning
+                                    ?.replace("null", "")
+                                    ?.replace("undefined", "")
+                                    ?.trim()
+                                    ?.takeIf { it.isNotBlank() }
                             }
                             is AgentResponse.Error -> {
                                 _uiState.value = ChatUiState.Error(response.message)
@@ -356,6 +367,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                             }
                             is AgentResponse.ModelInfo -> {
                                 // Model info - could log if needed
+                            }
+                            is AgentResponse.RetryInfo -> {
+                                // Show retry info to user via streaming content
+                                val retryText = "\n[Retrying: ${response.reason} - Attempt ${response.attempt}/${response.maxAttempts}]\n"
+                                _streamingContent.value = _streamingContent.value + retryText
                             }
                         }
                     }

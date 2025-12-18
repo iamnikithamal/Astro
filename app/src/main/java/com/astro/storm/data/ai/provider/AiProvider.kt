@@ -215,6 +215,16 @@ sealed class ChatResponse {
         val providerId: String,
         val model: String
     ) : ChatResponse()
+
+    /**
+     * Retry notification (when auto-retrying due to rate limits or errors)
+     */
+    data class RetryNotification(
+        val attempt: Int,
+        val maxAttempts: Int,
+        val delayMs: Long,
+        val reason: String
+    ) : ChatResponse()
 }
 
 /**

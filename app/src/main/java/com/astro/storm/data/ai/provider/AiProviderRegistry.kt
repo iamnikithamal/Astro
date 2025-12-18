@@ -56,6 +56,7 @@ class AiProviderRegistry private constructor(context: Context) {
         // Register default providers
         registerProvider(DeepInfraProvider())
         registerProvider(PollinationsProvider())
+        registerProvider(QwenProvider())
 
         // Load saved configurations
         loadConfigurations()
@@ -240,17 +241,81 @@ class AiProviderRegistry private constructor(context: Context) {
         return _enabledModels.value.groupBy { it.providerId }
     }
 
+    /**
+     * Enable all models (globally or for a specific provider)
+     * @param providerId If specified, only enable models from this provider
+     */
+    suspend fun enableAllModels(providerId: String? = null) {
+        mutex.withLock {
+            val modelsToEnable = if (providerId != null) {
+                _allModels.value.filter { it.providerId == providerId }
+            } else {
+                _allModels.value
+            }
+
+            modelsToEnable.forEach { model ->
+                val config = modelConfigs.getOrPut(model.id) { ModelConfig(model.id) }
+                modelConfigs[model.id] = config.copy(enabled = true)
+            }
+
+            saveConfigurations()
+            updateModelStates()
+        }
+    }
+
+    /**
+     * Disable all models (globally or for a specific provider)
+     * @param providerId If specified, only disable models from this provider
+     */
+    suspend fun disableAllModels(providerId: String? = null) {
+        mutex.withLock {
+            val modelsToDisable = if (providerId != null) {
+                _allModels.value.filter { it.providerId == providerId }
+            } else {
+                _allModels.value
+            }
+
+            modelsToDisable.forEach { model ->
+                val config = modelConfigs.getOrPut(model.id) { ModelConfig(model.id) }
+                modelConfigs[model.id] = config.copy(enabled = false)
+            }
+
+            saveConfigurations()
+            updateModelStates()
+        }
+    }
+
+    /**
+     * Get the count of enabled models for a provider
+     */
+    fun getEnabledCountForProvider(providerId: String): Int {
+        return _enabledModels.value.count { it.providerId == providerId }
+    }
+
+    /**
+     * Get the total count of models for a provider
+     */
+    fun getTotalCountForProvider(providerId: String): Int {
+        return _allModels.value.count { it.providerId == providerId }
+    }
+
+    /**
+     * Check if all models are enabled for a provider
+     */
+    fun areAllModelsEnabled(providerId: String): Boolean {
+        val total = getTotalCountForProvider(providerId)
+        val enabled = getEnabledCountForProvider(providerId)
+        return total > 0 && total == enabled
+    }
+
     private fun updateModelStates() {
         val allModelsFromProviders = mutableListOf<AiModel>()
 
         // Get cached models from providers
         for ((_, provider) in providers) {
             try {
-                // Use cached models (don't fetch again)
-                val models = (provider as? BaseOpenAiCompatibleProvider)?.let {
-                    // Access cached models if available
-                    _allModels.value.filter { model -> model.providerId == provider.providerId }
-                } ?: emptyList()
+                // Use cached models (don't fetch again) - filter from current state
+                val models = _allModels.value.filter { model -> model.providerId == provider.providerId }
                 allModelsFromProviders.addAll(models)
             } catch (e: Exception) {
                 // Continue

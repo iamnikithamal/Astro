@@ -42,7 +42,18 @@ class StormyAgent private constructor(
         const val AGENT_NAME = "Stormy"
         const val AGENT_DESCRIPTION = "Your Vedic Astrology AI Assistant"
 
-        private const val MAX_TOOL_ITERATIONS = 10
+        /**
+         * Maximum number of autonomous tool execution iterations.
+         * The agent can call tools up to this many times in a single request
+         * to accomplish the user's task autonomously.
+         */
+        private const val MAX_TOOL_ITERATIONS = 15
+
+        /**
+         * Maximum total iterations (including non-tool responses)
+         * to prevent infinite loops in edge cases
+         */
+        private const val MAX_TOTAL_ITERATIONS = 20
 
         @Volatile
         private var INSTANCE: StormyAgent? = null
@@ -122,7 +133,17 @@ $toolsDescription
 4. If a tool returns an error, explain the issue and suggest alternatives
 5. Always verify you have the necessary profile/chart before calling chart-specific tools
 
-Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help users understand their charts, make informed decisions, and find guidance through the wisdom of Vedic astrology.
+## Autonomous Behavior Guidelines
+- Work AUTONOMOUSLY to accomplish the user's request without waiting for further input
+- If you need data, call the appropriate tools immediately
+- Continue analyzing and calling tools until you can provide a COMPLETE response
+- DO NOT stop midway with incomplete analysis - gather all necessary information first
+- If you need to clarify something with the user, do so AFTER providing what you can
+- Provide comprehensive, detailed responses that fully address the user's query
+- Only ask clarifying questions if absolutely necessary for the core request
+- Think step-by-step: what data do I need? Call tools. What does this mean? Explain thoroughly.
+
+Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help users understand their charts, make informed decisions, and find guidance through the wisdom of Vedic astrology. Always strive to provide COMPLETE, actionable insights.
         """.trimIndent()
     }
 
@@ -196,10 +217,11 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
         fullMessages.addAll(messages)
 
         var iteration = 0
+        var toolIterations = 0
         var continueProcessing = true
         val toolsUsed = mutableListOf<String>()
 
-        while (continueProcessing && iteration < MAX_TOOL_ITERATIONS) {
+        while (continueProcessing && iteration < MAX_TOTAL_ITERATIONS && toolIterations < MAX_TOOL_ITERATIONS) {
             iteration++
             var currentContent = StringBuilder()
             var currentReasoning = StringBuilder()
@@ -256,6 +278,15 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
                     is ChatResponse.ProviderInfo -> {
                         emit(AgentResponse.ModelInfo(response.providerId, response.model))
                     }
+                    is ChatResponse.RetryNotification -> {
+                        // Emit retry notification so UI can show it
+                        emit(AgentResponse.RetryInfo(
+                            attempt = response.attempt,
+                            maxAttempts = response.maxAttempts,
+                            delayMs = response.delayMs,
+                            reason = response.reason
+                        ))
+                    }
                 }
             }
 
@@ -266,6 +297,7 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
 
             // Process tool calls if any
             if (pendingToolCalls.isNotEmpty()) {
+                toolIterations++
                 emit(AgentResponse.ToolCallsStarted(pendingToolCalls.map { it.name }))
 
                 // Add assistant message with tool calls
@@ -298,6 +330,7 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
                 }
 
                 // Continue processing to let AI respond to tool results
+                // The agent will autonomously continue until it has enough info
             } else {
                 // No tool calls, we're done
                 continueProcessing = false
@@ -309,8 +342,11 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
             }
         }
 
-        if (iteration >= MAX_TOOL_ITERATIONS) {
-            emit(AgentResponse.Error("Maximum tool call iterations reached", isRetryable = false))
+        if (iteration >= MAX_TOTAL_ITERATIONS || toolIterations >= MAX_TOOL_ITERATIONS) {
+            emit(AgentResponse.Error(
+                "Maximum iterations reached ($iteration total, $toolIterations tool calls). The analysis may be incomplete.",
+                isRetryable = false
+            ))
         }
     }
 
@@ -472,6 +508,16 @@ sealed class AgentResponse {
     data class Error(
         val message: String,
         val isRetryable: Boolean = false
+    ) : AgentResponse()
+
+    /**
+     * Retry notification (rate limit or transient error)
+     */
+    data class RetryInfo(
+        val attempt: Int,
+        val maxAttempts: Int,
+        val delayMs: Long,
+        val reason: String
     ) : AgentResponse()
 
     /**
