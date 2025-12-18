@@ -910,6 +910,15 @@ class PrashnaCalculatorWrapper(private val context: android.content.Context) {
                 PrashnaCalculator.PrashnaVerdict.TIMING_DEPENDENT -> 50
             }
 
+            // Extract relevant house information from the map
+            val primaryRelevantHouse = result.houseAnalysis.relevantHouses.firstOrNull() ?: 1
+            val houseCondition = result.houseAnalysis.houseConditions[primaryRelevantHouse]
+            val houseLordPosition = result.houseAnalysis.houseLords[primaryRelevantHouse]
+            val planetsInRelevantHouse = result.houseAnalysis.planetsInHouses[primaryRelevantHouse] ?: emptyList()
+
+            // Determine if moon is favorable based on strength
+            val isMoonFavorable = result.moonAnalysis.moonStrength.score >= 3
+
             PrashnaAnalysisResult(
                 question = question,
                 category = prashnaCategory.displayName,
@@ -918,48 +927,48 @@ class PrashnaCalculatorWrapper(private val context: android.content.Context) {
                 confidence = result.confidence,
                 moonAnalysis = MoonAnalysis(
                     sign = result.moonAnalysis.moonSign.displayName,
-                    nakshatra = result.moonAnalysis.moonNakshatra.displayName,
+                    nakshatra = result.moonAnalysis.nakshatra.displayName,
                     house = result.moonAnalysis.moonHouse,
-                    strength = result.moonAnalysis.moonStrength,
-                    isFavorable = result.moonAnalysis.isMoonFavorable,
+                    strength = result.moonAnalysis.moonStrength.displayName,
+                    isFavorable = isMoonFavorable,
                     interpretation = result.moonAnalysis.interpretation
                 ),
                 lagnaAnalysis = LagnaAnalysis(
                     sign = result.lagnaAnalysis.lagnaSign.displayName,
                     lord = result.lagnaAnalysis.lagnaLord.displayName,
-                    lordHouse = result.lagnaAnalysis.lagnaLordHouse,
-                    lordStrength = result.lagnaAnalysis.lagnaLordStrength,
+                    lordHouse = result.lagnaAnalysis.lagnaLordPosition.house,
+                    lordStrength = result.lagnaAnalysis.lagnaLordStrength.overallStrength.displayName,
                     interpretation = result.lagnaAnalysis.interpretation
                 ),
                 houseAnalysis = HouseAnalysis(
-                    relevantHouse = result.houseAnalysis.relevantHouse,
-                    houseLord = result.houseAnalysis.houseLord.displayName,
-                    houseLordPosition = result.houseAnalysis.houseLordHouse,
-                    planetsInHouse = result.houseAnalysis.planetsInHouse.map { it.displayName },
-                    aspects = result.houseAnalysis.aspectingPlanets.map { "${it.displayName} aspects" },
-                    strength = result.houseAnalysis.houseStrength,
+                    relevantHouse = primaryRelevantHouse,
+                    houseLord = houseCondition?.lord?.displayName ?: "Unknown",
+                    houseLordPosition = houseCondition?.lordPosition ?: 1,
+                    planetsInHouse = planetsInRelevantHouse.map { it.planet.displayName },
+                    aspects = houseCondition?.aspectsToHouse?.map { "${it.aspectingPlanet.displayName} aspects" } ?: emptyList(),
+                    strength = houseCondition?.condition?.displayName ?: "Unknown",
                     interpretation = result.houseAnalysis.interpretation
                 ),
                 specialYogas = result.specialYogas.map { yoga ->
                     SpecialYoga(
                         name = yoga.name,
-                        isFavorable = yoga.isFavorable,
-                        effect = yoga.effect
+                        isFavorable = yoga.isPositive,
+                        effect = yoga.interpretation
                     )
                 },
                 omens = result.omens.map { omen ->
                     Omen(
-                        type = omen.type,
+                        type = omen.type.displayName,
                         description = omen.description,
-                        significance = omen.significance
+                        significance = omen.indication
                     )
                 },
                 timingPrediction = TimingPrediction(
-                    shortTerm = result.timingPrediction.shortTermOutlook,
-                    mediumTerm = result.timingPrediction.mediumTermOutlook,
-                    longTerm = result.timingPrediction.longTermOutlook,
-                    favorableDays = result.timingPrediction.favorableDays,
-                    unfavorableDays = result.timingPrediction.unfavorableDays
+                    shortTerm = if (result.timingPrediction.willEventOccur) "Favorable" else "Uncertain",
+                    mediumTerm = result.timingPrediction.estimatedTime,
+                    longTerm = result.timingPrediction.explanation,
+                    favorableDays = emptyList(),
+                    unfavorableDays = emptyList()
                 ),
                 recommendations = result.recommendations,
                 detailedInterpretation = result.detailedInterpretation

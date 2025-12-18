@@ -80,9 +80,7 @@ import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.theme.AppTheme
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 private val SpringSpec = spring<Color>(stiffness = Spring.StiffnessMedium)
 private val SpringSpecDp = spring<Dp>(stiffness = Spring.StiffnessMedium)
@@ -694,13 +692,7 @@ private fun extractInitials(name: String): String {
 
 private fun formatChartDetails(chart: SavedChart, fallback: String): String {
     val formattedDate = try {
-        val dateTime = LocalDateTime.parse(
-            chart.dateTime,
-            DateTimeFormatter.ISO_LOCAL_DATE_TIME
-        )
-        dateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
-    } catch (_: DateTimeParseException) {
-        null
+        chart.dateTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
     } catch (_: Exception) {
         null
     }

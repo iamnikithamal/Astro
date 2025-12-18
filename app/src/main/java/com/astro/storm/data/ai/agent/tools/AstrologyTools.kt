@@ -1,14 +1,76 @@
 package com.astro.storm.data.ai.agent.tools
 
-import com.astro.storm.data.model.Planet
-import com.astro.storm.data.model.ZodiacSign
+import com.astro.storm.data.local.ChartEntity
+import com.astro.storm.data.model.BirthData
+import com.astro.storm.data.model.Gender
+import com.astro.storm.data.model.HouseSystem
 import com.astro.storm.data.model.Nakshatra
+import com.astro.storm.data.model.Planet
+import com.astro.storm.data.model.PlanetPosition
+import com.astro.storm.data.model.VedicChart
+import com.astro.storm.data.model.ZodiacSign
 // Note: Calculation wrappers are defined locally in this package
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+
+/**
+ * Extension function to convert ChartEntity to VedicChart
+ * Used by tools that need to access full chart data from the database
+ */
+fun ChartEntity.toVedicChart(): VedicChart {
+    val planetPositions = JSONArray(planetPositionsJson).let { array ->
+        (0 until array.length()).map { i ->
+            val obj = array.getJSONObject(i)
+            PlanetPosition(
+                planet = Planet.valueOf(obj.getString("planet")),
+                longitude = obj.getDouble("longitude"),
+                latitude = obj.getDouble("latitude"),
+                distance = obj.getDouble("distance"),
+                speed = obj.getDouble("speed"),
+                sign = ZodiacSign.valueOf(obj.getString("sign")),
+                degree = obj.getDouble("degree"),
+                minutes = obj.getDouble("minutes"),
+                seconds = obj.getDouble("seconds"),
+                isRetrograde = obj.getBoolean("isRetrograde"),
+                nakshatra = Nakshatra.valueOf(obj.getString("nakshatra")),
+                nakshatraPada = obj.getInt("nakshatraPada"),
+                house = obj.getInt("house")
+            )
+        }
+    }
+
+    val houseCuspsList = JSONArray(houseCuspsJson).let { array ->
+        (0 until array.length()).map { i ->
+            array.getDouble(i)
+        }
+    }
+
+    return VedicChart(
+        birthData = BirthData(
+            name = name,
+            dateTime = LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            latitude = latitude,
+            longitude = longitude,
+            timezone = timezone,
+            location = location,
+            gender = Gender.fromString(gender)
+        ),
+        julianDay = julianDay,
+        ayanamsa = ayanamsa,
+        ayanamsaName = ayanamsaName,
+        ascendant = ascendant,
+        midheaven = midheaven,
+        planetPositions = planetPositions,
+        houseCusps = houseCuspsList,
+        houseSystem = HouseSystem.valueOf(houseSystem),
+        calculationTime = createdAt
+    )
+}
 
 // ============================================
 // PROFILE & CHART ACCESS TOOLS
