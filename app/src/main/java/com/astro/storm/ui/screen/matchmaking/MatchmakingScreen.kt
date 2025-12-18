@@ -2794,10 +2794,10 @@ private fun buildMatchmakingAiPrompt(
     sb.appendLine()
 
     // Manglik Analysis
-    if (result.brideManglik.isManglik || result.groomManglik.isManglik) {
+    if (result.brideManglik.effectiveDosha.severity > 0 || result.groomManglik.effectiveDosha.severity > 0) {
         sb.appendLine("**Manglik Analysis:**")
-        sb.appendLine("- Bride Manglik: ${result.brideManglik.isManglik}")
-        sb.appendLine("- Groom Manglik: ${result.groomManglik.isManglik}")
+        sb.appendLine("- Bride Manglik: ${result.brideManglik.effectiveDosha.displayName}")
+        sb.appendLine("- Groom Manglik: ${result.groomManglik.effectiveDosha.displayName}")
         sb.appendLine("- Compatibility: ${result.manglikCompatibility}")
         sb.appendLine()
     }

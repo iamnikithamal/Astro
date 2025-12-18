@@ -577,7 +577,7 @@ enum class InsightFeature(
     ARUDHA_PADA(
         titleKey = StringKey.FEATURE_ARUDHA_PADA,
         descriptionKey = StringKey.FEATURE_ARUDHA_PADA_DESC,
-        icon = Icons.Outlined.TouchApp,
+        icon = Icons.Outlined.Spa,
         color = DarkAppThemeColors.LifeAreaSpiritual,
         isImplemented = true
     ),
