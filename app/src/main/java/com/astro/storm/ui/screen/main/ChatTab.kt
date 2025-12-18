@@ -589,6 +589,16 @@ fun ChatScreen(
                 .padding(paddingValues)
         ) {
             // Messages list
+            // Filter out streaming messages from the database list to avoid duplicates
+            // The streaming message is rendered separately below
+            val displayMessages = remember(messages, isStreaming) {
+                if (isStreaming) {
+                    messages.filter { !it.isStreaming }
+                } else {
+                    messages
+                }
+            }
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -598,20 +608,24 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Welcome message if empty
-                if (messages.isEmpty() && !isStreaming) {
+                if (displayMessages.isEmpty() && !isStreaming) {
                     item {
-                        WelcomeMessage()
+                        WelcomeMessage(
+                            onSuggestionClick = { suggestion ->
+                                messageText = suggestion
+                            }
+                        )
                     }
                 }
 
-                // Messages
+                // Messages (excluding streaming ones to avoid duplicates)
                 items(
-                    items = messages,
+                    items = displayMessages,
                     key = { it.id }
                 ) { message ->
                     MessageBubble(
                         message = message,
-                        onRegenerate = if (message.role == MessageRole.ASSISTANT && message == messages.lastOrNull()) {
+                        onRegenerate = if (message.role == MessageRole.ASSISTANT && message == displayMessages.lastOrNull { it.role == MessageRole.ASSISTANT } && !isStreaming) {
                             onRegenerateResponse
                         } else null
                     )
@@ -619,7 +633,7 @@ fun ChatScreen(
 
                 // Streaming message or AI status indicator
                 if (isStreaming) {
-                    item {
+                    item(key = "streaming_message") {
                         when {
                             // Show content bubble if we have content
                             streamingContent.isNotEmpty() -> {
@@ -647,7 +661,7 @@ fun ChatScreen(
 
                 // Sending indicator (before streaming starts)
                 if (uiState == ChatUiState.Sending && !isStreaming) {
-                    item {
+                    item(key = "sending_indicator") {
                         AiStatusIndicator(aiStatus = AiStatus.Thinking)
                     }
                 }
@@ -855,7 +869,9 @@ fun ChatScreen(
 }
 
 @Composable
-private fun WelcomeMessage() {
+private fun WelcomeMessage(
+    onSuggestionClick: (String) -> Unit = {}
+) {
     val colors = AppTheme.current
 
     Column(
@@ -907,24 +923,36 @@ private fun WelcomeMessage() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Suggestion chips
+        // Suggestion chips - clickable to populate input field
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SuggestionChip(text = "What's my current dasha period?")
-            SuggestionChip(text = "Analyze my birth chart")
-            SuggestionChip(text = "What yogas are present in my chart?")
+            SuggestionChip(
+                text = "What's my current dasha period?",
+                onClick = { onSuggestionClick("What's my current dasha period?") }
+            )
+            SuggestionChip(
+                text = "Analyze my birth chart",
+                onClick = { onSuggestionClick("Analyze my birth chart") }
+            )
+            SuggestionChip(
+                text = "What yogas are present in my chart?",
+                onClick = { onSuggestionClick("What yogas are present in my chart?") }
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SuggestionChip(text: String) {
+private fun SuggestionChip(
+    text: String,
+    onClick: () -> Unit = {}
+) {
     val colors = AppTheme.current
 
     SuggestionChip(
-        onClick = { /* TODO: Implement suggestion click */ },
+        onClick = onClick,
         label = {
             Text(
                 text = text,
@@ -1355,11 +1383,11 @@ private fun ChatInputArea(
                     Text(
                         text = "Ask Stormy...",
                         color = colors.TextSubtle,
-                        fontSize = 16.sp
+                        fontSize = 14.sp
                     )
                 },
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     color = colors.TextPrimary
                 ),
                 colors = OutlinedTextFieldDefaults.colors(

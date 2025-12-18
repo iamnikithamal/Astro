@@ -1,6 +1,7 @@
 package com.astro.storm.ui.components
 
 import android.content.Context
+import android.graphics.Typeface
 import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.compose.runtime.Composable
@@ -10,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.res.ResourcesCompat
+import com.astro.storm.R
 import io.noties.markwon.Markwon
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -211,12 +214,25 @@ fun MarkdownText(
         markwon.toMarkdown(displayContent)
     }
 
+    // Load Poppins font for consistent typography
+    val poppinsTypeface = remember(context) {
+        try {
+            ResourcesCompat.getFont(context, R.font.poppins_regular)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
             TextView(ctx).apply {
                 movementMethod = LinkMovementMethod.getInstance()
                 setTextIsSelectable(true)
+                // Apply Poppins font
+                poppinsTypeface?.let { typeface = it }
+                // Set line spacing for better readability
+                setLineSpacing(4f, 1.1f)
             }
         },
         update = { textView ->
@@ -232,6 +248,9 @@ fun MarkdownText(
 
             // Apply text size
             textView.textSize = textSize
+
+            // Ensure font is applied on update too
+            poppinsTypeface?.let { textView.typeface = it }
 
             // Set the markdown content
             markwon.setParsedMarkdown(textView, spanned)
