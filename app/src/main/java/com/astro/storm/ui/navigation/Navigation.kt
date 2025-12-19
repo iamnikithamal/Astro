@@ -44,6 +44,12 @@ import com.astro.storm.ui.screen.tarabala.TarabalaScreen
 import com.astro.storm.ui.screen.AiModelsScreen
 import com.astro.storm.ui.screen.ArudhaPadaScreen
 import com.astro.storm.ui.screen.GrahaYuddhaScreen
+import com.astro.storm.ui.screen.DashaSandhiScreen
+import com.astro.storm.ui.screen.GocharaVedhaScreen
+import com.astro.storm.ui.screen.KemadrumaYogaScreen
+import com.astro.storm.ui.screen.PanchMahapurushaScreen
+import com.astro.storm.ui.screen.NityaYogaScreen
+import com.astro.storm.ui.screen.AvasthaScreen
 import com.astro.storm.ui.screen.main.ChatScreen
 import com.astro.storm.ui.screen.main.ExportFormat
 import com.astro.storm.ui.screen.main.InsightFeature
@@ -166,6 +172,36 @@ sealed class Screen(val route: String) {
     // Graha Yuddha (Planetary War) screen
     object GrahaYuddha : Screen("graha_yuddha/{chartId}") {
         fun createRoute(chartId: Long) = "graha_yuddha/$chartId"
+    }
+
+    // Dasha Sandhi (Period Transitions) screen
+    object DashaSandhi : Screen("dasha_sandhi/{chartId}") {
+        fun createRoute(chartId: Long) = "dasha_sandhi/$chartId"
+    }
+
+    // Gochara Vedha (Transit Obstructions) screen
+    object GocharaVedha : Screen("gochara_vedha/{chartId}") {
+        fun createRoute(chartId: Long) = "gochara_vedha/$chartId"
+    }
+
+    // Kemadruma Yoga (Moon Isolation) screen
+    object KemadrumaYoga : Screen("kemadruma_yoga/{chartId}") {
+        fun createRoute(chartId: Long) = "kemadruma_yoga/$chartId"
+    }
+
+    // Panch Mahapurusha Yoga (Five Great Person Yogas) screen
+    object PanchMahapurusha : Screen("panch_mahapurusha/{chartId}") {
+        fun createRoute(chartId: Long) = "panch_mahapurusha/$chartId"
+    }
+
+    // Nitya Yoga (27 Daily Yogas) screen
+    object NityaYoga : Screen("nitya_yoga/{chartId}") {
+        fun createRoute(chartId: Long) = "nitya_yoga/$chartId"
+    }
+
+    // Avastha (Planetary States) screen
+    object Avastha : Screen("avastha/{chartId}") {
+        fun createRoute(chartId: Long) = "avastha/$chartId"
     }
 
     // AI Models configuration screen
@@ -379,6 +415,36 @@ fun AstroStormNavigation(
                 onNavigateToGrahaYuddha = {
                     selectedChartId?.let { chartId ->
                         navController.navigate(Screen.GrahaYuddha.createRoute(chartId))
+                    }
+                },
+                onNavigateToDashaSandhi = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.DashaSandhi.createRoute(chartId))
+                    }
+                },
+                onNavigateToGocharaVedha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.GocharaVedha.createRoute(chartId))
+                    }
+                },
+                onNavigateToKemadrumaYoga = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.KemadrumaYoga.createRoute(chartId))
+                    }
+                },
+                onNavigateToPanchMahapurusha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.PanchMahapurusha.createRoute(chartId))
+                    }
+                },
+                onNavigateToNityaYoga = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.NityaYoga.createRoute(chartId))
+                    }
+                },
+                onNavigateToAvastha = {
+                    selectedChartId?.let { chartId ->
+                        navController.navigate(Screen.Avastha.createRoute(chartId))
                     }
                 },
                 onNavigateToAiModels = {
@@ -1037,6 +1103,120 @@ fun AstroStormNavigation(
             }
 
             GrahaYuddhaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Dasha Sandhi (Period Transitions) screen
+        composable(
+            route = Screen.DashaSandhi.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            DashaSandhiScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Gochara Vedha (Transit Obstructions) screen
+        composable(
+            route = Screen.GocharaVedha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            GocharaVedhaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Kemadruma Yoga (Moon Isolation) screen
+        composable(
+            route = Screen.KemadrumaYoga.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            KemadrumaYogaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Panch Mahapurusha Yoga (Five Great Person Yogas) screen
+        composable(
+            route = Screen.PanchMahapurusha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            PanchMahapurushaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Nitya Yoga (27 Daily Yogas) screen
+        composable(
+            route = Screen.NityaYoga.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            NityaYogaScreen(
+                chart = currentChart,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Avastha (Planetary States) screen
+        composable(
+            route = Screen.Avastha.route,
+            arguments = listOf(navArgument("chartId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val chartId = backStackEntry.arguments?.getLong("chartId") ?: return@composable
+
+            LaunchedEffect(chartId) {
+                if (selectedChartId != chartId) {
+                    viewModel.loadChart(chartId)
+                }
+            }
+
+            AvasthaScreen(
                 chart = currentChart,
                 onBack = { navController.popBackStack() }
             )

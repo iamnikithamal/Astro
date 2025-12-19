@@ -1,8 +1,10 @@
 package com.astro.storm.ui.components
 
 import android.content.Context
-import android.graphics.Typeface
+import android.graphics.Canvas
+import android.graphics.Point
 import android.text.method.LinkMovementMethod
+import android.view.View
 import android.widget.TextView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -17,6 +19,79 @@ import io.noties.markwon.Markwon
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
+
+/**
+ * Custom TextView that fixes the drag shadow crash on long-press copy.
+ *
+ * The crash occurs when Android attempts to create a drag shadow with
+ * zero or negative dimensions (IllegalStateException: Drag shadow dimensions must be positive).
+ * This can happen with empty text, invisible text, or edge cases in text selection.
+ *
+ * This custom view overrides startDragAndDrop to provide a safe drag shadow
+ * that always has valid dimensions.
+ */
+private class SafeSelectableTextView(context: Context) : TextView(context) {
+
+    override fun startDragAndDrop(
+        data: android.content.ClipData?,
+        shadowBuilder: DragShadowBuilder?,
+        myLocalState: Any?,
+        flags: Int
+    ): Boolean {
+        // Use a safe drag shadow builder that guarantees positive dimensions
+        val safeShadowBuilder = SafeDragShadowBuilder(this)
+        return try {
+            super.startDragAndDrop(data, safeShadowBuilder, myLocalState, flags)
+        } catch (e: IllegalStateException) {
+            // If drag still fails somehow, return false gracefully instead of crashing
+            false
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun startDrag(
+        data: android.content.ClipData?,
+        shadowBuilder: DragShadowBuilder?,
+        myLocalState: Any?,
+        flags: Int
+    ): Boolean {
+        val safeShadowBuilder = SafeDragShadowBuilder(this)
+        return try {
+            super.startDrag(data, safeShadowBuilder, myLocalState, flags)
+        } catch (e: IllegalStateException) {
+            false
+        }
+    }
+
+    /**
+     * A DragShadowBuilder that guarantees valid dimensions.
+     * Falls back to minimum 1x1 size if the view has invalid dimensions.
+     */
+    private class SafeDragShadowBuilder(view: View) : DragShadowBuilder(view) {
+
+        override fun onProvideShadowMetrics(outShadowSize: Point, outShadowTouchPoint: Point) {
+            val view = view
+            if (view != null) {
+                val width = maxOf(view.width, 1)
+                val height = maxOf(view.height, 1)
+                outShadowSize.set(width, height)
+                outShadowTouchPoint.set(width / 2, height / 2)
+            } else {
+                // Fallback to minimum valid dimensions
+                outShadowSize.set(1, 1)
+                outShadowTouchPoint.set(0, 0)
+            }
+        }
+
+        override fun onDrawShadow(canvas: Canvas) {
+            val view = view
+            if (view != null && view.width > 0 && view.height > 0) {
+                view.draw(canvas)
+            }
+            // If view is invalid, draw nothing (empty shadow is better than crash)
+        }
+    }
+}
 
 /**
  * Content cleaning utilities for AI responses.
@@ -226,7 +301,7 @@ fun MarkdownText(
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            TextView(ctx).apply {
+            SafeSelectableTextView(ctx).apply {
                 movementMethod = LinkMovementMethod.getInstance()
                 setTextIsSelectable(true)
                 // Apply Poppins font

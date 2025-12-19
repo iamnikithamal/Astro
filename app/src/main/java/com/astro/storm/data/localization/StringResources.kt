@@ -256,6 +256,18 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     FEATURE_ARUDHA_PADA_DESC("Jaimini Arudha analysis for manifestation", "जैमिनी आरूढ विश्लेषण"),
     FEATURE_GRAHA_YUDDHA("Graha Yuddha", "ग्रह युद्ध"),
     FEATURE_GRAHA_YUDDHA_DESC("Planetary war analysis & remedies", "ग्रह युद्ध विश्लेषण र उपाय"),
+    FEATURE_DASHA_SANDHI("Dasha Sandhi", "दशा सन्धि"),
+    FEATURE_DASHA_SANDHI_DESC("Period transition analysis", "अवधि संक्रमण विश्लेषण"),
+    FEATURE_GOCHARA_VEDHA("Gochara Vedha", "गोचर वेध"),
+    FEATURE_GOCHARA_VEDHA_DESC("Transit obstruction effects", "गोचर अवरोध प्रभाव"),
+    FEATURE_KEMADRUMA_YOGA("Kemadruma Yoga", "केमद्रुम योग"),
+    FEATURE_KEMADRUMA_YOGA_DESC("Moon isolation analysis", "चन्द्र एकान्त विश्लेषण"),
+    FEATURE_PANCH_MAHAPURUSHA("Panch Mahapurusha", "पञ्च महापुरुष"),
+    FEATURE_PANCH_MAHAPURUSHA_DESC("Five great person yogas", "पाँच महान् व्यक्ति योग"),
+    FEATURE_NITYA_YOGA("Nitya Yoga", "नित्य योग"),
+    FEATURE_NITYA_YOGA_DESC("27 daily yogas", "२७ दैनिक योगहरू"),
+    FEATURE_AVASTHA("Avastha", "अवस्था"),
+    FEATURE_AVASTHA_DESC("Planetary states analysis", "ग्रह अवस्था विश्लेषण"),
 
     // Predictions Screen - Tabs
     PREDICTIONS_TAB_OVERVIEW("Overview", "सारांश"),

@@ -38,6 +38,9 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Stars
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Brightness2
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -586,6 +589,48 @@ enum class InsightFeature(
         descriptionKey = StringKey.FEATURE_GRAHA_YUDDHA_DESC,
         icon = Icons.Outlined.CompareArrows,
         color = DarkAppThemeColors.WarningColor,
+        isImplemented = true
+    ),
+    DASHA_SANDHI(
+        titleKey = StringKey.FEATURE_DASHA_SANDHI,
+        descriptionKey = StringKey.FEATURE_DASHA_SANDHI_DESC,
+        icon = Icons.Outlined.Timeline,
+        color = DarkAppThemeColors.LifeAreaSpiritual,
+        isImplemented = true
+    ),
+    GOCHARA_VEDHA(
+        titleKey = StringKey.FEATURE_GOCHARA_VEDHA,
+        descriptionKey = StringKey.FEATURE_GOCHARA_VEDHA_DESC,
+        icon = Icons.Outlined.Block,
+        color = DarkAppThemeColors.WarningColor,
+        isImplemented = true
+    ),
+    KEMADRUMA_YOGA(
+        titleKey = StringKey.FEATURE_KEMADRUMA_YOGA,
+        descriptionKey = StringKey.FEATURE_KEMADRUMA_YOGA_DESC,
+        icon = Icons.Outlined.Brightness2,
+        color = DarkAppThemeColors.PlanetMoon,
+        isImplemented = true
+    ),
+    PANCH_MAHAPURUSHA(
+        titleKey = StringKey.FEATURE_PANCH_MAHAPURUSHA,
+        descriptionKey = StringKey.FEATURE_PANCH_MAHAPURUSHA_DESC,
+        icon = Icons.Outlined.Stars,
+        color = DarkAppThemeColors.AccentGold,
+        isImplemented = true
+    ),
+    NITYA_YOGA(
+        titleKey = StringKey.FEATURE_NITYA_YOGA,
+        descriptionKey = StringKey.FEATURE_NITYA_YOGA_DESC,
+        icon = Icons.Outlined.CalendarMonth,
+        color = DarkAppThemeColors.AccentTeal,
+        isImplemented = true
+    ),
+    AVASTHA(
+        titleKey = StringKey.FEATURE_AVASTHA,
+        descriptionKey = StringKey.FEATURE_AVASTHA_DESC,
+        icon = Icons.Outlined.Psychology,
+        color = DarkAppThemeColors.AccentPrimary,
         isImplemented = true
     );
 

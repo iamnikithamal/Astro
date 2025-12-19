@@ -85,6 +85,12 @@ fun MainScreen(
     onNavigateToTarabala: () -> Unit = {},
     onNavigateToArudhaPada: () -> Unit = {},
     onNavigateToGrahaYuddha: () -> Unit = {},
+    onNavigateToDashaSandhi: () -> Unit = {},
+    onNavigateToGocharaVedha: () -> Unit = {},
+    onNavigateToKemadrumaYoga: () -> Unit = {},
+    onNavigateToPanchMahapurusha: () -> Unit = {},
+    onNavigateToNityaYoga: () -> Unit = {},
+    onNavigateToAvastha: () -> Unit = {},
     onNavigateToAiModels: () -> Unit = {},
     onNavigateToChat: (Long?) -> Unit = {}, // null for new chat, Long for existing
     onExportChart: (ExportFormat) -> Unit
@@ -233,6 +239,12 @@ fun MainScreen(
                                         InsightFeature.TARABALA -> if (currentChart != null) onNavigateToTarabala()
                                         InsightFeature.ARUDHA_PADA -> if (currentChart != null) onNavigateToArudhaPada()
                                         InsightFeature.GRAHA_YUDDHA -> if (currentChart != null) onNavigateToGrahaYuddha()
+                                        InsightFeature.DASHA_SANDHI -> if (currentChart != null) onNavigateToDashaSandhi()
+                                        InsightFeature.GOCHARA_VEDHA -> if (currentChart != null) onNavigateToGocharaVedha()
+                                        InsightFeature.KEMADRUMA_YOGA -> if (currentChart != null) onNavigateToKemadrumaYoga()
+                                        InsightFeature.PANCH_MAHAPURUSHA -> if (currentChart != null) onNavigateToPanchMahapurusha()
+                                        InsightFeature.NITYA_YOGA -> if (currentChart != null) onNavigateToNityaYoga()
+                                        InsightFeature.AVASTHA -> if (currentChart != null) onNavigateToAvastha()
                                         // Fallback to chart analysis for any remaining features
                                         else -> if (currentChart != null) onNavigateToChartAnalysis(feature)
                                     }

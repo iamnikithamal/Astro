@@ -17,8 +17,11 @@ import com.astro.storm.data.repository.ChatRepository
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * AI processing status for detailed UI feedback
@@ -136,6 +139,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     // Tool steps accumulator for agentic UI
     private var currentToolSteps = mutableListOf<ToolExecutionStep>()
+
+    // Performance optimization: Throttling for UI updates
+    private var lastUiUpdateTime = 0L
+    private var lastDbUpdateTime = 0L
+    private var pendingUiUpdate = false
+    private val updateMutex = Mutex()
+
+    // Throttle intervals (in milliseconds)
+    private companion object {
+        const val UI_UPDATE_THROTTLE_MS = 50L  // ~20 FPS for smooth typing
+        const val DB_UPDATE_THROTTLE_MS = 500L // Reduced DB writes
+        const val MIN_CONTENT_CHANGE_LENGTH = 5 // Min chars to trigger update
+    }
 
     // ============================================
     // DATA FLOWS
@@ -361,10 +377,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _aiStatus.value = AiStatus.Thinking
                 _uiState.value = ChatUiState.Sending
 
-                // Reset accumulators
+                // Reset accumulators and throttle timers
                 rawContentAccumulator.clear()
                 rawReasoningAccumulator.clear()
                 currentToolSteps.clear()
+                lastUiUpdateTime = 0L
+                lastDbUpdateTime = 0L
+                pendingUiUpdate = false
 
                 // Get or create conversation ID
                 // If we're in "new chat" mode, create the conversation now (lazy creation)
@@ -457,51 +476,78 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 // Accumulate raw content
                                 rawContentAccumulator.append(response.text)
 
-                                // Clean and update display content
-                                val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
-                                _streamingContent.value = cleanedContent
+                                // Throttled UI update for smooth performance
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastUiUpdateTime >= UI_UPDATE_THROTTLE_MS) {
+                                    lastUiUpdateTime = currentTime
 
-                                // Update AI status
-                                if (!hasReceivedContent && cleanedContent.isNotEmpty()) {
-                                    hasReceivedContent = true
-                                    _aiStatus.value = AiStatus.Typing
+                                    // Clean and update display content
+                                    val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
+                                    _streamingContent.value = cleanedContent
+
+                                    // Update AI status
+                                    if (!hasReceivedContent && cleanedContent.isNotEmpty()) {
+                                        hasReceivedContent = true
+                                        _aiStatus.value = AiStatus.Typing
+                                    }
+
+                                    // Update streaming message state (throttled)
+                                    updateStreamingMessageState()
+                                } else {
+                                    pendingUiUpdate = true
                                 }
 
-                                // Update database periodically with cleaned content
-                                currentMessageId?.let { msgId ->
-                                    val cleanedReasoning = if (rawReasoningAccumulator.isNotEmpty()) {
-                                        ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
-                                    } else null
+                                // Throttled database update (less frequent to reduce I/O)
+                                if (currentTime - lastDbUpdateTime >= DB_UPDATE_THROTTLE_MS) {
+                                    lastDbUpdateTime = currentTime
+                                    currentMessageId?.let { msgId ->
+                                        val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
+                                        val cleanedReasoning = if (rawReasoningAccumulator.isNotEmpty()) {
+                                            ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
+                                        } else null
 
-                                    chatRepository.updateAssistantMessageContent(
-                                        messageId = msgId,
-                                        content = cleanedContent,
-                                        reasoningContent = cleanedReasoning?.takeIf { it.isNotEmpty() },
-                                        isStreaming = true
-                                    )
+                                        chatRepository.updateAssistantMessageContent(
+                                            messageId = msgId,
+                                            content = cleanedContent,
+                                            reasoningContent = cleanedReasoning?.takeIf { it.isNotEmpty() },
+                                            isStreaming = true
+                                        )
+                                    }
                                 }
                             }
                             is AgentResponse.ReasoningChunk -> {
                                 // Accumulate raw reasoning
                                 rawReasoningAccumulator.append(response.text)
 
-                                // Clean and update display reasoning
-                                val cleanedReasoning = ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
-                                if (cleanedReasoning.isNotEmpty()) {
-                                    _streamingReasoning.value = cleanedReasoning
+                                // Throttled UI update for reasoning
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastUiUpdateTime >= UI_UPDATE_THROTTLE_MS) {
+                                    lastUiUpdateTime = currentTime
 
-                                    // Update AI status to show reasoning
-                                    if (_aiStatus.value == AiStatus.Thinking) {
-                                        _aiStatus.value = AiStatus.Reasoning
+                                    val cleanedReasoning = ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
+                                    if (cleanedReasoning.isNotEmpty()) {
+                                        _streamingReasoning.value = cleanedReasoning
+
+                                        // Update AI status to show reasoning
+                                        if (_aiStatus.value == AiStatus.Thinking) {
+                                            _aiStatus.value = AiStatus.Reasoning
+                                        }
+
+                                        // Update streaming message state
+                                        updateStreamingMessageState()
                                     }
+                                }
 
-                                    // Update database with reasoning
+                                // Throttled database update (reasoning less frequent)
+                                if (currentTime - lastDbUpdateTime >= DB_UPDATE_THROTTLE_MS) {
+                                    lastDbUpdateTime = currentTime
                                     currentMessageId?.let { msgId ->
                                         val cleanedContent = ContentCleaner.cleanForDisplay(rawContentAccumulator.toString())
+                                        val cleanedReasoning = ContentCleaner.cleanReasoning(rawReasoningAccumulator.toString())
                                         chatRepository.updateAssistantMessageContent(
                                             messageId = msgId,
                                             content = cleanedContent,
-                                            reasoningContent = cleanedReasoning,
+                                            reasoningContent = cleanedReasoning.takeIf { it.isNotEmpty() },
                                             isStreaming = true
                                         )
                                     }
@@ -574,6 +620,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     ContentCleaner.cleanReasoning(it)
                                 }?.takeIf { it.isNotBlank() }
                                 _aiStatus.value = AiStatus.Complete
+
+                                // Flush any pending UI updates before completion
+                                if (pendingUiUpdate || _streamingContent.value != finalContent) {
+                                    _streamingContent.value = finalContent
+                                    finalReasoning?.let { _streamingReasoning.value = it }
+                                }
 
                                 // Update streaming state to complete
                                 _streamingMessageState.value = _streamingMessageState.value?.copy(
@@ -717,6 +769,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         rawContentAccumulator.clear()
         rawReasoningAccumulator.clear()
         currentToolSteps.clear()
+
+        // Reset throttle timers
+        lastUiUpdateTime = 0L
+        lastDbUpdateTime = 0L
+        pendingUiUpdate = false
 
         // Clear streaming state
         _streamingMessageId.value = null

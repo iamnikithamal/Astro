@@ -181,21 +181,22 @@ fun YogasScreenRedesigned(
                 }
 
                 // Yoga cards
-                items(
+                itemsIndexed(
                     items = filteredYogas,
-                    key = { "yoga_${it.name}_${it.category}" }
-                ) { yoga ->
-                    val yogaKey = "${yoga.name}_${yoga.category}"
+                    key = { index, yoga -> "yoga_${index}_${yoga.name}_${yoga.category}" }
+                ) { index, yoga ->
+                    val yogaKey = "${index}_${yoga.name}_${yoga.category}"
                     val isExpanded = yogaKey in expandedYogaKeys
 
                     YogaCard(
                         yoga = yoga,
                         isExpanded = isExpanded,
                         onToggleExpand = { expanded ->
+                            val key = yogaKey
                             expandedYogaKeys = if (expanded) {
-                                expandedYogaKeys + yogaKey
+                                expandedYogaKeys + key
                             } else {
-                                expandedYogaKeys - yogaKey
+                                expandedYogaKeys - key
                             }
                         }
                     )
