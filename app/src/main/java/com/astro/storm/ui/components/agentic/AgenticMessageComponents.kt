@@ -408,13 +408,14 @@ private fun ToolStepRow(step: ToolExecutionStep) {
         }
 
         // Duration badge if completed
-        if (step.status == ToolStepStatus.COMPLETED && step.duration != null) {
+        if (step.status == ToolStepStatus.COMPLETED && step.endTime != null) {
+            val duration = step.endTime - step.startTime
             Surface(
                 color = colors.ChipBackground,
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = "${step.duration}ms",
+                    text = "${duration}ms",
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.TextSubtle,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

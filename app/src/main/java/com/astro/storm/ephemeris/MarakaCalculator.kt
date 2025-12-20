@@ -297,7 +297,7 @@ object MarakaCalculator {
         val primaryPlanets = primaryMarakas.map { it.planet }.toSet()
 
         chart.planetPositions.forEach { pos ->
-            if (pos.planet !in primaryPlanets && !VedicAstrologyUtils.isNode(pos.planet)) {
+            if (pos.planet !in primaryPlanets && pos.planet != Planet.RAHU && pos.planet != Planet.KETU) {
                 // Check if conjunct with primary Maraka
                 val isConjunct = primaryMarakas.any { primary ->
                     primary.housePosition == pos.house
