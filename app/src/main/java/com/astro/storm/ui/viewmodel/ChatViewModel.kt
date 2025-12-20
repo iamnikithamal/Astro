@@ -16,7 +16,16 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.ChatRepository
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
-import com.astro.storm.ui.components.agentic.*
+import com.astro.storm.ui.components.agentic.AgentSection
+import com.astro.storm.ui.components.agentic.AskUserOption
+import com.astro.storm.ui.components.agentic.ProfileOperationStatus
+import com.astro.storm.ui.components.agentic.ProfileOperationType
+import com.astro.storm.ui.components.agentic.SectionedMessageSerializer
+import com.astro.storm.ui.components.agentic.SectionedMessageState
+import com.astro.storm.ui.components.agentic.TodoItem
+import com.astro.storm.ui.components.agentic.ToolDisplayUtils
+import com.astro.storm.ui.components.agentic.ToolExecution
+import com.astro.storm.ui.components.agentic.ToolExecutionStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -611,7 +620,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 response.toolNames.forEach { toolName ->
                                     val step = ToolExecutionStep(
                                         toolName = toolName,
-                                        displayName = formatToolNameForDisplay(toolName),
+                                        displayName = ToolDisplayUtils.formatToolName(toolName),
                                         status = ToolStepStatus.PENDING
                                     )
                                     if (currentToolSteps.none { it.toolName == toolName }) {
@@ -642,7 +651,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 } else {
                                     currentToolSteps.add(ToolExecutionStep(
                                         toolName = response.toolName,
-                                        displayName = formatToolNameForDisplay(response.toolName),
+                                        displayName = ToolDisplayUtils.formatToolName(response.toolName),
                                         status = ToolStepStatus.EXECUTING
                                     ))
                                 }
@@ -844,19 +853,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * Format tool name for display (e.g., "get_planet_positions" -> "Planet Positions")
-     */
-    private fun formatToolNameForDisplay(toolName: String): String {
-        return toolName
-            .removePrefix("get_")
-            .removePrefix("calculate_")
-            .replace("_", " ")
-            .split(" ")
-            .joinToString(" ") { word ->
-                word.replaceFirstChar { it.uppercase() }
-            }
-    }
+    // Tool name formatting now uses centralized ToolDisplayUtils.formatToolName()
 
     // ============================================
     // SECTION MANAGEMENT HELPERS
@@ -957,7 +954,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val existingStep = currentToolSteps.find { it.toolName == toolName }
             ToolExecution(
                 toolName = toolName,
-                displayName = formatToolNameForDisplay(toolName),
+                displayName = ToolDisplayUtils.formatToolName(toolName),
                 status = when (existingStep?.status) {
                     ToolStepStatus.PENDING -> ToolExecutionStatus.PENDING
                     ToolStepStatus.EXECUTING -> ToolExecutionStatus.EXECUTING

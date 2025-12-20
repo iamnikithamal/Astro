@@ -59,6 +59,7 @@ import com.astro.storm.ui.components.agentic.CompletedAiMessageCard
 import com.astro.storm.ui.components.agentic.CompletedSectionedMessageCard
 import com.astro.storm.ui.components.agentic.SectionedMessageCard
 import com.astro.storm.ui.components.agentic.SectionedMessageState
+import com.astro.storm.ui.components.agentic.ToolDisplayUtils
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChatUiState
@@ -1034,145 +1035,8 @@ private fun UserMessageBubble(message: ChatMessageModel) {
     }
 }
 
-@Composable
-private fun StreamingMessageBubble(
-    content: String,
-    reasoningContent: String,
-    aiStatus: AiStatus
-) {
-    val colors = AppTheme.current
-    var showReasoning by remember { mutableStateOf(false) }
-
-    // Clean content from tool call artifacts during streaming
-    val cleanedContent = remember(content) {
-        ContentCleaner.cleanForDisplay(content)
-    }
-    val cleanedReasoning = remember(reasoningContent) {
-        if (reasoningContent.isNotBlank()) {
-            ContentCleaner.cleanReasoning(reasoningContent)
-        } else ""
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Surface(
-            color = colors.CardBackground,
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = 4.dp,
-                bottomEnd = 16.dp
-            ),
-            modifier = Modifier.widthIn(max = 320.dp)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                // Reasoning toggle at TOP
-                if (cleanedReasoning.isNotBlank()) {
-                    Surface(
-                        onClick = { showReasoning = !showReasoning },
-                        color = colors.ChipBackground.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Psychology,
-                                contentDescription = null,
-                                tint = colors.AccentPrimary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = if (showReasoning) "Hide reasoning" else "Show reasoning",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = colors.TextMuted
-                            )
-                            Icon(
-                                imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = colors.TextMuted,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    AnimatedVisibility(visible = showReasoning) {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            color = colors.ChipBackground,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = cleanedReasoning,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.TextMuted,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Message content with Markdown rendering
-                if (cleanedContent.isNotEmpty()) {
-                    MarkdownText(
-                        markdown = cleanedContent,
-                        modifier = Modifier.fillMaxWidth(),
-                        textColor = colors.TextPrimary,
-                        linkColor = colors.AccentPrimary,
-                        textSize = 14f,
-                        cleanContent = false // Already cleaned above
-                    )
-                }
-
-                // Typing indicator with status text
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Animated dots
-                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        repeat(3) { index ->
-                            val infiniteTransition = rememberInfiniteTransition(label = "typing_animation_$index")
-                            val alpha by infiniteTransition.animateFloat(
-                                initialValue = 0.3f,
-                                targetValue = 1f,
-                                animationSpec = infiniteRepeatable(
-                                    animation = keyframes {
-                                        durationMillis = 1000
-                                        0.3f at 0
-                                        1f at 300
-                                        0.3f at 600
-                                    },
-                                    repeatMode = RepeatMode.Restart,
-                                    initialStartOffset = StartOffset(index * 150)
-                                ),
-                                label = "typing_dot_$index"
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(5.dp)
-                                    .clip(CircleShape)
-                                    .background(colors.TextMuted.copy(alpha = alpha))
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Note: AgenticStreamingMessage, ToolExecutionSection, ToolStepItem, AgenticStatusIndicator,
-// and TypingDotsIndicator have been moved to AgenticMessageComponents.kt for better modularity
+// Legacy StreamingMessageBubble removed - replaced by SectionedMessageCard and AgenticMessageCard
+// for professional IDE-style AI message display
 
 /**
  * Displays the current AI processing status with appropriate icons and messages.
@@ -1187,8 +1051,8 @@ private fun AiStatusIndicator(aiStatus: AiStatus) {
         is AiStatus.Idle -> return // Don't show anything for idle
         is AiStatus.Thinking -> "Stormy is thinking..." to Icons.Outlined.Psychology
         is AiStatus.Reasoning -> "Stormy is reasoning..." to Icons.Outlined.Lightbulb
-        is AiStatus.CallingTool -> "Calling ${formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
-        is AiStatus.ExecutingTools -> "Using tools: ${aiStatus.tools.joinToString(", ") { formatToolName(it) }}" to Icons.Outlined.Build
+        is AiStatus.CallingTool -> "Calling ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
+        is AiStatus.ExecutingTools -> "Using tools: ${aiStatus.tools.joinToString(", ") { ToolDisplayUtils.formatToolName(it) }}" to Icons.Outlined.Build
         is AiStatus.Typing -> "Stormy is typing..." to Icons.Outlined.Edit
         is AiStatus.Complete -> return // Don't show anything for complete
     }
@@ -1241,18 +1105,7 @@ private fun AiStatusIndicator(aiStatus: AiStatus) {
     }
 }
 
-/**
- * Format tool name for display (e.g., "get_planet_positions" -> "Planet Positions")
- */
-private fun formatToolName(toolName: String): String {
-    return toolName
-        .removePrefix("get_")
-        .replace("_", " ")
-        .split(" ")
-        .joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercase() }
-        }
-}
+// Tool name formatting now uses centralized ToolDisplayUtils.formatToolName()
 
 @Composable
 private fun ChatInputArea(
