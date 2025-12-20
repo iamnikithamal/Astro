@@ -73,6 +73,52 @@ fun ChartEntity.toVedicChart(): VedicChart {
 }
 
 // ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Helper function to get VedicChart by profile ID.
+ * Returns the current chart if profile_id is "current" or empty.
+ * Loads and converts chart from database for other profile IDs.
+ */
+suspend fun getChartForProfile(
+    profileId: String,
+    context: ToolContext
+): Pair<VedicChart?, String?> {
+    return when {
+        profileId.isEmpty() || profileId == "current" -> {
+            context.currentChart to null
+        }
+        else -> {
+            val profile = context.allProfiles.find { it.id.toString() == profileId }
+                ?: return null to "Profile not found with ID: $profileId"
+
+            val chartEntity = context.database.chartDao().getChartById(profile.id)
+                ?: return null to "Chart data not found for profile: ${profile.name}"
+
+            chartEntity.toVedicChart() to null
+        }
+    }
+}
+
+/**
+ * Helper function to get profile name by ID
+ */
+fun getProfileName(
+    profileId: String,
+    context: ToolContext
+): String {
+    return when {
+        profileId.isEmpty() || profileId == "current" -> {
+            context.currentProfile?.name ?: "Current Profile"
+        }
+        else -> {
+            context.allProfiles.find { it.id.toString() == profileId }?.name ?: "Unknown"
+        }
+    }
+}
+
+// ============================================
 // PROFILE & CHART ACCESS TOOLS
 // ============================================
 
@@ -168,6 +214,13 @@ class GetPlanetPositionsTool : AstrologyTool {
     override val description = "Get detailed planetary positions from a birth chart including sign, degree, nakshatra, house, and retrograde status"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get positions for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "planets",
             description = "Specific planets to include (comma-separated: Sun,Moon,Mars,etc.). Leave empty for all planets",
             type = ParameterType.STRING,
@@ -176,13 +229,17 @@ class GetPlanetPositionsTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val filterPlanets = arguments.optString("planets", "")
             .split(",")
@@ -245,6 +302,13 @@ class GetHousePositionsTool : AstrologyTool {
     override val description = "Get house cusps and planets in each house (bhava)"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get house positions for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "house_number",
             description = "Specific house number (1-12). Leave empty for all houses",
             type = ParameterType.INTEGER,
@@ -253,13 +317,17 @@ class GetHousePositionsTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val houseNumber = arguments.optInt("house_number", 0)
         val planetsByHouse = chart.planetsByHouse
@@ -326,6 +394,13 @@ class GetNakshatraInfoTool : AstrologyTool {
     override val description = "Get detailed nakshatra (lunar mansion) information for planets in the chart"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get nakshatra info for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "planet",
             description = "Planet name to get nakshatra for (default: Moon for Janma Nakshatra)",
             type = ParameterType.STRING,
@@ -335,13 +410,17 @@ class GetNakshatraInfoTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val planetName = arguments.optString("planet", "Moon").lowercase()
         val planetPos = chart.planetPositions.find {
@@ -613,6 +692,13 @@ class GetDashaInfoTool : AstrologyTool {
     override val description = "Get Vimshottari Dasha (planetary period) timeline for the chart"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get dasha info for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "dasha_type",
             description = "Type of dasha system (vimshottari, yogini, chara). Default: vimshottari",
             type = ParameterType.STRING,
@@ -629,13 +715,17 @@ class GetDashaInfoTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val dashaType = arguments.optString("dasha_type", "vimshottari")
         val yearsAhead = arguments.optInt("years_ahead", 10)
@@ -696,16 +786,28 @@ class GetDashaInfoTool : AstrologyTool {
 class GetCurrentDashaTool : AstrologyTool {
     override val name = "get_current_dasha"
     override val description = "Get the currently running dasha (planetary period) at a glance"
-    override val parameters = emptyList<ToolParameter>()
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get current dasha for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        )
+    )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         try {
             val dashaCalculator = VimshottariDashaCalculator()
@@ -769,6 +871,13 @@ class GetYogasTool : AstrologyTool {
     override val description = "Get auspicious and inauspicious yogas (planetary combinations) present in the chart"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get yogas for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "category",
             description = "Yoga category filter: raja, dhana, pancha_mahapurusha, sun_moon, all (default: all)",
             type = ParameterType.STRING,
@@ -778,13 +887,17 @@ class GetYogasTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val category = arguments.optString("category", "all")
 
@@ -842,6 +955,13 @@ class GetAshtakavargaTool : AstrologyTool {
     override val description = "Get Ashtakavarga bindus (strength points) for planets and signs"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get Ashtakavarga for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "type",
             description = "Type: sarvashtakavarga (combined) or bhinnashtakavarga (individual). Default: sarvashtakavarga",
             type = ParameterType.STRING,
@@ -851,13 +971,17 @@ class GetAshtakavargaTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val type = arguments.optString("type", "sarvashtakavarga")
 
@@ -1018,6 +1142,13 @@ class GetTransitsTool : AstrologyTool {
     override val description = "Get current planetary transits and their effects on the birth chart"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get transits for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "planets",
             description = "Specific planets to check transits for (comma-separated). Default: all major planets",
             type = ParameterType.STRING,
@@ -1026,13 +1157,17 @@ class GetTransitsTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         try {
             val transitCalculator = TransitCalculatorWrapper(context.context)
@@ -1187,6 +1322,13 @@ class GetRemediesTool : AstrologyTool {
     override val description = "Get personalized Vedic remedies based on the chart"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get remedies for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "focus_area",
             description = "Area to focus remedies on: career, health, relationships, wealth, spiritual, all. Default: all",
             type = ParameterType.STRING,
@@ -1196,13 +1338,17 @@ class GetRemediesTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val focusArea = arguments.optString("focus_area", "all")
 
@@ -1262,6 +1408,13 @@ class GetStrengthAnalysisTool : AstrologyTool {
     override val description = "Get Shadbala (six-fold planetary strength) analysis"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get strength analysis for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "planet",
             description = "Specific planet to analyze. Leave empty for all planets",
             type = ParameterType.STRING,
@@ -1270,13 +1423,17 @@ class GetStrengthAnalysisTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val planetFilter = arguments.optString("planet", "")
 
@@ -1337,6 +1494,13 @@ class GetDivisionalChartTool : AstrologyTool {
     override val description = "Get a divisional chart (Varga) like Navamsa, Dasamsa, etc."
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get divisional chart for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "varga",
             description = "Divisional chart: D1 (Rashi), D2 (Hora), D3 (Drekkana), D4 (Chaturthamsa), D7 (Saptamsa), D9 (Navamsa), D10 (Dasamsa), D12 (Dwadashamsa), D16 (Shodashamsa), D20 (Vimshamsa), D24 (Chaturvimshamsa), D27 (Nakshatramsa), D30 (Trimshamsa), D40 (Khavedamsa), D45 (Akshavedamsa), D60 (Shashtiamsa)",
             type = ParameterType.STRING,
@@ -1345,13 +1509,17 @@ class GetDivisionalChartTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val varga = arguments.optString("varga", "D9").uppercase()
 
@@ -1514,16 +1682,28 @@ class CalculateMuhurtaTool : AstrologyTool {
 class GetBhriguBinduTool : AstrologyTool {
     override val name = "get_bhrigu_bindu"
     override val description = "Get Bhrigu Bindu (destiny point) analysis showing karmic themes"
-    override val parameters = emptyList<ToolParameter>()
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get Bhrigu Bindu for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        )
+    )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         try {
             val bhriguCalculator = BhriguBinduCalculatorWrapper()
@@ -1575,6 +1755,13 @@ class GetArgalaTool : AstrologyTool {
     override val description = "Get Argala (planetary intervention) analysis using Jaimini principles"
     override val parameters = listOf(
         ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to get Argala analysis for. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        ),
+        ToolParameter(
             name = "house",
             description = "House number to analyze Argala for (1-12). Leave empty for all houses",
             type = ParameterType.INTEGER,
@@ -1583,13 +1770,17 @@ class GetArgalaTool : AstrologyTool {
     )
 
     override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
-        val chart = context.currentChart
-            ?: return ToolExecutionResult(
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
                 success = false,
                 data = null,
-                error = "No chart loaded",
-                summary = "Please select a profile first"
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
             )
+        }
 
         val houseFilter = arguments.optInt("house", 0)
 
@@ -1955,6 +2146,419 @@ class GetCompatibilityDeepDiveTool : AstrologyTool {
                 error = e.message,
                 summary = "Failed to perform compatibility analysis"
             )
+        }
+    }
+}
+
+// ============================================
+// MARAKA (DEATH-INFLICTING) ANALYSIS TOOL
+// ============================================
+
+/**
+ * Tool to get Maraka (death-inflicting planet) analysis.
+ * Analyzes 2nd and 7th house lords and occupants for longevity indications.
+ */
+class GetMarakaAnalysisTool : AstrologyTool {
+    override val name = "get_maraka_analysis"
+    override val description = "Get Maraka (death-inflicting planet) analysis including longevity assessment, health vulnerabilities, and remedies. Analyzes 2nd and 7th house lords (primary Marakas) and occupants."
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to analyze. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        )
+    )
+
+    override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
+            )
+        }
+
+        try {
+            val result = com.astro.storm.ephemeris.MarakaCalculator.analyzeMaraka(chart)
+                ?: return ToolExecutionResult(
+                    success = false,
+                    data = null,
+                    error = "Failed to analyze Maraka planets",
+                    summary = "Unable to perform Maraka analysis"
+                )
+
+            val profileName = getProfileName(profileId, context)
+
+            val data = JSONObject().apply {
+                put("profileName", profileName)
+                put("secondHouseLord", result.secondHouseLord.displayName)
+                put("seventhHouseLord", result.seventhHouseLord.displayName)
+
+                put("primaryMarakas", JSONArray().apply {
+                    result.primaryMarakas.forEach { maraka ->
+                        put(JSONObject().apply {
+                            put("planet", maraka.planet.displayName)
+                            put("type", maraka.marakaType.displayName)
+                            put("severity", maraka.severity.displayName)
+                            put("house", maraka.housePosition)
+                            put("sign", maraka.position.sign.displayName)
+                            put("isRetrograde", maraka.isRetrograde)
+                            put("isDebilitated", maraka.isDebilitated)
+                            put("isExalted", maraka.isExalted)
+                            put("interpretation", maraka.interpretation)
+                        })
+                    }
+                })
+
+                put("secondaryMarakas", JSONArray().apply {
+                    result.secondaryMarakas.forEach { maraka ->
+                        put(JSONObject().apply {
+                            put("planet", maraka.planet.displayName)
+                            put("type", maraka.marakaType.displayName)
+                            put("severity", maraka.severity.displayName)
+                            put("house", maraka.housePosition)
+                            put("interpretation", maraka.interpretation)
+                        })
+                    }
+                })
+
+                put("longevityAnalysis", JSONObject().apply {
+                    put("category", result.longevityAnalysis.category.displayName)
+                    put("description", result.longevityAnalysis.category.description)
+                    put("yearsRange", result.longevityAnalysis.category.yearsRange)
+                    put("overallScore", result.longevityAnalysis.overallScore)
+                    put("interpretation", result.longevityAnalysis.interpretation)
+                    put("supportingFactors", JSONArray(result.longevityAnalysis.supportingFactors))
+                    put("challengingFactors", JSONArray(result.longevityAnalysis.challengingFactors))
+                })
+
+                put("overallSeverity", result.overallMarakaSeverity.displayName)
+                put("healthVulnerabilities", JSONArray(result.healthVulnerabilities))
+                put("protectiveFactors", JSONArray(result.protectiveFactors))
+
+                put("dashaPeriods", JSONArray().apply {
+                    result.dashaPeriods.take(5).forEach { period ->
+                        put(JSONObject().apply {
+                            put("planet", period.planet.displayName)
+                            put("marakaType", period.marakaType.displayName)
+                            put("riskLevel", period.riskLevel.displayName)
+                            put("description", period.periodDescription)
+                            put("healthConcerns", JSONArray(period.healthConcerns))
+                            put("precautions", JSONArray(period.precautions))
+                        })
+                    }
+                })
+
+                put("remedies", JSONArray().apply {
+                    result.remedies.take(5).forEach { remedy ->
+                        put(JSONObject().apply {
+                            put("planet", remedy.planet?.displayName)
+                            put("type", remedy.remedyType)
+                            put("description", remedy.description)
+                            put("mantra", remedy.mantra)
+                            put("gemstone", remedy.gemstone)
+                            put("charity", remedy.charity)
+                            put("fasting", remedy.fasting)
+                            put("deity", remedy.deity)
+                        })
+                    }
+                })
+
+                put("summary", result.summary)
+            }
+
+            return ToolExecutionResult(
+                success = true,
+                data = data,
+                summary = "Maraka analysis for $profileName: ${result.longevityAnalysis.category.displayName} longevity, ${result.overallMarakaSeverity.displayName} severity"
+            )
+        } catch (e: Exception) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message,
+                summary = "Failed to perform Maraka analysis"
+            )
+        }
+    }
+}
+
+// ============================================
+// BADHAKA (OBSTRUCTION) ANALYSIS TOOL
+// ============================================
+
+/**
+ * Tool to get Badhaka (obstruction planet) analysis.
+ * Analyzes Badhaka Sthana based on ascendant modality and its lord.
+ */
+class GetBadhakaAnalysisTool : AstrologyTool {
+    override val name = "get_badhaka_analysis"
+    override val description = "Get Badhaka (obstruction planet) analysis. Identifies Badhaka Sthana based on ascendant type (Movable/Fixed/Dual), analyzes Badhakesh lord, and provides obstacle predictions with remedies."
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to analyze. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        )
+    )
+
+    override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
+            )
+        }
+
+        try {
+            val result = com.astro.storm.ephemeris.BadhakaCalculator.analyzeBadhaka(chart)
+                ?: return ToolExecutionResult(
+                    success = false,
+                    data = null,
+                    error = "Failed to analyze Badhaka planets",
+                    summary = "Unable to perform Badhaka analysis"
+                )
+
+            val profileName = getProfileName(profileId, context)
+
+            val data = JSONObject().apply {
+                put("profileName", profileName)
+                put("ascendantSign", result.ascendantSign.displayName)
+                put("signModality", result.signModality.displayName)
+                put("signModalityDescription", result.signModality.description)
+                put("badhakaHouse", result.badhakaHouse)
+                put("badhakeshPlanet", result.badhakeshPlanet.displayName)
+
+                put("badhakeshAnalysis", JSONObject().apply {
+                    val bp = result.badhakeshPosition
+                    put("planet", bp.planet.displayName)
+                    put("house", bp.position.house)
+                    put("sign", bp.position.sign.displayName)
+                    put("severity", bp.severity.displayName)
+                    put("strength", bp.strength)
+                    put("isRetrograde", bp.isRetrograde)
+                    put("isDebilitated", bp.isDebilitated)
+                    put("isExalted", bp.isExalted)
+                    put("isCombust", bp.isCombust)
+                    put("interpretation", bp.interpretation)
+                })
+
+                put("planetsInBadhakaHouse", JSONArray().apply {
+                    result.planetsInBadhakaHouse.forEach { planet ->
+                        put(JSONObject().apply {
+                            put("planet", planet.planet.displayName)
+                            put("severity", planet.severity.displayName)
+                            put("interpretation", planet.interpretation)
+                        })
+                    }
+                })
+
+                put("overallSeverity", result.overallSeverity.displayName)
+
+                put("primaryObstacles", JSONArray().apply {
+                    result.primaryObstacles.forEach { obstacle ->
+                        put(JSONObject().apply {
+                            put("type", obstacle.displayName)
+                            put("description", obstacle.description)
+                        })
+                    }
+                })
+
+                put("affectedHouses", JSONArray(result.affectedHouses))
+
+                put("dashaPeriods", JSONArray().apply {
+                    result.dashaPeriods.take(5).forEach { period ->
+                        put(JSONObject().apply {
+                            put("planet", period.planet.displayName)
+                            put("isBadhakesh", period.isBadhakesh)
+                            put("obstructionLevel", period.obstructionLevel.displayName)
+                            put("description", period.periodDescription)
+                            put("affectedAreas", JSONArray(period.affectedAreas.map { it.displayName }))
+                            put("recommendations", JSONArray(period.recommendations))
+                        })
+                    }
+                })
+
+                put("protectiveFactors", JSONArray(result.protectiveFactors))
+
+                put("remedies", JSONArray().apply {
+                    result.remedies.take(5).forEach { remedy ->
+                        put(JSONObject().apply {
+                            put("planet", remedy.planet?.displayName)
+                            put("type", remedy.remedyType)
+                            put("description", remedy.description)
+                            put("mantra", remedy.mantra)
+                            put("deity", remedy.deity)
+                            put("charity", remedy.charity)
+                            put("ritual", remedy.ritual)
+                        })
+                    }
+                })
+
+                put("summary", result.summary)
+            }
+
+            return ToolExecutionResult(
+                success = true,
+                data = data,
+                summary = "Badhaka analysis for $profileName: ${result.signModality.displayName} ascendant, ${result.badhakaHouse}th house Badhaka, ${result.overallSeverity.displayName} severity"
+            )
+        } catch (e: Exception) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message,
+                summary = "Failed to perform Badhaka analysis"
+            )
+        }
+    }
+}
+
+// ============================================
+// VIPAREETA RAJA YOGA ANALYSIS TOOL
+// ============================================
+
+/**
+ * Tool to get Vipareeta Raja Yoga analysis.
+ * Detects Harsha, Sarala, and Vimala yogas formed when dusthana lords occupy dusthana houses.
+ */
+class GetVipareetaRajaYogaTool : AstrologyTool {
+    override val name = "get_vipareeta_raja_yoga"
+    override val description = "Get Vipareeta Raja Yoga analysis. Detects Harsha (6th lord), Sarala (8th lord), and Vimala (12th lord) yogas formed when dusthana lords occupy dusthana houses. These 'reverse' Raja Yogas bring success through difficulties."
+    override val parameters = listOf(
+        ToolParameter(
+            name = "profile_id",
+            description = "ID of the profile to analyze. Use 'current' for active profile or leave empty.",
+            type = ParameterType.STRING,
+            required = false,
+            defaultValue = "current"
+        )
+    )
+
+    override suspend fun execute(arguments: JSONObject, context: ToolContext): ToolExecutionResult {
+        val profileId = arguments.optString("profile_id", "current")
+        val (chart, error) = getChartForProfile(profileId, context)
+
+        if (chart == null) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = error ?: "No chart loaded",
+                summary = error ?: "Please select a profile first"
+            )
+        }
+
+        try {
+            val result = com.astro.storm.ephemeris.VipareetaRajaYogaCalculator.analyzeVipareetaRajaYogas(chart)
+                ?: return ToolExecutionResult(
+                    success = false,
+                    data = null,
+                    error = "Failed to analyze Vipareeta Raja Yogas",
+                    summary = "Unable to perform Vipareeta Raja Yoga analysis"
+                )
+
+            val profileName = getProfileName(profileId, context)
+
+            val data = JSONObject().apply {
+                put("profileName", profileName)
+                put("ascendantSign", result.ascendantSign.displayName)
+                put("sixthLord", result.sixthLord.displayName)
+                put("eighthLord", result.eighthLord.displayName)
+                put("twelfthLord", result.twelfthLord.displayName)
+
+                put("harshaYoga", buildYogaJson(result.harshaYoga))
+                put("saralaYoga", buildYogaJson(result.saralaYoga))
+                put("vimalaYoga", buildYogaJson(result.vimalaYoga))
+
+                put("dusthanaExchanges", JSONArray().apply {
+                    result.dusthanaExchanges.forEach { exchange ->
+                        put(JSONObject().apply {
+                            put("planet1", exchange.planet1.displayName)
+                            put("planet2", exchange.planet2.displayName)
+                            put("house1", exchange.house1)
+                            put("house2", exchange.house2)
+                            put("isParivartana", exchange.isParivartana)
+                            put("effect", exchange.effect)
+                            put("strength", exchange.strength.displayName)
+                        })
+                    }
+                })
+
+                put("totalYogasFormed", result.totalYogasFormed)
+                put("overallStrength", result.overallStrength.displayName)
+                put("primaryBenefits", JSONArray(result.primaryBenefits))
+
+                put("activationTimeline", JSONArray().apply {
+                    result.activationTimeline.take(6).forEach { period ->
+                        put(JSONObject().apply {
+                            put("planet", period.planet.displayName)
+                            put("yogaType", period.yogaType?.displayName)
+                            put("description", period.description)
+                            put("expectedEffects", JSONArray(period.expectedEffects))
+                        })
+                    }
+                })
+
+                put("enhancementFactors", JSONArray(result.enhancementFactors))
+                put("cancellationFactors", JSONArray(result.cancellationFactors))
+
+                put("summary", result.summary)
+            }
+
+            val yogasFormedStr = when (result.totalYogasFormed) {
+                0 -> "No yogas formed"
+                1 -> "1 yoga formed"
+                2 -> "2 yogas formed"
+                3 -> "All 3 yogas formed (rare!)"
+                else -> "${result.totalYogasFormed} yogas"
+            }
+
+            return ToolExecutionResult(
+                success = true,
+                data = data,
+                summary = "Vipareeta Raja Yoga analysis for $profileName: $yogasFormedStr, ${result.overallStrength.displayName} strength"
+            )
+        } catch (e: Exception) {
+            return ToolExecutionResult(
+                success = false,
+                data = null,
+                error = e.message,
+                summary = "Failed to perform Vipareeta Raja Yoga analysis"
+            )
+        }
+    }
+
+    private fun buildYogaJson(yoga: com.astro.storm.ephemeris.VipareetaRajaYogaCalculator.VipareetaYoga): JSONObject {
+        return JSONObject().apply {
+            put("name", yoga.yogaType.displayName)
+            put("sanskritName", yoga.yogaType.sanskritName)
+            put("isFormed", yoga.isFormed)
+            put("strength", yoga.strength.displayName)
+            put("activationStatus", yoga.activationStatus.displayName)
+            put("dusthanaLord", yoga.dusthanaLord.displayName)
+            put("placedInHouse", yoga.placedInHouse)
+            put("placedInSign", yoga.placedInSign.displayName)
+            put("isRetrograde", yoga.isRetrograde)
+            put("isExalted", yoga.isExalted)
+            put("isDebilitated", yoga.isDebilitated)
+            put("strengthFactors", JSONArray(yoga.strengthFactors))
+            put("weaknessFactors", JSONArray(yoga.weaknessFactors))
+            put("benefitsAreas", JSONArray(yoga.benefitsAreas))
+            put("activationDashas", JSONArray(yoga.activationDashas.map { it.displayName }))
+            put("interpretation", yoga.interpretation)
         }
     }
 }

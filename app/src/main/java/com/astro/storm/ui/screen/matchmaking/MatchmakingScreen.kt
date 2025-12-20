@@ -1,6 +1,5 @@
 package com.astro.storm.ui.screen.matchmaking
 
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -55,12 +54,6 @@ import com.astro.storm.ephemeris.MatchmakingCalculator
 import com.astro.storm.ephemeris.VedicAstrologyUtils
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.ChartViewModel
-import com.astro.storm.data.ai.provider.AiProviderRegistry
-import com.astro.storm.data.ai.provider.ChatMessage
-import com.astro.storm.data.ai.provider.ChatResponse
-import com.astro.storm.data.ai.provider.MessageRole
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -91,12 +84,6 @@ fun MatchmakingScreen(
     var showBrideSelector by remember { mutableStateOf(false) }
     var showGroomSelector by remember { mutableStateOf(false) }
     var showShareSheet by remember { mutableStateOf(false) }
-
-    // AI Insight state
-    val context = LocalContext.current
-    var aiInsight by remember { mutableStateOf<String?>(null) }
-    var isLoadingAi by remember { mutableStateOf(false) }
-    var aiError by remember { mutableStateOf<String?>(null) }
 
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -134,9 +121,6 @@ fun MatchmakingScreen(
         if (brideChart != null && groomChart != null) {
             isCalculating = true
             errorMessage = null
-            // Reset AI insight when charts change
-            aiInsight = null
-            aiError = null
             delay(300)
             try {
                 matchingResult = withContext(Dispatchers.Default) {
@@ -148,8 +132,6 @@ fun MatchmakingScreen(
             isCalculating = false
         } else {
             matchingResult = null
-            aiInsight = null
-            aiError = null
         }
     }
 
@@ -325,35 +307,6 @@ fun MatchmakingScreen(
                     0 -> {
                         item {
                             OverviewSection(result, brideChart, groomChart)
-                        }
-                        // AI Insight Card in Overview tab
-                        item {
-                            MatchmakingAiInsightCard(
-                                result = result,
-                                brideChart = brideChart,
-                                groomChart = groomChart,
-                                aiInsight = aiInsight,
-                                isLoading = isLoadingAi,
-                                error = aiError,
-                                onGenerateInsight = {
-                                    scope.launch {
-                                        isLoadingAi = true
-                                        aiError = null
-                                        try {
-                                            val insight = generateMatchmakingAiInsight(
-                                                context, result, brideChart, groomChart
-                                            )
-                                            aiInsight = insight
-                                        } catch (e: CancellationException) {
-                                            throw e
-                                        } catch (e: Exception) {
-                                            aiError = e.message ?: "Failed to generate AI insight"
-                                        } finally {
-                                            isLoadingAi = false
-                                        }
-                                    }
-                                }
-                            )
                         }
                     }
                     1 -> {
@@ -2527,295 +2480,4 @@ private fun getYoni(chart: VedicChart): String {
     val moonPosition = getMoonPosition(chart) ?: return unknownText
     // Use centralized VedicAstrologyUtils for consistent Yoni lookup
     return VedicAstrologyUtils.getYoniDisplayName(moonPosition.nakshatra)
-}
-
-// ============================================
-// AI INSIGHT INTEGRATION
-// ============================================
-
-/**
- * AI Insight Card for Matchmaking - Provides deeper compatibility analysis using AI
- */
-@Composable
-private fun MatchmakingAiInsightCard(
-    result: MatchmakingResult,
-    brideChart: VedicChart?,
-    groomChart: VedicChart?,
-    aiInsight: String?,
-    isLoading: Boolean,
-    error: String?,
-    onGenerateInsight: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = AppTheme.AccentPrimary.copy(alpha = 0.08f)
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(AppTheme.AccentPrimary.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.AutoAwesome,
-                        contentDescription = null,
-                        tint = AppTheme.AccentPrimary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(StringKeyMatch.MATCH_AI_INSIGHT),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppTheme.TextPrimary
-                    )
-                    Text(
-                        text = stringResource(StringKeyMatch.MATCH_AI_INSIGHT_SUBTITLE),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AppTheme.TextMuted
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when {
-                isLoading -> {
-                    // Loading state
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator(
-                            color = AppTheme.AccentPrimary,
-                            strokeWidth = 3.dp,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = stringResource(StringKeyMatch.MATCH_AI_ANALYZING),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = AppTheme.TextMuted
-                        )
-                    }
-                }
-                error != null -> {
-                    // Error state
-                    Surface(
-                        color = AppTheme.ErrorColor.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = AppTheme.ErrorColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = error,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = AppTheme.ErrorColor,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onGenerateInsight,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.AccentPrimary
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(StringKey.BTN_TRY_AGAIN),
-                            color = AppTheme.ButtonText
-                        )
-                    }
-                }
-                aiInsight != null -> {
-                    // Success state - show the insight
-                    Surface(
-                        color = AppTheme.CardBackgroundElevated,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = aiInsight,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = AppTheme.TextPrimary,
-                                lineHeight = 24.sp
-                            )
-                        }
-                    }
-                }
-                else -> {
-                    // Initial state - show generate button
-                    Text(
-                        text = stringResource(StringKeyMatch.MATCH_AI_INSIGHT_DESC),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = AppTheme.TextMuted,
-                        lineHeight = 20.sp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onGenerateInsight,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.AccentPrimary
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(StringKeyMatch.MATCH_GENERATE_AI_INSIGHT),
-                            color = AppTheme.ButtonText
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Generate AI insight for Matchmaking result
- */
-private suspend fun generateMatchmakingAiInsight(
-    context: Context,
-    result: MatchmakingResult,
-    brideChart: VedicChart?,
-    groomChart: VedicChart?
-): String = withContext(Dispatchers.IO) {
-    val providerRegistry = AiProviderRegistry.getInstance(context)
-
-    // Get the first enabled model
-    val model = providerRegistry.getDefaultModel()
-        ?: throw IllegalStateException("No AI models available. Please configure AI models in Settings.")
-
-    val provider = providerRegistry.getProvider(model.providerId)
-        ?: throw IllegalStateException("AI provider not found")
-
-    // Build the prompt with matchmaking context
-    val prompt = buildMatchmakingAiPrompt(result, brideChart, groomChart)
-
-    val messages = listOf(
-        ChatMessage(
-            role = MessageRole.SYSTEM,
-            content = """You are an expert Vedic astrologer specializing in Kundli Milan (matchmaking).
-You provide insightful, compassionate, and practical interpretations based on classical texts like Muhurta Chintamani.
-Your response should be 2-3 paragraphs, offering deeper insight into the compatibility and providing guidance for the relationship.
-Be warm and supportive while maintaining astrological accuracy. Focus on strengths and constructive advice for challenges.
-Do NOT make absolute negative predictions. Always emphasize that relationships are built on mutual effort and understanding."""
-        ),
-        ChatMessage(
-            role = MessageRole.USER,
-            content = prompt
-        )
-    )
-
-    val contentBuilder = StringBuilder()
-    var errorMessage: String? = null
-
-    provider.chat(messages, model.id, stream = false).collect { response ->
-        when (response) {
-            is ChatResponse.Content -> contentBuilder.append(response.text)
-            is ChatResponse.Error -> errorMessage = response.message
-            else -> { /* Ignore other response types */ }
-        }
-    }
-
-    if (errorMessage != null) {
-        throw Exception(errorMessage)
-    }
-
-    contentBuilder.toString().ifEmpty {
-        throw Exception("No response received from AI")
-    }
-}
-
-/**
- * Build the prompt for AI matchmaking interpretation
- */
-private fun buildMatchmakingAiPrompt(
-    result: MatchmakingResult,
-    brideChart: VedicChart?,
-    groomChart: VedicChart?
-): String {
-    val sb = StringBuilder()
-
-    sb.appendLine("Please provide a deeper Vedic astrology interpretation for this Kundli Milan (compatibility analysis):")
-    sb.appendLine()
-    sb.appendLine("**Bride:** ${brideChart?.birthData?.name ?: "Unknown"}")
-    sb.appendLine("**Groom:** ${groomChart?.birthData?.name ?: "Unknown"}")
-    sb.appendLine()
-    sb.appendLine("**Overall Compatibility:**")
-    sb.appendLine("- Total Score: ${result.totalPoints}/${result.maxPoints} (${String.format("%.1f", result.percentage)}%)")
-    sb.appendLine("- Compatibility: ${result.rating.displayName}")
-    sb.appendLine("- ${result.summary}")
-    sb.appendLine()
-    sb.appendLine("**Guna Analysis (8 Aspects):**")
-    result.gunaAnalyses.forEach { guna ->
-        sb.appendLine("- ${guna.gunaType.displayName}: ${guna.obtainedPoints}/${guna.maxPoints} - ${guna.analysis}")
-    }
-    sb.appendLine()
-
-    // Manglik Analysis
-    if (result.brideManglik.effectiveDosha.severity > 0 || result.groomManglik.effectiveDosha.severity > 0) {
-        sb.appendLine("**Manglik Analysis:**")
-        sb.appendLine("- Bride Manglik: ${result.brideManglik.effectiveDosha.displayName}")
-        sb.appendLine("- Groom Manglik: ${result.groomManglik.effectiveDosha.displayName}")
-        sb.appendLine("- Compatibility: ${result.manglikCompatibility}")
-        sb.appendLine()
-    }
-
-    // Nakshatra details
-    val brideMoon = brideChart?.planetPositions?.find { it.planet == Planet.MOON }
-    val groomMoon = groomChart?.planetPositions?.find { it.planet == Planet.MOON }
-    if (brideMoon != null && groomMoon != null) {
-        sb.appendLine("**Nakshatra Details:**")
-        sb.appendLine("- Bride: ${brideMoon.nakshatra.displayName} in ${brideMoon.sign.displayName}")
-        sb.appendLine("- Groom: ${groomMoon.nakshatra.displayName} in ${groomMoon.sign.displayName}")
-        sb.appendLine()
-    }
-
-    sb.appendLine("Please provide a personalized interpretation that:")
-    sb.appendLine("1. Highlights the key strengths of this match based on the Guna scores")
-    sb.appendLine("2. Offers constructive guidance for any challenges (doshas or low-scoring areas)")
-    sb.appendLine("3. Provides practical relationship advice based on their Nakshatra energies")
-
-    return sb.toString()
 }
