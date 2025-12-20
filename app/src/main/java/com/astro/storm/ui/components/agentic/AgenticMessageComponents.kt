@@ -5,7 +5,9 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,17 +36,30 @@ import com.astro.storm.ui.viewmodel.ToolExecutionStep
 import com.astro.storm.ui.viewmodel.ToolStepStatus
 
 /**
- * Agentic Message Layout - IDE-style streaming message display
+ * Modern Agentic Message Layout - Professional IDE-style AI Message Display
  *
- * Inspired by modern AI coding agents like Cursor, Windsurf, and similar tools.
- * Displays tool executions, reasoning, and content in a clean, structured layout
- * with progressive disclosure and smooth animations.
+ * This component renders AI messages in a modern, professional layout inspired by
+ * agentic coding IDEs like Cursor, Windsurf, and Google's Antigravity. It is designed
+ * specifically for Stormy, the Vedic Astrology AI Assistant.
  *
- * Key features:
- * - Collapsible tool execution section with status indicators
- * - Progressive content streaming with typing indicators
- * - Reasoning/thinking mode display with toggle
- * - Clean separation of concerns to prevent duplicate messages
+ * Key Design Principles:
+ * - NO message bubbles for AI responses (clean, professional look)
+ * - Structured content blocks that parse and organize message content
+ * - Collapsible tool execution panel with real-time status indicators
+ * - Reasoning/thinking display with progressive disclosure
+ * - Full-width layout that respects the content hierarchy
+ * - Smooth animations and visual feedback for agentic operations
+ *
+ * The layout uses a vertical stack of components:
+ * 1. Agent Identity Header - Shows Stormy with active status
+ * 2. Tool Execution Panel - Collapsible list of tool calls with status
+ * 3. Reasoning Panel - Collapsible thinking/reasoning content
+ * 4. Response Content - Main message content with Markdown rendering
+ *
+ * This design prevents message duplication by:
+ * - Using a single source of truth (StreamingMessageState)
+ * - Separating streaming UI from persisted message rendering
+ * - Cleaning tool call artifacts before display
  */
 @Composable
 fun AgenticMessageCard(
@@ -68,23 +84,33 @@ fun AgenticMessageCard(
         if (reasoning.isNotBlank()) ContentCleaner.cleanReasoning(reasoning) else ""
     }
 
-    // State for collapsible sections
+    // State for collapsible sections - reasoning collapsed by default to focus on response
     var showReasoning by remember { mutableStateOf(false) }
     var showToolSteps by remember { mutableStateOf(true) }
 
     // Determine if we're actively processing
     val isProcessing = aiStatus !is AiStatus.Idle && aiStatus !is AiStatus.Complete
 
+    // Main container - NO bubble, full width professional layout
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Agent Header - Shows Stormy identity
-        AgentIdentityHeader(isProcessing = isProcessing)
+        // Agent Identity Header with status indicator
+        AgentIdentityHeader(
+            isProcessing = isProcessing,
+            aiStatus = aiStatus
+        )
 
-        // Tool Execution Panel - Only show if tools are being used
-        if (toolSteps.isNotEmpty()) {
+        // Tool Execution Panel - Shows when tools are being used
+        AnimatedVisibility(
+            visible = toolSteps.isNotEmpty(),
+            enter = expandVertically(animationSpec = tween(200)) + fadeIn(),
+            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
+        ) {
             ToolExecutionPanel(
                 toolSteps = toolSteps,
                 isExpanded = showToolSteps,
@@ -92,8 +118,12 @@ fun AgenticMessageCard(
             )
         }
 
-        // Reasoning Panel - Collapsible thinking display
-        if (cleanedReasoning.isNotBlank()) {
+        // Reasoning Panel - Collapsible thinking/reasoning display
+        AnimatedVisibility(
+            visible = cleanedReasoning.isNotBlank(),
+            enter = expandVertically(animationSpec = tween(200)) + fadeIn(),
+            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
+        ) {
             ReasoningPanel(
                 reasoning = cleanedReasoning,
                 isExpanded = showReasoning,
@@ -102,32 +132,38 @@ fun AgenticMessageCard(
             )
         }
 
-        // Main Content Panel
+        // Main Content Panel - Response content with status
         ContentPanel(
             content = cleanedContent,
             aiStatus = aiStatus,
-            toolsUsed = toolSteps.filter { it.status == ToolStepStatus.COMPLETED }.map { it.toolName }
+            toolsUsed = toolSteps.filter { it.status == ToolStepStatus.COMPLETED }.map { it.toolName },
+            isProcessing = isProcessing
         )
     }
 }
 
 /**
- * Agent Identity Header - Shows Stormy avatar and status
+ * Agent Identity Header - Shows Stormy avatar and current status
+ *
+ * Displays the agent name with a pulsing avatar during active processing
+ * and a status description based on the current AI operation.
  */
 @Composable
 private fun AgentIdentityHeader(
-    isProcessing: Boolean
+    isProcessing: Boolean,
+    aiStatus: AiStatus
 ) {
     val colors = AppTheme.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // Animated avatar
+        // Animated avatar with pulsing effect during processing
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(36.dp)
                 .clip(CircleShape)
                 .background(
                     Brush.radialGradient(
@@ -151,31 +187,67 @@ private fun AgentIdentityHeader(
                     ),
                     label = "avatar_alpha"
                 )
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = 0.95f,
+                    targetValue = 1.05f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(800, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "avatar_scale"
+                )
                 Icon(
                     imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
                     tint = colors.AccentGold.copy(alpha = alpha),
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size((20 * scale).dp)
                 )
             } else {
                 Icon(
                     imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
                     tint = colors.AccentGold,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
 
-        Text(
-            text = "Stormy",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.TextPrimary
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Stormy",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.TextPrimary
+                )
 
-        if (isProcessing) {
-            ActiveIndicatorDot()
+                if (isProcessing) {
+                    ActiveIndicatorDot()
+                }
+            }
+
+            // Status description
+            val statusText = when (aiStatus) {
+                is AiStatus.Idle -> null
+                is AiStatus.Complete -> null
+                is AiStatus.Thinking -> "Analyzing your question..."
+                is AiStatus.Reasoning -> "Reasoning through Vedic principles..."
+                is AiStatus.CallingTool -> "Using ${formatToolNameDisplay(aiStatus.toolName)}..."
+                is AiStatus.ExecutingTools -> "Gathering astrological data..."
+                is AiStatus.Typing -> "Composing response..."
+            }
+
+            statusText?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.TextMuted,
+                    fontStyle = FontStyle.Italic
+                )
+            }
         }
     }
 }
@@ -206,7 +278,10 @@ private fun ActiveIndicatorDot() {
 }
 
 /**
- * Tool Execution Panel - Shows tool calls with status indicators
+ * Tool Execution Panel - IDE-style tool call display
+ *
+ * Shows all tool calls with their execution status in a collapsible panel.
+ * Displays a summary header with completion counts and expandable details.
  */
 @Composable
 fun ToolExecutionPanel(
@@ -220,7 +295,7 @@ fun ToolExecutionPanel(
     val executingCount = toolSteps.count { it.status == ToolStepStatus.EXECUTING }
     val totalCount = toolSteps.size
 
-    // Determine overall status color
+    // Determine overall status color based on tool execution states
     val statusColor = when {
         failedCount > 0 -> colors.ErrorColor
         executingCount > 0 -> colors.AccentTeal
@@ -228,14 +303,15 @@ fun ToolExecutionPanel(
         else -> colors.TextMuted
     }
 
+    // Tool panel container with subtle background
     Surface(
         onClick = onToggle,
-        color = colors.CardBackground,
-        shape = RoundedCornerShape(12.dp),
+        color = statusColor.copy(alpha = 0.06f),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Header row with status
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Header row with status summary
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -245,25 +321,47 @@ fun ToolExecutionPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Tool icon with status color
+                    // Tool icon with status-based background
                     Box(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .background(statusColor.copy(alpha = 0.12f)),
+                            .background(statusColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Build,
-                            contentDescription = null,
-                            tint = statusColor,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        // Animated icon for executing state
+                        if (executingCount > 0) {
+                            val infiniteTransition = rememberInfiniteTransition(label = "tool_icon_spin")
+                            val rotation by infiniteTransition.animateFloat(
+                                initialValue = 0f,
+                                targetValue = 360f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(1500, easing = LinearEasing),
+                                    repeatMode = RepeatMode.Restart
+                                ),
+                                label = "tool_icon_rotation"
+                            )
+                            Icon(
+                                imageVector = Icons.Outlined.Sync,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .rotate(rotation)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (failedCount > 0) Icons.Outlined.Warning else Icons.Outlined.Build,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
 
                     Column {
                         Text(
-                            text = "Tool Execution",
+                            text = "Astrological Tools",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = colors.TextPrimary
@@ -276,10 +374,10 @@ fun ToolExecutionPanel(
                     }
                 }
 
-                // Chevron
+                // Expand/collapse chevron
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
                     tint = colors.TextMuted,
                     modifier = Modifier.size(22.dp)
                 )
@@ -292,8 +390,8 @@ fun ToolExecutionPanel(
                 exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
             ) {
                 Column(
-                    modifier = Modifier.padding(top = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(top = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     toolSteps.forEach { step ->
                         ToolStepRow(step = step)
@@ -305,19 +403,21 @@ fun ToolExecutionPanel(
 }
 
 /**
- * Build status summary text
+ * Build status summary text based on tool execution states
  */
 private fun buildStatusSummary(completed: Int, executing: Int, failed: Int, total: Int): String {
     return when {
-        executing > 0 -> "$completed/$total completed, $executing running"
-        failed > 0 -> "$completed/$total completed, $failed failed"
-        completed == total -> "$completed tools completed"
+        executing > 0 && completed > 0 -> "$completed/$total completed, $executing running"
+        executing > 0 -> "$executing tool${if (executing > 1) "s" else ""} running..."
+        failed > 0 && completed > 0 -> "$completed completed, $failed failed"
+        failed > 0 -> "$failed tool${if (failed > 1) "s" else ""} failed"
+        completed == total && total > 0 -> "$completed tool${if (completed > 1) "s" else ""} completed"
         else -> "$completed/$total completed"
     }
 }
 
 /**
- * Individual tool step with detailed status
+ * Individual tool step row with detailed status
  */
 @Composable
 private fun ToolStepRow(step: ToolExecutionStep) {
@@ -351,17 +451,17 @@ private fun ToolStepRow(step: ToolExecutionStep) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(bgColor)
-            .padding(10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Status icon (animated if executing)
+        // Status icon with animation for executing state
         Box(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(18.dp),
             contentAlignment = Alignment.Center
         ) {
             if (step.status == ToolStepStatus.EXECUTING) {
-                val infiniteTransition = rememberInfiniteTransition(label = "tool_spin")
+                val infiniteTransition = rememberInfiniteTransition(label = "tool_spin_${step.toolName}")
                 val rotation by infiniteTransition.animateFloat(
                     initialValue = 0f,
                     targetValue = 360f,
@@ -369,14 +469,14 @@ private fun ToolStepRow(step: ToolExecutionStep) {
                         animation = tween(1000, easing = LinearEasing),
                         repeatMode = RepeatMode.Restart
                     ),
-                    label = "tool_rotation"
+                    label = "tool_rotation_${step.toolName}"
                 )
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconColor,
                     modifier = Modifier
-                        .size(18.dp)
+                        .size(16.dp)
                         .rotate(rotation)
                 )
             } else {
@@ -384,11 +484,12 @@ private fun ToolStepRow(step: ToolExecutionStep) {
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
 
+        // Tool name and result
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = step.displayName,
@@ -397,17 +498,19 @@ private fun ToolStepRow(step: ToolExecutionStep) {
                 color = colors.TextPrimary
             )
             step.result?.let { result ->
-                Text(
-                    text = result,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.TextMuted,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (result.isNotBlank()) {
+                    Text(
+                        text = result,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.TextMuted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
 
-        // Duration badge if completed
+        // Duration badge for completed tools
         if (step.status == ToolStepStatus.COMPLETED && step.endTime != null) {
             val duration = step.endTime - step.startTime
             Surface(
@@ -415,7 +518,7 @@ private fun ToolStepRow(step: ToolExecutionStep) {
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = "${duration}ms",
+                    text = formatDuration(duration),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.TextSubtle,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -426,7 +529,21 @@ private fun ToolStepRow(step: ToolExecutionStep) {
 }
 
 /**
- * Reasoning Panel - Shows AI thinking process
+ * Format duration for display
+ */
+private fun formatDuration(durationMs: Long): String {
+    return when {
+        durationMs < 1000 -> "${durationMs}ms"
+        durationMs < 60000 -> "${durationMs / 1000}.${(durationMs % 1000) / 100}s"
+        else -> "${durationMs / 60000}m ${(durationMs % 60000) / 1000}s"
+    }
+}
+
+/**
+ * Reasoning Panel - Collapsible thinking/reasoning display
+ *
+ * Shows the AI's reasoning process in a collapsible section.
+ * Displays an active indicator when reasoning is in progress.
  */
 @Composable
 fun ReasoningPanel(
@@ -439,12 +556,12 @@ fun ReasoningPanel(
 
     Surface(
         onClick = onToggle,
-        color = colors.AccentPrimary.copy(alpha = 0.08f),
-        shape = RoundedCornerShape(12.dp),
+        color = colors.AccentPrimary.copy(alpha = 0.06f),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Header
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Header with thinking indicator
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -476,7 +593,7 @@ fun ReasoningPanel(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Thinking",
+                                text = "Reasoning",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colors.AccentPrimary
@@ -486,7 +603,7 @@ fun ReasoningPanel(
                             }
                         }
                         Text(
-                            text = if (isExpanded) "Tap to collapse" else "Tap to expand",
+                            text = if (isExpanded) "Vedic analysis process" else "Tap to view reasoning",
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.TextMuted
                         )
@@ -495,13 +612,13 @@ fun ReasoningPanel(
 
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
                     tint = colors.AccentPrimary,
                     modifier = Modifier.size(22.dp)
                 )
             }
 
-            // Expandable content
+            // Expandable reasoning content
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
@@ -512,7 +629,7 @@ fun ReasoningPanel(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp)
+                        .padding(top = 10.dp)
                 ) {
                     Text(
                         text = reasoning,
@@ -528,7 +645,7 @@ fun ReasoningPanel(
 }
 
 /**
- * Animated thinking indicator
+ * Animated thinking indicator - three pulsing dots
  */
 @Composable
 private fun ThinkingIndicator() {
@@ -558,56 +675,59 @@ private fun ThinkingIndicator() {
 }
 
 /**
- * Main Content Panel - Shows the response text
+ * Main Content Panel - Response content with status indicators
+ *
+ * Displays the main response content with Markdown rendering.
+ * Shows appropriate status indicators during processing phases.
  */
 @Composable
 fun ContentPanel(
     content: String,
     aiStatus: AiStatus,
-    toolsUsed: List<String>
+    toolsUsed: List<String>,
+    isProcessing: Boolean = false
 ) {
     val colors = AppTheme.current
     val isTyping = aiStatus is AiStatus.Typing ||
         (aiStatus !is AiStatus.Idle && aiStatus !is AiStatus.Complete && content.isNotEmpty())
 
-    Surface(
-        color = colors.CardBackground,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth()
+    // Content container - clean, no bubble for AI messages
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Content or status
-            if (content.isNotEmpty()) {
-                MarkdownText(
-                    markdown = content,
-                    modifier = Modifier.fillMaxWidth(),
-                    textColor = colors.TextPrimary,
-                    linkColor = colors.AccentPrimary,
-                    textSize = 14f,
-                    cleanContent = false
-                )
+        // Main content area
+        if (content.isNotEmpty()) {
+            // Render content with Markdown support
+            MarkdownText(
+                markdown = content,
+                modifier = Modifier.fillMaxWidth(),
+                textColor = colors.TextPrimary,
+                linkColor = colors.AccentPrimary,
+                textSize = 15f,
+                cleanContent = false // Already cleaned above
+            )
 
-                // Typing indicator at end
-                if (isTyping) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TypingDots()
-                }
-            } else if (aiStatus !is AiStatus.Idle && aiStatus !is AiStatus.Complete) {
-                // Show status when no content yet
-                StatusIndicatorInline(aiStatus = aiStatus)
+            // Typing indicator at end when actively typing
+            if (isTyping) {
+                Spacer(modifier = Modifier.height(4.dp))
+                TypingDots()
             }
+        } else if (aiStatus !is AiStatus.Idle && aiStatus !is AiStatus.Complete) {
+            // Show status indicator when no content yet
+            StatusIndicatorInline(aiStatus = aiStatus)
+        }
 
-            // Tools used badge
-            if (toolsUsed.isNotEmpty() && !isTyping && aiStatus is AiStatus.Complete) {
-                Spacer(modifier = Modifier.height(10.dp))
-                ToolsUsedBadge(tools = toolsUsed)
-            }
+        // Tools used badge - show after completion
+        if (toolsUsed.isNotEmpty() && !isProcessing && aiStatus is AiStatus.Complete) {
+            Spacer(modifier = Modifier.height(4.dp))
+            ToolsUsedBadge(tools = toolsUsed)
         }
     }
 }
 
 /**
- * Inline status indicator
+ * Inline status indicator for pre-content phases
  */
 @Composable
 private fun StatusIndicatorInline(aiStatus: AiStatus) {
@@ -616,7 +736,7 @@ private fun StatusIndicatorInline(aiStatus: AiStatus) {
     val (statusText, statusIcon) = when (aiStatus) {
         is AiStatus.Idle, is AiStatus.Complete -> return
         is AiStatus.Thinking -> "Analyzing your question..." to Icons.Outlined.Psychology
-        is AiStatus.Reasoning -> "Reasoning through the details..." to Icons.Outlined.Lightbulb
+        is AiStatus.Reasoning -> "Applying Vedic principles..." to Icons.Outlined.Lightbulb
         is AiStatus.CallingTool -> "Using ${formatToolNameDisplay(aiStatus.toolName)}..." to Icons.Outlined.Build
         is AiStatus.ExecutingTools -> "Gathering astrological data..." to Icons.Outlined.Build
         is AiStatus.Typing -> "Composing response..." to Icons.Outlined.Edit
@@ -624,7 +744,8 @@ private fun StatusIndicatorInline(aiStatus: AiStatus) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(vertical = 8.dp)
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(16.dp),
@@ -640,13 +761,14 @@ private fun StatusIndicatorInline(aiStatus: AiStatus) {
         Text(
             text = statusText,
             style = MaterialTheme.typography.bodySmall,
-            color = colors.TextMuted
+            color = colors.TextMuted,
+            fontStyle = FontStyle.Italic
         )
     }
 }
 
 /**
- * Animated typing dots
+ * Animated typing dots indicator
  */
 @Composable
 fun TypingDots() {
@@ -681,40 +803,237 @@ fun TypingDots() {
 }
 
 /**
- * Badge showing tools that were used
+ * Badge showing tools that were used in the response
  */
 @Composable
 private fun ToolsUsedBadge(tools: List<String>) {
     val colors = AppTheme.current
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    Surface(
+        color = colors.ChipBackground,
+        shape = RoundedCornerShape(6.dp)
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Build,
-            contentDescription = null,
-            tint = colors.TextSubtle,
-            modifier = Modifier.size(12.dp)
-        )
-        Text(
-            text = tools.take(3).joinToString(", ") { formatToolNameDisplay(it) } +
-                if (tools.size > 3) " +${tools.size - 3} more" else "",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.TextSubtle
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Build,
+                contentDescription = null,
+                tint = colors.TextSubtle,
+                modifier = Modifier.size(12.dp)
+            )
+            Text(
+                text = "Used: " + tools.take(3).joinToString(", ") { formatToolNameDisplay(it) } +
+                    if (tools.size > 3) " +${tools.size - 3} more" else "",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.TextSubtle
+            )
+        }
     }
 }
 
 /**
- * Format tool name for display
+ * Format tool name for user-friendly display
+ *
+ * Converts snake_case tool names to Title Case display names.
+ * Examples:
+ * - get_planet_positions -> Planet Positions
+ * - get_current_dasha -> Current Dasha
+ * - calculate_muhurta -> Calculate Muhurta
  */
 private fun formatToolNameDisplay(toolName: String): String {
     return toolName
         .removePrefix("get_")
+        .removePrefix("calculate_")
         .replace("_", " ")
         .split(" ")
         .joinToString(" ") { word ->
             word.replaceFirstChar { it.uppercase() }
         }
+}
+
+/**
+ * Completed Message Card - For rendering finalized AI messages (not streaming)
+ *
+ * This component is used to display AI messages that have been saved to the database.
+ * It uses a similar layout to AgenticMessageCard but without streaming-specific features.
+ */
+@Composable
+fun CompletedAiMessageCard(
+    content: String,
+    reasoning: String?,
+    toolsUsed: List<String>?,
+    errorMessage: String?,
+    onRegenerate: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val colors = AppTheme.current
+
+    // Clean content
+    val cleanedContent = remember(content) {
+        ContentCleaner.cleanForDisplay(content)
+    }
+    val cleanedReasoning = remember(reasoning) {
+        reasoning?.let { ContentCleaner.cleanReasoning(it) }
+    }
+
+    // State for collapsible reasoning
+    var showReasoning by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Agent header (static, not processing)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                colors.AccentGold.copy(alpha = 0.3f),
+                                colors.AccentPrimary.copy(alpha = 0.15f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = colors.AccentGold,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Text(
+                text = "Stormy",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.TextPrimary
+            )
+        }
+
+        // Reasoning panel if present
+        if (!cleanedReasoning.isNullOrBlank()) {
+            Surface(
+                onClick = { showReasoning = !showReasoning },
+                color = colors.AccentPrimary.copy(alpha = 0.06f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Psychology,
+                                contentDescription = null,
+                                tint = colors.AccentPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Reasoning",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.AccentPrimary
+                            )
+                        }
+                        Icon(
+                            imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = colors.AccentPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    AnimatedVisibility(visible = showReasoning) {
+                        Text(
+                            text = cleanedReasoning,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.TextSecondary,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Error state
+        if (errorMessage != null) {
+            Surface(
+                color = colors.ErrorColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ErrorOutline,
+                        contentDescription = null,
+                        tint = colors.ErrorColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.ErrorColor
+                    )
+                }
+            }
+        } else if (cleanedContent.isNotEmpty()) {
+            // Main content with Markdown
+            MarkdownText(
+                markdown = cleanedContent,
+                modifier = Modifier.fillMaxWidth(),
+                textColor = colors.TextPrimary,
+                linkColor = colors.AccentPrimary,
+                textSize = 15f,
+                cleanContent = false
+            )
+        }
+
+        // Tools used badge
+        if (!toolsUsed.isNullOrEmpty()) {
+            ToolsUsedBadge(tools = toolsUsed)
+        }
+
+        // Regenerate button
+        if (onRegenerate != null) {
+            TextButton(
+                onClick = onRegenerate,
+                modifier = Modifier.align(Alignment.Start)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Regenerate",
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
 }

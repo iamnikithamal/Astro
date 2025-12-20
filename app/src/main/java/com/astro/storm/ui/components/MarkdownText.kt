@@ -38,7 +38,24 @@ private class SafeSelectableTextView(context: Context) : TextView(context) {
 
 /**
  * Content cleaning utilities for AI responses.
- * Removes tool call blocks, artifacts, and other non-display content.
+ *
+ * This utility handles the critical task of cleaning AI-generated content
+ * before display. It addresses several common issues:
+ *
+ * 1. Tool Call Artifacts: AI models may include tool call JSON in their
+ *    responses that should not be displayed to users.
+ *
+ * 2. Streaming Artifacts: During streaming, various artifacts like "null",
+ *    "undefined", "[DONE]" markers, and incomplete code blocks may appear.
+ *
+ * 3. Content Duplication: AI models (especially after tool calls) may
+ *    repeat content. This cleaner detects and removes duplicated sections.
+ *
+ * 4. Thinking/Reasoning Tags: Content wrapped in thinking tags should be
+ *    displayed separately in the reasoning panel.
+ *
+ * 5. Whitespace Normalization: Excessive whitespace is normalized while
+ *    preserving intentional markdown formatting.
  */
 object ContentCleaner {
 
@@ -49,7 +66,11 @@ object ContentCleaner {
         // JSON code block with tool call inside
         Regex("""```json\s*\n?\s*\{"tool"\s*:[\s\S]*?\}\s*\n?```""", RegexOption.MULTILINE),
         // Plain code block with tool call
-        Regex("""```\s*\n?\s*\{"tool"\s*:[\s\S]*?\}\s*\n?```""", RegexOption.MULTILINE)
+        Regex("""```\s*\n?\s*\{"tool"\s*:[\s\S]*?\}\s*\n?```""", RegexOption.MULTILINE),
+        // Code block with function name
+        Regex("""```\s*\n?\s*\{"name"\s*:[\s\S]*?\}\s*\n?```""", RegexOption.MULTILINE),
+        // Code block with nested arguments (multi-line)
+        Regex("""```(?:json|tool_call)?\s*\n\s*\{[^`]*"tool"[^`]*\}\s*\n```""", RegexOption.MULTILINE)
     )
 
     // Pattern to match inline tool call JSON (various formats)
@@ -59,14 +80,19 @@ object ContentCleaner {
         // Alternate order
         Regex("""\{"arguments"\s*:\s*\{[^}]*\}\s*,\s*"tool"\s*:\s*"[^"]+"\s*\}"""),
         // With extra whitespace
-        Regex("""\{\s*"tool"\s*:\s*"[^"]+"\s*,\s*"arguments"\s*:\s*\{[^}]*\}\s*\}""")
+        Regex("""\{\s*"tool"\s*:\s*"[^"]+"\s*,\s*"arguments"\s*:\s*\{[^}]*\}\s*\}"""),
+        // Name-first format
+        Regex("""\{\s*"name"\s*:\s*"[^"]+"\s*,\s*"parameters"\s*:\s*\{[^}]*\}\s*\}"""),
+        // Function call format
+        Regex("""\{\s*"function"\s*:\s*"[^"]+"\s*,\s*"args"\s*:\s*\{[^}]*\}\s*\}""")
     )
 
     // Pattern to match thinking/reasoning blocks that shouldn't be in main content
     private val thinkingBlockPatterns = listOf(
         Regex("""<think>[\s\S]*?</think>""", RegexOption.MULTILINE),
         Regex("""<thinking>[\s\S]*?</thinking>""", RegexOption.MULTILINE),
-        Regex("""<reasoning>[\s\S]*?</reasoning>""", RegexOption.MULTILINE)
+        Regex("""<reasoning>[\s\S]*?</reasoning>""", RegexOption.MULTILINE),
+        Regex("""<reflection>[\s\S]*?</reflection>""", RegexOption.MULTILINE)
     )
 
     // Pattern to match common AI response artifacts
@@ -84,7 +110,11 @@ object ContentCleaner {
         // Remove [DONE] markers that might leak through
         Regex("""\[DONE\]"""),
         // Remove data: prefixes that might leak through
-        Regex("""^data:\s*""", RegexOption.MULTILINE)
+        Regex("""^data:\s*""", RegexOption.MULTILINE),
+        // Remove SSE event markers
+        Regex("""^event:\s*\w+\s*$""", RegexOption.MULTILINE),
+        // Remove id: markers from SSE
+        Regex("""^id:\s*\S+\s*$""", RegexOption.MULTILINE)
     )
 
     /**
@@ -116,6 +146,9 @@ object ContentCleaner {
             cleaned = pattern.replace(cleaned, "")
         }
 
+        // Detect and remove content duplication (common after tool calls)
+        cleaned = removeDuplicatedContent(cleaned)
+
         // Clean up excessive whitespace while preserving markdown formatting
         cleaned = cleaned
             .replace(Regex("\n{4,}"), "\n\n\n") // Max 3 newlines
@@ -124,6 +157,89 @@ object ContentCleaner {
             .trim()
 
         return cleaned
+    }
+
+    /**
+     * Detect and remove duplicated content sections.
+     *
+     * AI models sometimes repeat content after tool calls. This function
+     * detects when a significant portion of the content is duplicated
+     * and removes the repetition.
+     *
+     * Detection algorithm:
+     * 1. Split content into paragraphs/sections
+     * 2. Look for repeating sequences of paragraphs
+     * 3. If found, keep only the first occurrence
+     */
+    private fun removeDuplicatedContent(content: String): String {
+        if (content.length < 200) return content // Too short to have meaningful duplication
+
+        // Split into paragraphs (using double newlines as delimiter)
+        val paragraphs = content.split(Regex("\n\n+"))
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        if (paragraphs.size < 4) return content // Not enough paragraphs to detect duplication
+
+        // Look for repeating sequences
+        for (windowSize in (paragraphs.size / 2) downTo 2) {
+            // Check if the first windowSize paragraphs repeat
+            val firstHalf = paragraphs.take(windowSize)
+            val secondHalf = paragraphs.drop(windowSize).take(windowSize)
+
+            // Calculate similarity between the two halves
+            if (firstHalf.size == secondHalf.size) {
+                val matchCount = firstHalf.zip(secondHalf).count { (a, b) ->
+                    a == b || calculateSimilarity(a, b) > 0.9
+                }
+
+                // If more than 80% of paragraphs match, we have duplication
+                if (matchCount.toFloat() / firstHalf.size > 0.8) {
+                    // Return only the first occurrence plus any remaining unique content
+                    val uniqueContent = paragraphs.take(windowSize) +
+                        paragraphs.drop(windowSize * 2)
+                    return uniqueContent.joinToString("\n\n")
+                }
+            }
+        }
+
+        // Also check for exact substring duplication (simpler case)
+        val halfLength = content.length / 2
+        if (halfLength > 100) {
+            val firstHalf = content.substring(0, halfLength).trim()
+            val secondHalf = content.substring(halfLength).trim()
+
+            // Check if second half starts with the beginning of first half
+            if (secondHalf.startsWith(firstHalf.take(100)) ||
+                calculateSimilarity(firstHalf, secondHalf) > 0.85) {
+                return firstHalf
+            }
+        }
+
+        return content
+    }
+
+    /**
+     * Calculate similarity ratio between two strings (0.0 to 1.0)
+     */
+    private fun calculateSimilarity(a: String, b: String): Float {
+        if (a == b) return 1.0f
+        if (a.isEmpty() || b.isEmpty()) return 0.0f
+
+        val maxLen = maxOf(a.length, b.length)
+        val minLen = minOf(a.length, b.length)
+
+        // Quick length check - if very different lengths, probably not similar
+        if (minLen.toFloat() / maxLen < 0.5f) return 0.0f
+
+        // Compare word sets for similarity
+        val wordsA = a.lowercase().split(Regex("\\s+")).toSet()
+        val wordsB = b.lowercase().split(Regex("\\s+")).toSet()
+
+        val intersection = wordsA.intersect(wordsB).size
+        val union = wordsA.union(wordsB).size
+
+        return if (union == 0) 0.0f else intersection.toFloat() / union
     }
 
     /**
@@ -139,6 +255,17 @@ object ContentCleaner {
         cleaned = cleaned
             .replace(Regex("""(?<![a-zA-Z])null(?![a-zA-Z])"""), "")
             .replace(Regex("""(?<![a-zA-Z])undefined(?![a-zA-Z])"""), "")
+
+        // Remove SSE artifacts
+        cleaned = cleaned
+            .replace(Regex("""^data:\s*""", RegexOption.MULTILINE), "")
+            .replace(Regex("""^event:\s*\w+\s*$""", RegexOption.MULTILINE), "")
+
+        // Remove thinking tags if present (keep content)
+        cleaned = cleaned
+            .replace(Regex("""</?think(?:ing)?>"""), "")
+            .replace(Regex("""</?reasoning>"""), "")
+            .replace(Regex("""</?reflection>"""), "")
 
         // Clean up whitespace
         cleaned = cleaned
@@ -166,7 +293,28 @@ object ContentCleaner {
         val closeBraces = trimmed.count { it == '}' }
         if (openBraces > closeBraces) return true
 
+        // Check for incomplete thinking tags
+        val hasOpenThink = trimmed.contains("<think") && !trimmed.contains("</think>")
+        if (hasOpenThink) return true
+
         return false
+    }
+
+    /**
+     * Extract thinking/reasoning content from a response
+     */
+    fun extractThinkingContent(content: String): String? {
+        for (pattern in thinkingBlockPatterns) {
+            val match = pattern.find(content)
+            if (match != null) {
+                // Extract content between tags
+                val inner = match.value
+                    .replace(Regex("""<[^>]+>"""), "")
+                    .trim()
+                if (inner.isNotEmpty()) return inner
+            }
+        }
+        return null
     }
 }
 

@@ -484,54 +484,188 @@ Remember: You are Stormy, a knowledgeable and caring astrology assistant. Help u
 
     /**
      * Parse embedded tool calls from AI response content
+     *
+     * Supports multiple formats to maximize compatibility across different AI models:
+     * 1. Code block format: ```tool_call { "tool": "name", "arguments": {...} } ```
+     * 2. JSON code block: ```json { "tool": "name", "arguments": {...} } ```
+     * 3. Inline JSON format: {"tool": "name", "arguments": {...}}
+     * 4. Function call format: tool_name(arg1=val1, arg2=val2)
+     * 5. Name-first format: { "name": "tool_name", "parameters": {...} }
+     *
+     * This robust parsing handles edge cases where models may:
+     * - Use different JSON formatting (minified, pretty-printed)
+     * - Include extra whitespace or newlines
+     * - Use nested arguments with complex values
      */
     private fun parseEmbeddedToolCalls(content: String): List<ToolCallRequest> {
         val toolCalls = mutableListOf<ToolCallRequest>()
+        val processedToolIds = mutableSetOf<String>()
 
-        // Look for tool_call JSON blocks
-        val pattern = Regex("""```tool_call\s*\n?\s*(\{[\s\S]*?\})\s*\n?```""", RegexOption.MULTILINE)
-        val matches = pattern.findAll(content)
-
-        for (match in matches) {
-            try {
-                val jsonStr = match.groupValues[1].trim()
-                val json = JSONObject(jsonStr)
-                val toolName = json.getString("tool")
-                val arguments = json.optJSONObject("arguments")?.toString() ?: "{}"
-
-                toolCalls.add(ToolCallRequest(
-                    id = "tool_${UUID.randomUUID().toString().take(8)}",
-                    name = toolName,
-                    arguments = arguments
-                ))
-            } catch (e: Exception) {
-                // Invalid JSON, skip
-            }
+        // Pattern 1: Standard tool_call code block
+        val toolCallBlockPattern = Regex(
+            """```tool_call\s*\n?\s*(\{[\s\S]*?\})\s*\n?```""",
+            RegexOption.MULTILINE
+        )
+        toolCallBlockPattern.findAll(content).forEach { match ->
+            parseToolCallJson(match.groupValues[1], toolCalls, processedToolIds)
         }
 
-        // Also check for inline JSON tool calls (for models that don't use code blocks)
-        val inlinePattern = Regex("""\{"tool"\s*:\s*"([^"]+)"\s*,\s*"arguments"\s*:\s*(\{[^}]*\})\s*\}""")
-        val inlineMatches = inlinePattern.findAll(content)
+        // Pattern 2: JSON code block with tool call
+        val jsonBlockPattern = Regex(
+            """```json\s*\n?\s*(\{[\s\S]*?"tool"[\s\S]*?\})\s*\n?```""",
+            RegexOption.MULTILINE
+        )
+        jsonBlockPattern.findAll(content).forEach { match ->
+            parseToolCallJson(match.groupValues[1], toolCalls, processedToolIds)
+        }
 
-        for (match in inlineMatches) {
-            try {
-                val toolName = match.groupValues[1]
-                val arguments = match.groupValues[2]
+        // Pattern 3: Plain code block with JSON
+        val plainBlockPattern = Regex(
+            """```\s*\n?\s*(\{[\s\S]*?"tool"[\s\S]*?\})\s*\n?```""",
+            RegexOption.MULTILINE
+        )
+        plainBlockPattern.findAll(content).forEach { match ->
+            parseToolCallJson(match.groupValues[1], toolCalls, processedToolIds)
+        }
 
-                // Avoid duplicates
-                if (toolCalls.none { it.name == toolName }) {
-                    toolCalls.add(ToolCallRequest(
-                        id = "tool_${UUID.randomUUID().toString().take(8)}",
-                        name = toolName,
-                        arguments = arguments
-                    ))
-                }
-            } catch (e: Exception) {
-                // Invalid format, skip
-            }
+        // Pattern 4: Inline JSON with tool key (handles nested arguments)
+        val inlinePattern = Regex(
+            """\{\s*"tool"\s*:\s*"([^"]+)"\s*,\s*"arguments"\s*:\s*(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})\s*\}"""
+        )
+        inlinePattern.findAll(content).forEach { match ->
+            val toolName = match.groupValues[1]
+            val arguments = match.groupValues[2]
+            addToolCallIfNotExists(toolName, arguments, toolCalls, processedToolIds)
+        }
+
+        // Pattern 5: Name-first format (some models use this)
+        val nameFirstPattern = Regex(
+            """\{\s*"name"\s*:\s*"([^"]+)"\s*,\s*"parameters"\s*:\s*(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})\s*\}"""
+        )
+        nameFirstPattern.findAll(content).forEach { match ->
+            val toolName = match.groupValues[1]
+            val arguments = match.groupValues[2]
+            addToolCallIfNotExists(toolName, arguments, toolCalls, processedToolIds)
+        }
+
+        // Pattern 6: Function call format (tool_name(args))
+        val functionPattern = Regex(
+            """(get_\w+|calculate_\w+)\s*\(\s*([^)]*)\s*\)"""
+        )
+        functionPattern.findAll(content).forEach { match ->
+            val toolName = match.groupValues[1]
+            val argsStr = match.groupValues[2]
+            val arguments = parseFunctionArguments(argsStr)
+            addToolCallIfNotExists(toolName, arguments, toolCalls, processedToolIds)
         }
 
         return toolCalls
+    }
+
+    /**
+     * Parse JSON string into tool call and add to list
+     */
+    private fun parseToolCallJson(
+        jsonStr: String,
+        toolCalls: MutableList<ToolCallRequest>,
+        processedIds: MutableSet<String>
+    ) {
+        try {
+            val cleanedJson = jsonStr.trim()
+            val json = JSONObject(cleanedJson)
+
+            // Try different field names for tool name
+            val toolName = json.optString("tool")
+                .ifEmpty { json.optString("name") }
+                .ifEmpty { json.optString("function") }
+
+            if (toolName.isEmpty()) return
+
+            // Try different field names for arguments
+            val arguments = json.optJSONObject("arguments")
+                ?: json.optJSONObject("parameters")
+                ?: json.optJSONObject("args")
+                ?: JSONObject()
+
+            addToolCallIfNotExists(toolName, arguments.toString(), toolCalls, processedIds)
+        } catch (e: Exception) {
+            // JSON parsing failed - try to extract partial information
+            tryPartialParse(jsonStr, toolCalls, processedIds)
+        }
+    }
+
+    /**
+     * Attempt to parse partial or malformed JSON
+     */
+    private fun tryPartialParse(
+        jsonStr: String,
+        toolCalls: MutableList<ToolCallRequest>,
+        processedIds: MutableSet<String>
+    ) {
+        // Try to extract tool name even from malformed JSON
+        val toolNameMatch = Regex(""""tool"\s*:\s*"([^"]+)"""").find(jsonStr)
+            ?: Regex(""""name"\s*:\s*"([^"]+)"""").find(jsonStr)
+
+        if (toolNameMatch != null) {
+            val toolName = toolNameMatch.groupValues[1]
+
+            // Try to extract arguments
+            val argsMatch = Regex(""""arguments"\s*:\s*(\{[^{}]*\})""").find(jsonStr)
+                ?: Regex(""""parameters"\s*:\s*(\{[^{}]*\})""").find(jsonStr)
+
+            val arguments = argsMatch?.groupValues?.get(1) ?: "{}"
+            addToolCallIfNotExists(toolName, arguments, toolCalls, processedIds)
+        }
+    }
+
+    /**
+     * Add tool call if not already processed (deduplication)
+     */
+    private fun addToolCallIfNotExists(
+        toolName: String,
+        arguments: String,
+        toolCalls: MutableList<ToolCallRequest>,
+        processedIds: MutableSet<String>
+    ) {
+        // Create a unique key for deduplication based on tool name and arguments
+        val toolKey = "$toolName:${arguments.hashCode()}"
+        if (toolKey in processedIds) return
+
+        processedIds.add(toolKey)
+        toolCalls.add(ToolCallRequest(
+            id = "tool_${UUID.randomUUID().toString().take(8)}",
+            name = toolName,
+            arguments = arguments
+        ))
+    }
+
+    /**
+     * Parse function-style arguments into JSON
+     */
+    private fun parseFunctionArguments(argsStr: String): String {
+        if (argsStr.isBlank()) return "{}"
+
+        val argsJson = JSONObject()
+
+        // Split by comma, handling quoted strings
+        val argPairs = argsStr.split(Regex(""",(?=(?:[^"]*"[^"]*")*[^"]*$)"""))
+
+        for (pair in argPairs) {
+            val parts = pair.split("=", limit = 2)
+            if (parts.size == 2) {
+                val key = parts[0].trim()
+                var value = parts[1].trim()
+
+                // Remove surrounding quotes if present
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length - 1)
+                }
+
+                argsJson.put(key, value)
+            }
+        }
+
+        return argsJson.toString()
     }
 
     /**

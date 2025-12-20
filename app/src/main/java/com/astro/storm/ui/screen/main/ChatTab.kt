@@ -54,6 +54,7 @@ import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
 import com.astro.storm.ui.components.MarkdownText
 import com.astro.storm.ui.components.agentic.AgenticMessageCard
+import com.astro.storm.ui.components.agentic.CompletedAiMessageCard
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChatUiState
@@ -937,166 +938,64 @@ private fun SuggestionChip(
     )
 }
 
+/**
+ * Message display component - Uses different layouts for user vs AI messages
+ *
+ * User messages: Traditional bubble style (right-aligned, colored background)
+ * AI messages: Modern IDE-style layout (full width, no bubble, professional look)
+ *
+ * This approach inspired by agentic coding IDEs like Cursor, Windsurf, and Google Antigravity
+ * but adapted for Vedic astrology assistant context.
+ */
 @Composable
 private fun MessageBubble(
     message: ChatMessageModel,
     onRegenerate: (() -> Unit)?
 ) {
-    val colors = AppTheme.current
     val isUser = message.role == MessageRole.USER
-    var showReasoning by remember { mutableStateOf(false) }
 
-    // Clean message content from tool call artifacts
-    val cleanedContent = remember(message.content) {
-        if (isUser) message.content else ContentCleaner.cleanForDisplay(message.content)
+    if (isUser) {
+        // User messages keep the bubble style
+        UserMessageBubble(message = message)
+    } else {
+        // AI messages use the new bubble-free professional layout
+        CompletedAiMessageCard(
+            content = message.content,
+            reasoning = message.reasoningContent,
+            toolsUsed = message.toolsUsed,
+            errorMessage = message.errorMessage,
+            onRegenerate = onRegenerate
+        )
     }
-    val cleanedReasoning = remember(message.reasoningContent) {
-        message.reasoningContent?.let { ContentCleaner.cleanReasoning(it) }
-    }
+}
+
+/**
+ * User message bubble - Maintains the traditional bubble style for user messages
+ */
+@Composable
+private fun UserMessageBubble(message: ChatMessageModel) {
+    val colors = AppTheme.current
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
+        horizontalAlignment = Alignment.End
     ) {
         Surface(
-            color = if (isUser) colors.AccentPrimary else colors.CardBackground,
+            color = colors.AccentPrimary,
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
+                bottomStart = 16.dp,
+                bottomEnd = 4.dp
             ),
             modifier = Modifier.widthIn(max = 320.dp)
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                // Reasoning toggle at TOP for assistant messages
-                if (!isUser && !cleanedReasoning.isNullOrBlank()) {
-                    Surface(
-                        onClick = { showReasoning = !showReasoning },
-                        color = colors.ChipBackground.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Psychology,
-                                contentDescription = null,
-                                tint = colors.AccentPrimary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = if (showReasoning) "Hide reasoning" else "Show reasoning",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = colors.TextMuted
-                            )
-                            Icon(
-                                imageVector = if (showReasoning) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = colors.TextMuted,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    AnimatedVisibility(visible = showReasoning) {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            color = colors.ChipBackground,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = cleanedReasoning ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.TextMuted,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Error state
-                if (message.errorMessage != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Outlined.ErrorOutline,
-                            contentDescription = null,
-                            tint = colors.ErrorColor,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = message.errorMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.ErrorColor
-                        )
-                    }
-                } else if (cleanedContent.isNotEmpty()) {
-                    // Use Markdown rendering for assistant messages, plain text for user
-                    if (isUser) {
-                        Text(
-                            text = cleanedContent,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.ScreenBackground
-                        )
-                    } else {
-                        MarkdownText(
-                            markdown = cleanedContent,
-                            modifier = Modifier.fillMaxWidth(),
-                            textColor = colors.TextPrimary,
-                            linkColor = colors.AccentPrimary,
-                            textSize = 14f,
-                            cleanContent = false // Already cleaned above
-                        )
-                    }
-                }
-
-                // Tools used
-                if (!isUser && message.toolsUsed?.isNotEmpty() == true) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Build,
-                            contentDescription = null,
-                            tint = colors.TextSubtle,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = message.toolsUsed.joinToString(", "),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.TextSubtle
-                        )
-                    }
-                }
-            }
-        }
-
-        // Regenerate button for last assistant message
-        if (onRegenerate != null && !isUser) {
-            TextButton(
-                onClick = onRegenerate,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Regenerate",
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
+            Text(
+                text = message.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.ScreenBackground,
+                modifier = Modifier.padding(12.dp)
+            )
         }
     }
 }
