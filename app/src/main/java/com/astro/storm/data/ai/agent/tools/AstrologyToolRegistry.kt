@@ -19,29 +19,60 @@ class AstrologyToolRegistry private constructor(
 
     init {
         // Register all available tools
+
+        // === AGENTIC WORKFLOW TOOLS ===
+        // Task management and user interaction
+        registerTool(StartTaskTool())
+        registerTool(FinishTaskTool())
+        registerTool(UpdateTodoTool())
+        registerTool(AskUserTool())
+
+        // === PROFILE MANAGEMENT TOOLS ===
+        // Create, update, delete, and manage profiles
         registerTool(GetProfileInfoTool())
         registerTool(GetAllProfilesTool())
+        registerTool(CreateProfileTool())
+        registerTool(UpdateProfileTool())
+        registerTool(DeleteProfileTool())
+        registerTool(SetActiveProfileTool())
+
+        // === CHART DATA TOOLS ===
+        // Planetary positions, houses, nakshatras
         registerTool(GetPlanetPositionsTool())
         registerTool(GetHousePositionsTool())
         registerTool(GetNakshatraInfoTool())
+
+        // === DASHA & TIMING TOOLS ===
+        // Dasha periods and timing
         registerTool(GetDashaInfoTool())
         registerTool(GetCurrentDashaTool())
+        registerTool(CalculateMuhurtaTool())
+        registerTool(GetPanchangaTool())
+
+        // === YOGA & STRENGTH TOOLS ===
+        // Yogas, strengths, and special combinations
         registerTool(GetYogasTool())
         registerTool(GetAshtakavargaTool())
-        registerTool(GetPanchangaTool())
+        registerTool(GetStrengthAnalysisTool())
+        registerTool(GetVipareetaRajaYogaTool())
+
+        // === TRANSIT & COMPATIBILITY TOOLS ===
+        // Transits and relationship analysis
         registerTool(GetTransitsTool())
         registerTool(GetCompatibilityTool())
-        registerTool(GetRemediesTool())
-        registerTool(GetStrengthAnalysisTool())
+        registerTool(GetCompatibilityDeepDiveTool())
+
+        // === ADVANCED ANALYSIS TOOLS ===
+        // Divisional charts, special points, and advanced techniques
         registerTool(GetDivisionalChartTool())
-        registerTool(CalculateMuhurtaTool())
         registerTool(GetBhriguBinduTool())
         registerTool(GetArgalaTool())
         registerTool(GetPrashnaAnalysisTool())
-        registerTool(GetCompatibilityDeepDiveTool())
         registerTool(GetMarakaAnalysisTool())
         registerTool(GetBadhakaAnalysisTool())
-        registerTool(GetVipareetaRajaYogaTool())
+
+        // === REMEDIES ===
+        registerTool(GetRemediesTool())
     }
 
     /**

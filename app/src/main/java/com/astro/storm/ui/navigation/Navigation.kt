@@ -59,6 +59,8 @@ import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChartViewModel
 import com.astro.storm.ui.viewmodel.ChatViewModel
 import com.astro.storm.ui.viewmodel.StreamingMessageState
+import com.astro.storm.ui.components.agentic.AskUserOption
+import com.astro.storm.ui.components.agentic.SectionedMessageState
 import com.astro.storm.data.ai.provider.AiProviderRegistry
 
 /**
@@ -1256,6 +1258,7 @@ fun AstroStormNavigation(
             val webSearchEnabled by chatViewModel.webSearchEnabled.collectAsState()
             val streamingMessageState by chatViewModel.streamingMessageState.collectAsState()
             val streamingMessageId by chatViewModel.streamingMessageId.collectAsState()
+            val sectionedMessageState by chatViewModel.sectionedMessageState.collectAsState()
 
             // Initialize/open conversation
             LaunchedEffect(conversationId) {
@@ -1290,6 +1293,7 @@ fun AstroStormNavigation(
                 webSearchEnabled = webSearchEnabled,
                 streamingMessageState = streamingMessageState,
                 streamingMessageId = streamingMessageId,
+                sectionedMessageState = sectionedMessageState,
                 onSendMessage = { message ->
                     chatViewModel.sendMessage(message, currentChart, savedCharts, selectedChartId)
                 },
@@ -1300,6 +1304,15 @@ fun AstroStormNavigation(
                 onSelectModel = { chatViewModel.selectModel(it) },
                 onSetThinkingEnabled = { chatViewModel.setThinkingEnabled(it) },
                 onSetWebSearchEnabled = { chatViewModel.setWebSearchEnabled(it) },
+                onAskUserResponse = { sectionId, response ->
+                    chatViewModel.handleAskUserResponse(sectionId, response)
+                },
+                onAskUserOptionSelect = { sectionId, option ->
+                    chatViewModel.handleAskUserOptionSelect(sectionId, option)
+                },
+                onToggleSection = { sectionId ->
+                    chatViewModel.toggleSectionExpanded(sectionId)
+                },
                 onBack = {
                     chatViewModel.closeConversation()
                     navController.popBackStack()

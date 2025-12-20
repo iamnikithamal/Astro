@@ -225,7 +225,8 @@ class ChatRepository private constructor(
         toolsUsed: List<String>? = null,
         promptTokens: Int? = null,
         completionTokens: Int? = null,
-        totalTokens: Int? = null
+        totalTokens: Int? = null,
+        sectionsJson: String? = null
     ) {
         val message = chatDao.getMessageById(messageId) ?: return
 
@@ -237,7 +238,8 @@ class ChatRepository private constructor(
                 toolsUsedJson = toolsUsed?.let { JSONArray(it).toString() },
                 promptTokens = promptTokens,
                 completionTokens = completionTokens,
-                totalTokens = totalTokens
+                totalTokens = totalTokens,
+                sectionsJson = sectionsJson
             )
         )
 

@@ -54,7 +54,11 @@ import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
 import com.astro.storm.ui.components.MarkdownText
 import com.astro.storm.ui.components.agentic.AgenticMessageCard
+import com.astro.storm.ui.components.agentic.AskUserOption
 import com.astro.storm.ui.components.agentic.CompletedAiMessageCard
+import com.astro.storm.ui.components.agentic.CompletedSectionedMessageCard
+import com.astro.storm.ui.components.agentic.SectionedMessageCard
+import com.astro.storm.ui.components.agentic.SectionedMessageState
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.ui.viewmodel.AiStatus
 import com.astro.storm.ui.viewmodel.ChatUiState
@@ -476,12 +480,16 @@ fun ChatScreen(
     webSearchEnabled: Boolean = false,
     streamingMessageState: StreamingMessageState? = null,
     streamingMessageId: Long? = null,
+    sectionedMessageState: SectionedMessageState? = null,
     onSendMessage: (String) -> Unit,
     onCancelStreaming: () -> Unit,
     onRegenerateResponse: () -> Unit,
     onSelectModel: (AiModel) -> Unit,
     onSetThinkingEnabled: (Boolean) -> Unit = {},
     onSetWebSearchEnabled: (Boolean) -> Unit = {},
+    onAskUserResponse: (sectionId: String, response: String) -> Unit = { _, _ -> },
+    onAskUserOptionSelect: (sectionId: String, option: AskUserOption) -> Unit = { _, _ -> },
+    onToggleSection: (sectionId: String) -> Unit = {},
     onBack: () -> Unit,
     onClearChat: () -> Unit,
     onNavigateToModels: () -> Unit
@@ -617,16 +625,29 @@ fun ChatScreen(
                     )
                 }
 
-                // Streaming message with agentic UI - shows tool calls, thinking, and content
-                // Uses enhanced AgenticMessageCard with IDE-style layout
-                if (isStreaming || streamingMessageState != null) {
+                // Streaming message with dynamic sectioned agentic UI
+                // Uses SectionedMessageCard for professional IDE-style layout
+                // Falls back to AgenticMessageCard if no sectioned state available
+                if (isStreaming || streamingMessageState != null || sectionedMessageState != null) {
                     item(key = "streaming_message") {
-                        AgenticMessageCard(
-                            streamingState = streamingMessageState,
-                            streamingContent = streamingContent,
-                            streamingReasoning = streamingReasoning,
-                            aiStatus = aiStatus
-                        )
+                        if (sectionedMessageState != null) {
+                            // Use new sectioned layout when available
+                            SectionedMessageCard(
+                                sectionedState = sectionedMessageState,
+                                aiStatus = aiStatus,
+                                onAskUserResponse = onAskUserResponse,
+                                onAskUserOptionSelect = onAskUserOptionSelect,
+                                onToggleSection = onToggleSection
+                            )
+                        } else {
+                            // Fallback to legacy AgenticMessageCard
+                            AgenticMessageCard(
+                                streamingState = streamingMessageState,
+                                streamingContent = streamingContent,
+                                streamingReasoning = streamingReasoning,
+                                aiStatus = aiStatus
+                            )
+                        }
                     }
                 }
 
@@ -958,14 +979,27 @@ private fun MessageBubble(
         // User messages keep the bubble style
         UserMessageBubble(message = message)
     } else {
-        // AI messages use the new bubble-free professional layout
-        CompletedAiMessageCard(
-            content = message.content,
-            reasoning = message.reasoningContent,
-            toolsUsed = message.toolsUsed,
-            errorMessage = message.errorMessage,
-            onRegenerate = onRegenerate
-        )
+        // AI messages use the new professional layout
+        // Use CompletedSectionedMessageCard when sectionsJson is available for full agentic layout
+        // Fall back to CompletedAiMessageCard for legacy messages without section data
+        if (message.sectionsJson != null) {
+            CompletedSectionedMessageCard(
+                content = message.content,
+                reasoning = message.reasoningContent,
+                toolsUsed = message.toolsUsed,
+                sectionsJson = message.sectionsJson,
+                errorMessage = message.errorMessage,
+                onRegenerate = onRegenerate
+            )
+        } else {
+            CompletedAiMessageCard(
+                content = message.content,
+                reasoning = message.reasoningContent,
+                toolsUsed = message.toolsUsed,
+                errorMessage = message.errorMessage,
+                onRegenerate = onRegenerate
+            )
+        }
     }
 }
 

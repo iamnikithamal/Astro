@@ -149,7 +149,13 @@ data class MessageEntity(
      */
     val promptTokens: Int? = null,
     val completionTokens: Int? = null,
-    val totalTokens: Int? = null
+    val totalTokens: Int? = null,
+
+    /**
+     * Serialized sections JSON for agentic message layout
+     * Contains the dynamic section data (reasoning, tools, content, ask_user, etc.)
+     */
+    val sectionsJson: String? = null
 )
 
 /**
@@ -213,7 +219,8 @@ data class ChatMessageModel(
     val errorMessage: String?,
     val promptTokens: Int?,
     val completionTokens: Int?,
-    val totalTokens: Int?
+    val totalTokens: Int?,
+    val sectionsJson: String?
 ) {
     companion object {
         fun fromEntity(entity: MessageEntity): ChatMessageModel {
@@ -232,7 +239,8 @@ data class ChatMessageModel(
                 errorMessage = entity.errorMessage,
                 promptTokens = entity.promptTokens,
                 completionTokens = entity.completionTokens,
-                totalTokens = entity.totalTokens
+                totalTokens = entity.totalTokens,
+                sectionsJson = entity.sectionsJson
             )
         }
 
@@ -293,7 +301,8 @@ data class ChatMessageModel(
             errorMessage = errorMessage,
             promptTokens = promptTokens,
             completionTokens = completionTokens,
-            totalTokens = totalTokens
+            totalTokens = totalTokens,
+            sectionsJson = sectionsJson
         )
     }
 }

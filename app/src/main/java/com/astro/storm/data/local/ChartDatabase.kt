@@ -20,7 +20,7 @@ import com.astro.storm.data.local.chat.MessageEntity
         ConversationEntity::class,
         MessageEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -91,6 +91,15 @@ abstract class ChartDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 3 to 4: Add sectionsJson column for agentic message layout
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN sectionsJson TEXT")
+            }
+        }
+
         fun getInstance(context: Context): ChartDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -98,7 +107,7 @@ abstract class ChartDatabase : RoomDatabase() {
                     ChartDatabase::class.java,
                     "astrostorm_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

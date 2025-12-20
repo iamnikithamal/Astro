@@ -16,12 +16,15 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.ChatRepository
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
+import com.astro.storm.ui.components.agentic.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * AI processing status for detailed UI feedback
@@ -125,6 +128,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _streamingMessageState = MutableStateFlow<StreamingMessageState?>(null)
     val streamingMessageState: StateFlow<StreamingMessageState?> = _streamingMessageState.asStateFlow()
 
+    // Sectioned message state for dynamic agentic UI layout
+    private val _sectionedMessageState = MutableStateFlow<SectionedMessageState?>(null)
+    val sectionedMessageState: StateFlow<SectionedMessageState?> = _sectionedMessageState.asStateFlow()
+
     // Track the ID of the message being streamed to exclude from regular message list
     private val _streamingMessageId = MutableStateFlow<Long?>(null)
     val streamingMessageId: StateFlow<Long?> = _streamingMessageId.asStateFlow()
@@ -139,6 +146,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     // Tool steps accumulator for agentic UI
     private var currentToolSteps = mutableListOf<ToolExecutionStep>()
+
+    // Section tracking for dynamic agentic layout
+    private var currentSections = mutableListOf<AgentSection>()
+    private var currentReasoningSection: AgentSection.Reasoning? = null
+    private var currentContentSection: AgentSection.Content? = null
+    private var currentToolGroup: AgentSection.ToolGroup? = null
+    private var currentTodoList: AgentSection.TodoList? = null
+    private var activeTaskId: String? = null
+    private var reasoningStartTime: Long = 0L
 
     // Performance optimization: Throttling for UI updates
     private var lastUiUpdateTime = 0L
@@ -385,6 +401,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 lastDbUpdateTime = 0L
                 pendingUiUpdate = false
 
+                // Reset section tracking for new message
+                currentSections.clear()
+                currentReasoningSection = null
+                currentContentSection = null
+                currentToolGroup = null
+                currentTodoList = null
+                activeTaskId = null
+                reasoningStartTime = 0L
+
                 // Get or create conversation ID
                 // If we're in "new chat" mode, create the conversation now (lazy creation)
                 val conversationId = _currentConversationId.value ?: run {
@@ -427,6 +452,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         content = "",
                         reasoning = "",
                         toolSteps = emptyList(),
+                        isComplete = false
+                    )
+                    // Initialize sectioned message state
+                    _sectionedMessageState.value = SectionedMessageState(
+                        messageId = msgId,
+                        sections = emptyList(),
                         isComplete = false
                     )
                 }
@@ -476,6 +507,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 // Accumulate raw content
                                 rawContentAccumulator.append(response.text)
 
+                                // Mark reasoning as complete when content starts
+                                if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
+                                    finalizeReasoningSection()
+                                }
+
                                 // Throttled UI update for smooth performance
                                 val currentTime = System.currentTimeMillis()
                                 if (currentTime - lastUiUpdateTime >= UI_UPDATE_THROTTLE_MS) {
@@ -491,8 +527,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                         _aiStatus.value = AiStatus.Typing
                                     }
 
+                                    // Update or create content section
+                                    updateContentSection(cleanedContent, isComplete = false)
+
                                     // Update streaming message state (throttled)
                                     updateStreamingMessageState()
+                                    updateSectionedMessageState()
                                 } else {
                                     pendingUiUpdate = true
                                 }
@@ -519,6 +559,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 // Accumulate raw reasoning
                                 rawReasoningAccumulator.append(response.text)
 
+                                // Track reasoning section start time
+                                if (reasoningStartTime == 0L) {
+                                    reasoningStartTime = System.currentTimeMillis()
+                                }
+
                                 // Throttled UI update for reasoning
                                 val currentTime = System.currentTimeMillis()
                                 if (currentTime - lastUiUpdateTime >= UI_UPDATE_THROTTLE_MS) {
@@ -533,8 +578,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                             _aiStatus.value = AiStatus.Reasoning
                                         }
 
+                                        // Update or create reasoning section
+                                        updateReasoningSection(cleanedReasoning, isComplete = false)
+
                                         // Update streaming message state
                                         updateStreamingMessageState()
+                                        updateSectionedMessageState()
                                     }
                                 }
 
@@ -569,7 +618,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                         currentToolSteps.add(step)
                                     }
                                 }
+
+                                // Create or update tool group section
+                                updateToolGroupSection(response.toolNames)
                                 updateStreamingMessageState()
+                                updateSectionedMessageState()
                             }
                             is AgentResponse.ToolExecuting -> {
                                 if (!_toolsInProgress.value.contains(response.toolName)) {
@@ -593,7 +646,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                         status = ToolStepStatus.EXECUTING
                                     ))
                                 }
+
+                                // Update sectioned UI
+                                updateToolExecutionStatus(response.toolName, ToolExecutionStatus.EXECUTING)
                                 updateStreamingMessageState()
+                                updateSectionedMessageState()
                             }
                             is AgentResponse.ToolResult -> {
                                 _toolsInProgress.value = _toolsInProgress.value - response.toolName
@@ -611,7 +668,26 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                         result = response.summary
                                     )
                                 }
+
+                                // Update sectioned UI with tool result
+                                updateToolExecutionStatus(
+                                    toolName = response.toolName,
+                                    status = if (response.success) ToolExecutionStatus.COMPLETED else ToolExecutionStatus.FAILED,
+                                    result = response.summary
+                                )
+
+                                // Check for agentic tools and process their results
+                                if (response.success && isAgenticTool(response.toolName)) {
+                                    try {
+                                        val resultJson = parseToolResultJson(response.summary)
+                                        processAgenticToolResult(response.toolName, resultJson)
+                                    } catch (e: Exception) {
+                                        // Non-JSON result, ignore
+                                    }
+                                }
+
                                 updateStreamingMessageState()
+                                updateSectionedMessageState()
                             }
                             is AgentResponse.Complete -> {
                                 // Clean final content
@@ -626,6 +702,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     _streamingContent.value = finalContent
                                     finalReasoning?.let { _streamingReasoning.value = it }
                                 }
+
+                                // Update final content section
+                                if (finalContent.isNotEmpty()) {
+                                    updateContentSection(finalContent, isComplete = true)
+                                }
+
+                                // Finalize all sections
+                                finalizeSections()
 
                                 // Update streaming state to complete
                                 _streamingMessageState.value = _streamingMessageState.value?.copy(
@@ -643,6 +727,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                                 // Update streaming state with error
                                 _streamingMessageState.value = _streamingMessageState.value?.copy(
+                                    hasError = true,
+                                    errorMessage = response.message
+                                )
+
+                                // Update sectioned state with error
+                                _sectionedMessageState.value = _sectionedMessageState.value?.copy(
                                     hasError = true,
                                     errorMessage = response.message
                                 )
@@ -680,11 +770,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         else -> null
                     }
 
+                    // Serialize the sectioned state for persistence
+                    val sectionsJsonToSave = _sectionedMessageState.value?.let { state ->
+                        try {
+                            SectionedMessageSerializer.serialize(state)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
                     chatRepository.finalizeAssistantMessage(
                         messageId = msgId,
                         content = contentToSave,
                         reasoningContent = reasoningToSave,
-                        toolsUsed = toolsUsed.distinct().takeIf { it.isNotEmpty() }
+                        toolsUsed = toolsUsed.distinct().takeIf { it.isNotEmpty() },
+                        sectionsJson = sectionsJsonToSave
                     )
                 }
 
@@ -703,6 +803,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 // Clear streaming message state and ID - this allows the message to appear in regular list
                 _streamingMessageId.value = null
                 _streamingMessageState.value = null
+                _sectionedMessageState.value = null
+                clearSectionTracking()
                 currentMessageId = null
 
             } catch (e: Exception) {
@@ -718,6 +820,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 // Clear streaming state on error
                 _streamingMessageId.value = null
                 _streamingMessageState.value = null
+                _sectionedMessageState.value = null
+                clearSectionTracking()
                 currentMessageId = null
             }
         }
@@ -746,11 +850,549 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private fun formatToolNameForDisplay(toolName: String): String {
         return toolName
             .removePrefix("get_")
+            .removePrefix("calculate_")
             .replace("_", " ")
             .split(" ")
             .joinToString(" ") { word ->
                 word.replaceFirstChar { it.uppercase() }
             }
+    }
+
+    // ============================================
+    // SECTION MANAGEMENT HELPERS
+    // ============================================
+
+    /**
+     * Update or create reasoning section during streaming.
+     * Called when reasoning content is received from the AI.
+     */
+    private fun updateReasoningSection(content: String, isComplete: Boolean) {
+        val durationMs = if (reasoningStartTime > 0) {
+            System.currentTimeMillis() - reasoningStartTime
+        } else 0L
+
+        if (currentReasoningSection == null) {
+            // Create new reasoning section
+            currentReasoningSection = AgentSection.Reasoning(
+                content = content,
+                isComplete = isComplete,
+                isExpanded = false,
+                durationMs = durationMs
+            )
+            currentSections.add(currentReasoningSection!!)
+        } else {
+            // Update existing reasoning section
+            val index = currentSections.indexOfFirst { it.id == currentReasoningSection!!.id }
+            if (index >= 0) {
+                currentReasoningSection = currentReasoningSection!!.copy(
+                    content = content,
+                    isComplete = isComplete,
+                    durationMs = durationMs
+                )
+                currentSections[index] = currentReasoningSection!!
+            }
+        }
+    }
+
+    /**
+     * Finalize reasoning section when content starts streaming.
+     * Marks reasoning as complete and calculates final duration.
+     */
+    private fun finalizeReasoningSection() {
+        if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
+            val durationMs = if (reasoningStartTime > 0) {
+                System.currentTimeMillis() - reasoningStartTime
+            } else 0L
+
+            val index = currentSections.indexOfFirst { it.id == currentReasoningSection!!.id }
+            if (index >= 0) {
+                currentReasoningSection = currentReasoningSection!!.copy(
+                    isComplete = true,
+                    durationMs = durationMs
+                )
+                currentSections[index] = currentReasoningSection!!
+            }
+        }
+    }
+
+    /**
+     * Update or create content section during streaming.
+     * Called when content text is received from the AI.
+     */
+    private fun updateContentSection(text: String, isComplete: Boolean) {
+        if (currentContentSection == null) {
+            // Create new content section
+            currentContentSection = AgentSection.Content(
+                text = text,
+                isComplete = isComplete,
+                isTyping = !isComplete && text.isNotEmpty()
+            )
+            currentSections.add(currentContentSection!!)
+        } else {
+            // Update existing content section
+            val index = currentSections.indexOfFirst { it.id == currentContentSection!!.id }
+            if (index >= 0) {
+                currentContentSection = currentContentSection!!.copy(
+                    text = text,
+                    isComplete = isComplete,
+                    isTyping = !isComplete && text.isNotEmpty()
+                )
+                currentSections[index] = currentContentSection!!
+            }
+        }
+    }
+
+    /**
+     * Update or create tool group section when tools are called.
+     * Creates a collapsible section showing all tool executions.
+     */
+    private fun updateToolGroupSection(toolNames: List<String>) {
+        // Finalize any active reasoning before tools
+        if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
+            finalizeReasoningSection()
+        }
+
+        // Build tool execution list from current tool steps
+        val toolExecutions = toolNames.map { toolName ->
+            val existingStep = currentToolSteps.find { it.toolName == toolName }
+            ToolExecution(
+                toolName = toolName,
+                displayName = formatToolNameForDisplay(toolName),
+                status = when (existingStep?.status) {
+                    ToolStepStatus.PENDING -> ToolExecutionStatus.PENDING
+                    ToolStepStatus.EXECUTING -> ToolExecutionStatus.EXECUTING
+                    ToolStepStatus.COMPLETED -> ToolExecutionStatus.COMPLETED
+                    ToolStepStatus.FAILED -> ToolExecutionStatus.FAILED
+                    null -> ToolExecutionStatus.PENDING
+                },
+                startTime = existingStep?.startTime ?: System.currentTimeMillis(),
+                endTime = existingStep?.endTime,
+                result = existingStep?.result
+            )
+        }
+
+        if (currentToolGroup == null) {
+            // Create new tool group section
+            currentToolGroup = AgentSection.ToolGroup(
+                tools = toolExecutions,
+                isComplete = false,
+                isExpanded = true
+            )
+            currentSections.add(currentToolGroup!!)
+        } else {
+            // Update existing tool group with new tools
+            val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
+            if (index >= 0) {
+                // Merge existing tools with new ones
+                val existingTools = currentToolGroup!!.tools.toMutableList()
+                toolExecutions.forEach { newTool ->
+                    val existingIndex = existingTools.indexOfFirst { it.toolName == newTool.toolName }
+                    if (existingIndex >= 0) {
+                        existingTools[existingIndex] = newTool
+                    } else {
+                        existingTools.add(newTool)
+                    }
+                }
+                currentToolGroup = currentToolGroup!!.copy(tools = existingTools)
+                currentSections[index] = currentToolGroup!!
+            }
+        }
+    }
+
+    /**
+     * Update tool execution status within the tool group.
+     * Called when a tool starts executing or completes.
+     */
+    private fun updateToolExecutionStatus(
+        toolName: String,
+        status: ToolExecutionStatus,
+        result: String? = null,
+        error: String? = null
+    ) {
+        if (currentToolGroup == null) return
+
+        val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
+        if (index >= 0) {
+            val updatedTools = currentToolGroup!!.tools.map { tool ->
+                if (tool.toolName == toolName) {
+                    tool.copy(
+                        status = status,
+                        endTime = if (status == ToolExecutionStatus.COMPLETED || status == ToolExecutionStatus.FAILED) {
+                            System.currentTimeMillis()
+                        } else tool.endTime,
+                        result = result ?: tool.result,
+                        error = error ?: tool.error
+                    )
+                } else tool
+            }
+
+            // Check if all tools are complete
+            val allComplete = updatedTools.all {
+                it.status == ToolExecutionStatus.COMPLETED || it.status == ToolExecutionStatus.FAILED
+            }
+
+            currentToolGroup = currentToolGroup!!.copy(
+                tools = updatedTools,
+                isComplete = allComplete,
+                isExpanded = !allComplete
+            )
+            currentSections[index] = currentToolGroup!!
+        }
+    }
+
+    /**
+     * Process agentic tool results from tool execution.
+     * Handles special tools like start_task, finish_task, ask_user, update_todo.
+     */
+    private fun processAgenticToolResult(toolName: String, resultJson: JSONObject?) {
+        if (resultJson == null) return
+
+        when (toolName) {
+            "start_task" -> {
+                val taskName = resultJson.optString("task_name", "Analysis")
+                activeTaskId = java.util.UUID.randomUUID().toString()
+
+                val taskSection = AgentSection.TaskBoundary(
+                    id = activeTaskId!!,
+                    taskName = taskName,
+                    isStart = true
+                )
+                currentSections.add(taskSection)
+
+                // Reset content section for new task
+                currentContentSection = null
+            }
+
+            "finish_task" -> {
+                val taskName = resultJson.optString("task_name", "Analysis")
+                val summary = resultJson.optString("summary", "")
+
+                val taskSection = AgentSection.TaskBoundary(
+                    taskName = taskName,
+                    isStart = false,
+                    summary = summary
+                )
+                currentSections.add(taskSection)
+
+                activeTaskId = null
+            }
+
+            "ask_user" -> {
+                val question = resultJson.optString("question", "")
+                val optionsArray = resultJson.optJSONArray("options")
+                val allowCustomInput = resultJson.optBoolean("allow_custom_input", true)
+
+                val options = mutableListOf<AskUserOption>()
+                optionsArray?.let { array ->
+                    for (i in 0 until array.length()) {
+                        val opt = array.optJSONObject(i)
+                        if (opt != null) {
+                            options.add(
+                                AskUserOption(
+                                    label = opt.optString("label", "Option ${i + 1}"),
+                                    description = opt.optString("description", null),
+                                    value = opt.optString("value", opt.optString("label", ""))
+                                )
+                            )
+                        }
+                    }
+                }
+
+                val askSection = AgentSection.AskUser(
+                    question = question,
+                    options = options,
+                    allowCustomInput = allowCustomInput,
+                    isAnswered = false
+                )
+                currentSections.add(askSection)
+            }
+
+            "update_todo" -> {
+                val operation = resultJson.optString("operation", "replace")
+                val title = resultJson.optString("title", "Analysis Steps")
+                val itemsArray = resultJson.optJSONArray("items")
+
+                val items = mutableListOf<String>()
+                itemsArray?.let { array ->
+                    for (i in 0 until array.length()) {
+                        items.add(array.optString(i, ""))
+                    }
+                }
+
+                when (operation) {
+                    "add", "replace" -> {
+                        val todoItems = items.map { text ->
+                            TodoItem(
+                                text = text,
+                                isCompleted = false,
+                                isInProgress = false
+                            )
+                        }
+
+                        if (currentTodoList == null || operation == "replace") {
+                            currentTodoList = AgentSection.TodoList(
+                                title = title,
+                                items = todoItems,
+                                isExpanded = true
+                            )
+                            // Remove old todo list if replacing
+                            if (operation == "replace") {
+                                currentSections.removeAll { it is AgentSection.TodoList }
+                            }
+                            currentSections.add(currentTodoList!!)
+                        } else {
+                            // Add items to existing list
+                            val index = currentSections.indexOfFirst { it.id == currentTodoList!!.id }
+                            if (index >= 0) {
+                                currentTodoList = currentTodoList!!.copy(
+                                    items = currentTodoList!!.items + todoItems
+                                )
+                                currentSections[index] = currentTodoList!!
+                            }
+                        }
+                    }
+
+                    "complete" -> {
+                        if (currentTodoList != null) {
+                            val index = currentSections.indexOfFirst { it.id == currentTodoList!!.id }
+                            if (index >= 0) {
+                                val updatedItems = currentTodoList!!.items.mapIndexed { idx, item ->
+                                    if (items.contains(idx.toString()) || items.contains(item.text)) {
+                                        item.copy(isCompleted = true, isInProgress = false)
+                                    } else item
+                                }
+                                currentTodoList = currentTodoList!!.copy(items = updatedItems)
+                                currentSections[index] = currentTodoList!!
+                            }
+                        }
+                    }
+
+                    "set_in_progress" -> {
+                        if (currentTodoList != null) {
+                            val index = currentSections.indexOfFirst { it.id == currentTodoList!!.id }
+                            if (index >= 0) {
+                                val updatedItems = currentTodoList!!.items.mapIndexed { idx, item ->
+                                    val shouldBeInProgress = items.contains(idx.toString()) || items.contains(item.text)
+                                    item.copy(isInProgress = shouldBeInProgress && !item.isCompleted)
+                                }
+                                currentTodoList = currentTodoList!!.copy(items = updatedItems)
+                                currentSections[index] = currentTodoList!!
+                            }
+                        }
+                    }
+                }
+            }
+
+            "create_profile", "update_profile" -> {
+                val profileName = resultJson.optString("name", "Profile")
+                val profileId = resultJson.optLong("profile_id", -1L)
+                val status = resultJson.optString("status", "")
+
+                val opType = if (toolName == "create_profile") {
+                    ProfileOperationType.CREATE
+                } else {
+                    ProfileOperationType.UPDATE
+                }
+
+                val opStatus = when (status) {
+                    "created", "updated" -> ProfileOperationStatus.SUCCESS
+                    else -> ProfileOperationStatus.FAILED
+                }
+
+                val profileSection = AgentSection.ProfileOperation(
+                    operation = opType,
+                    profileName = profileName,
+                    profileId = if (profileId > 0) profileId else null,
+                    status = opStatus
+                )
+                currentSections.add(profileSection)
+            }
+
+            "delete_profile" -> {
+                val profileName = resultJson.optString("name", "Profile")
+                val status = resultJson.optString("status", "")
+
+                val profileSection = AgentSection.ProfileOperation(
+                    operation = ProfileOperationType.DELETE,
+                    profileName = profileName,
+                    status = if (status == "deleted") ProfileOperationStatus.SUCCESS else ProfileOperationStatus.FAILED
+                )
+                currentSections.add(profileSection)
+            }
+
+            "set_active_profile" -> {
+                val profileName = resultJson.optString("name", "Profile")
+                val profileId = resultJson.optLong("profile_id", -1L)
+
+                val profileSection = AgentSection.ProfileOperation(
+                    operation = ProfileOperationType.VIEW,
+                    profileName = profileName,
+                    profileId = if (profileId > 0) profileId else null,
+                    status = ProfileOperationStatus.SUCCESS
+                )
+                currentSections.add(profileSection)
+            }
+        }
+    }
+
+    /**
+     * Update the sectioned message state from current sections.
+     * Called after any section modification to sync UI state.
+     */
+    private fun updateSectionedMessageState() {
+        currentMessageId?.let { msgId ->
+            _sectionedMessageState.value = SectionedMessageState(
+                messageId = msgId,
+                sections = currentSections.toList(),
+                isComplete = false
+            )
+        }
+    }
+
+    /**
+     * Finalize all sections when message is complete.
+     * Marks content as complete and closes any open sections.
+     */
+    private fun finalizeSections() {
+        // Finalize reasoning if still open
+        if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
+            finalizeReasoningSection()
+        }
+
+        // Finalize content section
+        if (currentContentSection != null) {
+            val index = currentSections.indexOfFirst { it.id == currentContentSection!!.id }
+            if (index >= 0) {
+                currentContentSection = currentContentSection!!.copy(
+                    isComplete = true,
+                    isTyping = false
+                )
+                currentSections[index] = currentContentSection!!
+            }
+        }
+
+        // Mark tool group as complete
+        if (currentToolGroup != null) {
+            val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
+            if (index >= 0) {
+                currentToolGroup = currentToolGroup!!.copy(
+                    isComplete = true,
+                    isExpanded = false
+                )
+                currentSections[index] = currentToolGroup!!
+            }
+        }
+
+        // Update final state
+        currentMessageId?.let { msgId ->
+            _sectionedMessageState.value = SectionedMessageState(
+                messageId = msgId,
+                sections = currentSections.toList(),
+                isComplete = true
+            )
+        }
+    }
+
+    /**
+     * Clear all section tracking state.
+     * Called when cancelling or resetting the conversation.
+     */
+    private fun clearSectionTracking() {
+        currentSections.clear()
+        currentReasoningSection = null
+        currentContentSection = null
+        currentToolGroup = null
+        currentTodoList = null
+        activeTaskId = null
+        reasoningStartTime = 0L
+        _sectionedMessageState.value = null
+    }
+
+    /**
+     * Handle user response to an AskUser section.
+     * Updates the section state and can trigger continuation.
+     */
+    fun handleAskUserResponse(sectionId: String, response: String) {
+        val index = currentSections.indexOfFirst { it.id == sectionId }
+        if (index >= 0) {
+            val section = currentSections[index]
+            if (section is AgentSection.AskUser) {
+                currentSections[index] = section.copy(
+                    isAnswered = true,
+                    customResponse = response
+                )
+                updateSectionedMessageState()
+            }
+        }
+    }
+
+    /**
+     * Handle user selection of an option in AskUser section.
+     */
+    fun handleAskUserOptionSelect(sectionId: String, option: AskUserOption) {
+        val index = currentSections.indexOfFirst { it.id == sectionId }
+        if (index >= 0) {
+            val section = currentSections[index]
+            if (section is AgentSection.AskUser) {
+                currentSections[index] = section.copy(
+                    isAnswered = true,
+                    selectedOptionId = option.id
+                )
+                updateSectionedMessageState()
+            }
+        }
+    }
+
+    /**
+     * Toggle expansion state of a section (for reasoning, tools, todo).
+     */
+    fun toggleSectionExpanded(sectionId: String) {
+        val index = currentSections.indexOfFirst { it.id == sectionId }
+        if (index >= 0) {
+            val section = currentSections[index]
+            currentSections[index] = when (section) {
+                is AgentSection.Reasoning -> section.copy(isExpanded = !section.isExpanded)
+                is AgentSection.ToolGroup -> section.copy(isExpanded = !section.isExpanded)
+                is AgentSection.TodoList -> section.copy(isExpanded = !section.isExpanded)
+                else -> section
+            }
+            updateSectionedMessageState()
+        }
+    }
+
+    /**
+     * Check if a tool is an agentic workflow tool that needs special handling.
+     */
+    private fun isAgenticTool(toolName: String): Boolean {
+        return toolName in listOf(
+            "start_task",
+            "finish_task",
+            "ask_user",
+            "update_todo",
+            "create_profile",
+            "update_profile",
+            "delete_profile",
+            "set_active_profile"
+        )
+    }
+
+    /**
+     * Parse tool result summary to extract JSON data.
+     * Tool results often contain JSON that we need to parse for agentic tools.
+     */
+    private fun parseToolResultJson(summary: String): JSONObject? {
+        return try {
+            // Try to parse the summary directly as JSON
+            if (summary.trim().startsWith("{")) {
+                JSONObject(summary)
+            } else {
+                // Look for JSON embedded in the summary
+                val jsonMatch = Regex("""\{[^{}]*\}""").find(summary)
+                jsonMatch?.let { JSONObject(it.value) }
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**
@@ -778,15 +1420,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Clear streaming state
         _streamingMessageId.value = null
         _streamingMessageState.value = null
+        _sectionedMessageState.value = null
+        clearSectionTracking()
 
-        // Mark current message as incomplete
+        // Mark current message as incomplete (no sectionsJson for cancelled messages)
         viewModelScope.launch {
             currentMessageId?.let { msgId ->
                 val content = _streamingContent.value.ifEmpty { "Response cancelled" }
                 chatRepository.finalizeAssistantMessage(
                     messageId = msgId,
                     content = content,
-                    reasoningContent = _streamingReasoning.value.takeIf { it.isNotEmpty() }
+                    reasoningContent = _streamingReasoning.value.takeIf { it.isNotEmpty() },
+                    sectionsJson = null // Cancelled messages don't persist section data
                 )
             }
             currentMessageId = null
