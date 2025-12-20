@@ -235,7 +235,7 @@ private fun AgentIdentityHeader(
                 is AiStatus.Complete -> null
                 is AiStatus.Thinking -> "Analyzing your question..."
                 is AiStatus.Reasoning -> "Reasoning through Vedic principles..."
-                is AiStatus.CallingTool -> "Using ${formatToolNameDisplay(aiStatus.toolName)}..."
+                is AiStatus.CallingTool -> "Using ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..."
                 is AiStatus.ExecutingTools -> "Gathering astrological data..."
                 is AiStatus.Typing -> "Composing response..."
             }
@@ -518,24 +518,13 @@ private fun ToolStepRow(step: ToolExecutionStep) {
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = formatDuration(duration),
+                    text = ToolDisplayUtils.formatDuration(duration),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.TextSubtle,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
         }
-    }
-}
-
-/**
- * Format duration for display
- */
-private fun formatDuration(durationMs: Long): String {
-    return when {
-        durationMs < 1000 -> "${durationMs}ms"
-        durationMs < 60000 -> "${durationMs / 1000}.${(durationMs % 1000) / 100}s"
-        else -> "${durationMs / 60000}m ${(durationMs % 60000) / 1000}s"
     }
 }
 
@@ -737,7 +726,7 @@ private fun StatusIndicatorInline(aiStatus: AiStatus) {
         is AiStatus.Idle, is AiStatus.Complete -> return
         is AiStatus.Thinking -> "Analyzing your question..." to Icons.Outlined.Psychology
         is AiStatus.Reasoning -> "Applying Vedic principles..." to Icons.Outlined.Lightbulb
-        is AiStatus.CallingTool -> "Using ${formatToolNameDisplay(aiStatus.toolName)}..." to Icons.Outlined.Build
+        is AiStatus.CallingTool -> "Using ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
         is AiStatus.ExecutingTools -> "Gathering astrological data..." to Icons.Outlined.Build
         is AiStatus.Typing -> "Composing response..." to Icons.Outlined.Edit
     }
@@ -825,7 +814,7 @@ private fun ToolsUsedBadge(tools: List<String>) {
                 modifier = Modifier.size(12.dp)
             )
             Text(
-                text = "Used: " + tools.take(3).joinToString(", ") { formatToolNameDisplay(it) } +
+                text = "Used: " + tools.take(3).joinToString(", ") { ToolDisplayUtils.formatToolName(it) } +
                     if (tools.size > 3) " +${tools.size - 3} more" else "",
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.TextSubtle
@@ -834,25 +823,7 @@ private fun ToolsUsedBadge(tools: List<String>) {
     }
 }
 
-/**
- * Format tool name for user-friendly display
- *
- * Converts snake_case tool names to Title Case display names.
- * Examples:
- * - get_planet_positions -> Planet Positions
- * - get_current_dasha -> Current Dasha
- * - calculate_muhurta -> Calculate Muhurta
- */
-private fun formatToolNameDisplay(toolName: String): String {
-    return toolName
-        .removePrefix("get_")
-        .removePrefix("calculate_")
-        .replace("_", " ")
-        .split(" ")
-        .joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercase() }
-        }
-}
+// Tool name formatting now uses centralized ToolDisplayUtils.formatToolName()
 
 /**
  * Completed Message Card - For rendering finalized AI messages (not streaming)

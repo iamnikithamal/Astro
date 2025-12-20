@@ -80,7 +80,8 @@ fun SectionedMessageCard(
                 ) {
                     when (section) {
                         is AgentSection.TaskBoundary -> {
-                            TaskBoundarySection(section = section)
+                            // TaskBoundary is internal state tracking only - not shown to users
+                            // These are used by the agent system to track task lifecycle
                         }
 
                         is AgentSection.Reasoning -> {
@@ -335,25 +336,13 @@ private fun getStatusText(aiStatus: AiStatus): String? {
         is AiStatus.Complete -> null
         is AiStatus.Thinking -> "Analyzing your question..."
         is AiStatus.Reasoning -> "Reasoning through Vedic principles..."
-        is AiStatus.CallingTool -> "Using ${formatToolName(aiStatus.toolName)}..."
+        is AiStatus.CallingTool -> "Using ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..."
         is AiStatus.ExecutingTools -> "Gathering astrological data..."
         is AiStatus.Typing -> "Composing response..."
     }
 }
 
-/**
- * Format tool name for display
- */
-private fun formatToolName(toolName: String): String {
-    return toolName
-        .removePrefix("get_")
-        .removePrefix("calculate_")
-        .replace("_", " ")
-        .split(" ")
-        .joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercase() }
-        }
-}
+// Tool name formatting now uses centralized ToolDisplayUtils.formatToolName()
 
 /**
  * Completed Sectioned Message Card
@@ -416,7 +405,7 @@ fun CompletedSectionedMessageCard(
             sectionedState.sections.forEach { section ->
                 when (section) {
                     is AgentSection.TaskBoundary -> {
-                        TaskBoundarySection(section = section)
+                        // TaskBoundary is internal state tracking only - not shown to users
                     }
 
                     is AgentSection.Reasoning -> {
@@ -491,7 +480,7 @@ fun CompletedSectionedMessageCard(
                     tools = toolsUsed.map { toolName ->
                         ToolExecution(
                             toolName = toolName,
-                            displayName = formatToolName(toolName),
+                            displayName = ToolDisplayUtils.formatToolName(toolName),
                             status = ToolExecutionStatus.COMPLETED
                         )
                     },
