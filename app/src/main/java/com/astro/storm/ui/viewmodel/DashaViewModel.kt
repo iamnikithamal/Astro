@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.DashaCalculator
+import com.astro.storm.util.ChartUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -97,18 +98,10 @@ class DashaViewModel : ViewModel() {
         cache.set(null)
     }
 
-    private fun generateChartKey(chart: VedicChart): String {
-        val birthData = chart.birthData
-        return buildString {
-            append(birthData.dateTime.toEpochSecond(java.time.ZoneOffset.UTC))
-            append('|')
-            append((birthData.latitude * 1_000_000).toLong())
-            append('|')
-            append((birthData.longitude * 1_000_000).toLong())
-            append('|')
-            append(chart.ayanamsaName)
-        }
-    }
+    /**
+     * Uses shared ChartUtils for consistent cache key generation across ViewModels.
+     */
+    private fun generateChartKey(chart: VedicChart): String = ChartUtils.generateChartKey(chart)
 
     override fun onCleared() {
         super.onCleared()

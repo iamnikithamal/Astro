@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.DashaCalculator
 import com.astro.storm.ephemeris.HoroscopeCalculator
+import com.astro.storm.util.ChartUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,20 +66,10 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
     private var cachedChartId: String? = null
     private var cachedDate: LocalDate? = null
 
-    private fun getChartId(chart: VedicChart): String {
-        val birthData = chart.birthData
-        return buildString {
-            append(birthData.name)
-            append('_')
-            append(birthData.dateTime)
-            append('_')
-            append((birthData.latitude * 1000).toInt())
-            append('_')
-            append((birthData.longitude * 1000).toInt())
-            append('_')
-            append(birthData.timezone)
-        }
-    }
+    /**
+     * Uses shared ChartUtils for consistent cache key generation across ViewModels.
+     */
+    private fun getChartId(chart: VedicChart): String = ChartUtils.generateChartKey(chart)
 
     private fun isCacheValid(chartId: String, today: LocalDate): Boolean {
         return cachedData?.let {

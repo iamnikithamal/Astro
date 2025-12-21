@@ -30,8 +30,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -169,7 +167,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var lastUiUpdateTime = 0L
     private var lastDbUpdateTime = 0L
     private var pendingUiUpdate = false
-    private val updateMutex = Mutex()
 
     // Throttle intervals (in milliseconds)
     private companion object {
@@ -860,42 +857,77 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     // ============================================
 
     /**
+     * Chronological Section Management Strategy
+     * ==========================================
+     *
+     * Instead of maintaining global pointers that group all sections of the same type together,
+     * we now use a chronological approach inspired by professional agentic IDEs (Cursor, Codex, etc.):
+     *
+     * 1. When new data arrives, check if the LAST section in the list is of the same type
+     * 2. If yes: append to that section
+     * 3. If no: finalize the previous section (if any) and create a NEW section
+     *
+     * This allows the natural flow: Reasoning A → Tool A → Reasoning B → Tool B → Content
+     * Each section appears separately in chronological order rather than being merged.
+     */
+
+    /**
      * Update or create reasoning section during streaming.
-     * Called when reasoning content is received from the AI.
+     * Uses chronological appending - creates new section if last section is different type.
      */
     private fun updateReasoningSection(content: String, isComplete: Boolean) {
         val durationMs = if (reasoningStartTime > 0) {
             System.currentTimeMillis() - reasoningStartTime
         } else 0L
 
-        if (currentReasoningSection == null) {
+        val lastSection = currentSections.lastOrNull()
+
+        // Check if last section is a reasoning section we can append to
+        val canAppendToLast = lastSection is AgentSection.Reasoning &&
+                              currentReasoningSection?.id == lastSection.id &&
+                              !lastSection.isComplete
+
+        if (canAppendToLast && currentReasoningSection != null) {
+            // Append to the existing reasoning section (which is the last section)
+            val index = currentSections.size - 1
+            currentReasoningSection = currentReasoningSection!!.copy(
+                content = content,
+                isComplete = isComplete,
+                durationMs = durationMs
+            )
+            currentSections[index] = currentReasoningSection!!
+        } else {
+            // Finalize previous reasoning section if exists and create a new one
+            if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
+                finalizeCurrentReasoningSection()
+            }
+
+            // Reset reasoning start time for new section
+            reasoningStartTime = System.currentTimeMillis()
+
             // Create new reasoning section
             currentReasoningSection = AgentSection.Reasoning(
                 content = content,
                 isComplete = isComplete,
                 isExpanded = false,
-                durationMs = durationMs
+                durationMs = 0L // Will be calculated when finalized
             )
             currentSections.add(currentReasoningSection!!)
-        } else {
-            // Update existing reasoning section
-            val index = currentSections.indexOfFirst { it.id == currentReasoningSection!!.id }
-            if (index >= 0) {
-                currentReasoningSection = currentReasoningSection!!.copy(
-                    content = content,
-                    isComplete = isComplete,
-                    durationMs = durationMs
-                )
-                currentSections[index] = currentReasoningSection!!
-            }
         }
     }
 
     /**
-     * Finalize reasoning section when content starts streaming.
+     * Finalize the current reasoning section when transitioning to another section type.
      * Marks reasoning as complete and calculates final duration.
      */
     private fun finalizeReasoningSection() {
+        finalizeCurrentReasoningSection()
+    }
+
+    /**
+     * Internal helper to finalize current reasoning section.
+     */
+    private fun finalizeCurrentReasoningSection() {
         if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
             val durationMs = if (reasoningStartTime > 0) {
                 System.currentTimeMillis() - reasoningStartTime
@@ -909,15 +941,38 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 currentSections[index] = currentReasoningSection!!
             }
+            // Reset reasoning tracking for next reasoning section
+            reasoningStartTime = 0L
         }
     }
 
     /**
      * Update or create content section during streaming.
-     * Called when content text is received from the AI.
+     * Uses chronological appending - creates new section if last section is different type.
      */
     private fun updateContentSection(text: String, isComplete: Boolean) {
-        if (currentContentSection == null) {
+        val lastSection = currentSections.lastOrNull()
+
+        // Check if last section is a content section we can append to
+        val canAppendToLast = lastSection is AgentSection.Content &&
+                              currentContentSection?.id == lastSection.id &&
+                              !lastSection.isComplete
+
+        if (canAppendToLast && currentContentSection != null) {
+            // Append to the existing content section (which is the last section)
+            val index = currentSections.size - 1
+            currentContentSection = currentContentSection!!.copy(
+                text = text,
+                isComplete = isComplete,
+                isTyping = !isComplete && text.isNotEmpty()
+            )
+            currentSections[index] = currentContentSection!!
+        } else {
+            // Finalize previous content section if exists and create a new one
+            if (currentContentSection != null && !currentContentSection!!.isComplete) {
+                finalizeCurrentContentSection()
+            }
+
             // Create new content section
             currentContentSection = AgentSection.Content(
                 text = text,
@@ -925,14 +980,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 isTyping = !isComplete && text.isNotEmpty()
             )
             currentSections.add(currentContentSection!!)
-        } else {
-            // Update existing content section
+        }
+    }
+
+    /**
+     * Internal helper to finalize current content section.
+     */
+    private fun finalizeCurrentContentSection() {
+        if (currentContentSection != null && !currentContentSection!!.isComplete) {
             val index = currentSections.indexOfFirst { it.id == currentContentSection!!.id }
             if (index >= 0) {
                 currentContentSection = currentContentSection!!.copy(
-                    text = text,
-                    isComplete = isComplete,
-                    isTyping = !isComplete && text.isNotEmpty()
+                    isComplete = true,
+                    isTyping = false
                 )
                 currentSections[index] = currentContentSection!!
             }
@@ -941,15 +1001,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Update or create tool group section when tools are called.
-     * Creates a collapsible section showing all tool executions.
+     * Uses chronological appending - creates new section if last section is different type.
+     * This allows multiple separate tool sections interleaved with reasoning.
      */
     private fun updateToolGroupSection(toolNames: List<String>) {
         // Finalize any active reasoning before tools
         if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
-            finalizeReasoningSection()
+            finalizeCurrentReasoningSection()
         }
 
-        // Build tool execution list from current tool steps
+        // Finalize any active content before tools
+        if (currentContentSection != null && !currentContentSection!!.isComplete) {
+            finalizeCurrentContentSection()
+        }
+
+        // Build tool execution list for the new tools
         val toolExecutions = toolNames.map { toolName ->
             val existingStep = currentToolSteps.find { it.toolName == toolName }
             ToolExecution(
@@ -968,7 +1034,34 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        if (currentToolGroup == null) {
+        val lastSection = currentSections.lastOrNull()
+
+        // Check if last section is a tool group we can add tools to
+        // Only append if the tool group is still active (not complete)
+        val canAppendToLast = lastSection is AgentSection.ToolGroup &&
+                              currentToolGroup?.id == lastSection.id &&
+                              !lastSection.isComplete
+
+        if (canAppendToLast && currentToolGroup != null) {
+            // Add tools to existing tool group
+            val index = currentSections.size - 1
+            val existingTools = currentToolGroup!!.tools.toMutableList()
+            toolExecutions.forEach { newTool ->
+                val existingIndex = existingTools.indexOfFirst { it.toolName == newTool.toolName }
+                if (existingIndex >= 0) {
+                    existingTools[existingIndex] = newTool
+                } else {
+                    existingTools.add(newTool)
+                }
+            }
+            currentToolGroup = currentToolGroup!!.copy(tools = existingTools)
+            currentSections[index] = currentToolGroup!!
+        } else {
+            // Finalize previous tool group if exists and create a new one
+            if (currentToolGroup != null && !currentToolGroup!!.isComplete) {
+                finalizeCurrentToolGroup()
+            }
+
             // Create new tool group section
             currentToolGroup = AgentSection.ToolGroup(
                 tools = toolExecutions,
@@ -976,29 +1069,31 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 isExpanded = true
             )
             currentSections.add(currentToolGroup!!)
-        } else {
-            // Update existing tool group with new tools
+        }
+    }
+
+    /**
+     * Internal helper to finalize current tool group.
+     */
+    private fun finalizeCurrentToolGroup() {
+        if (currentToolGroup != null && !currentToolGroup!!.isComplete) {
             val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
             if (index >= 0) {
-                // Merge existing tools with new ones
-                val existingTools = currentToolGroup!!.tools.toMutableList()
-                toolExecutions.forEach { newTool ->
-                    val existingIndex = existingTools.indexOfFirst { it.toolName == newTool.toolName }
-                    if (existingIndex >= 0) {
-                        existingTools[existingIndex] = newTool
-                    } else {
-                        existingTools.add(newTool)
-                    }
-                }
-                currentToolGroup = currentToolGroup!!.copy(tools = existingTools)
+                currentToolGroup = currentToolGroup!!.copy(
+                    isComplete = true,
+                    isExpanded = false
+                )
                 currentSections[index] = currentToolGroup!!
             }
         }
     }
 
     /**
-     * Update tool execution status within the tool group.
+     * Update tool execution status within tool groups.
      * Called when a tool starts executing or completes.
+     *
+     * With chronological sections, a tool could be in any tool group (not just the current one),
+     * so we search through all sections to find the matching tool.
      */
     private fun updateToolExecutionStatus(
         toolName: String,
@@ -1006,11 +1101,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         result: String? = null,
         error: String? = null
     ) {
-        if (currentToolGroup == null) return
+        // Find the tool group containing this tool (could be any tool group in chronological order)
+        val toolGroupIndex = currentSections.indexOfFirst { section ->
+            section is AgentSection.ToolGroup && section.tools.any { it.toolName == toolName }
+        }
 
-        val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
-        if (index >= 0) {
-            val updatedTools = currentToolGroup!!.tools.map { tool ->
+        if (toolGroupIndex >= 0) {
+            val toolGroup = currentSections[toolGroupIndex] as AgentSection.ToolGroup
+            val updatedTools = toolGroup.tools.map { tool ->
                 if (tool.toolName == toolName) {
                     tool.copy(
                         status = status,
@@ -1023,17 +1121,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 } else tool
             }
 
-            // Check if all tools are complete
+            // Check if all tools in this group are complete
             val allComplete = updatedTools.all {
                 it.status == ToolExecutionStatus.COMPLETED || it.status == ToolExecutionStatus.FAILED
             }
 
-            currentToolGroup = currentToolGroup!!.copy(
+            val updatedToolGroup = toolGroup.copy(
                 tools = updatedTools,
                 isComplete = allComplete,
                 isExpanded = !allComplete
             )
-            currentSections[index] = currentToolGroup!!
+            currentSections[toolGroupIndex] = updatedToolGroup
+
+            // Update the currentToolGroup reference if this is the current one
+            if (currentToolGroup?.id == toolGroup.id) {
+                currentToolGroup = updatedToolGroup
+            }
         }
     }
 
@@ -1248,37 +1351,40 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Finalize all sections when message is complete.
-     * Marks content as complete and closes any open sections.
+     * With chronological sections, we need to finalize ALL sections, not just the current ones.
      */
     private fun finalizeSections() {
-        // Finalize reasoning if still open
-        if (currentReasoningSection != null && !currentReasoningSection!!.isComplete) {
-            finalizeReasoningSection()
-        }
-
-        // Finalize content section
-        if (currentContentSection != null) {
-            val index = currentSections.indexOfFirst { it.id == currentContentSection!!.id }
-            if (index >= 0) {
-                currentContentSection = currentContentSection!!.copy(
-                    isComplete = true,
-                    isTyping = false
-                )
-                currentSections[index] = currentContentSection!!
+        // Finalize all sections in the list
+        currentSections.forEachIndexed { index, section ->
+            when (section) {
+                is AgentSection.Reasoning -> {
+                    if (!section.isComplete) {
+                        val durationMs = if (section.id == currentReasoningSection?.id && reasoningStartTime > 0) {
+                            System.currentTimeMillis() - reasoningStartTime
+                        } else section.durationMs
+                        currentSections[index] = section.copy(isComplete = true, durationMs = durationMs)
+                    }
+                }
+                is AgentSection.Content -> {
+                    if (!section.isComplete) {
+                        currentSections[index] = section.copy(isComplete = true, isTyping = false)
+                    }
+                }
+                is AgentSection.ToolGroup -> {
+                    if (!section.isComplete) {
+                        currentSections[index] = section.copy(isComplete = true, isExpanded = false)
+                    }
+                }
+                else -> {
+                    // Other section types don't need finalization
+                }
             }
         }
 
-        // Mark tool group as complete
-        if (currentToolGroup != null) {
-            val index = currentSections.indexOfFirst { it.id == currentToolGroup!!.id }
-            if (index >= 0) {
-                currentToolGroup = currentToolGroup!!.copy(
-                    isComplete = true,
-                    isExpanded = false
-                )
-                currentSections[index] = currentToolGroup!!
-            }
-        }
+        // Clear current section references
+        currentReasoningSection = null
+        currentContentSection = null
+        currentToolGroup = null
 
         // Update final state
         currentMessageId?.let { msgId ->
@@ -1506,6 +1612,47 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         if (_uiState.value is ChatUiState.Error) {
             _uiState.value = ChatUiState.Idle
         }
+    }
+
+    // ============================================
+    // LIFECYCLE CLEANUP
+    // ============================================
+
+    /**
+     * Cleanup resources when ViewModel is destroyed.
+     * This prevents memory leaks from coroutines, streaming jobs, and agent instances.
+     */
+    override fun onCleared() {
+        super.onCleared()
+
+        // Cancel any active streaming job
+        streamingJob?.cancel()
+        streamingJob = null
+
+        // Clear streaming state
+        _isStreaming.value = false
+        _streamingContent.value = ""
+        _streamingReasoning.value = ""
+        _toolsInProgress.value = emptyList()
+        _aiStatus.value = AiStatus.Idle
+        _streamingMessageId.value = null
+        _streamingMessageState.value = null
+        _sectionedMessageState.value = null
+
+        // Clear accumulators to free memory
+        rawContentAccumulator.clear()
+        rawReasoningAccumulator.clear()
+        currentToolSteps.clear()
+
+        // Clear section tracking
+        clearSectionTracking()
+
+        // Release agent instance
+        stormyAgent = null
+
+        // Clear message tracking
+        currentMessageId = null
+        pendingConversationContext = null
     }
 }
 
