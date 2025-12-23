@@ -317,11 +317,198 @@ private fun ThinkingDotsIndicator() {
 /**
  * Tool Group Section - Shows tool execution status
  *
- * Displays a collapsible panel with all tool executions,
- * their status, and individual results.
+ * With chronological sections, each ToolGroup represents a batch of tools
+ * that were called together. When tools are interleaved with reasoning,
+ * multiple separate ToolGroup sections will be created.
+ *
+ * This matches the Codex-style layout where each tool operation appears
+ * as a distinct, chronologically-ordered section.
  */
 @Composable
 fun ToolGroupSection(
+    section: AgentSection.ToolGroup,
+    onToggleExpand: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Render each tool as its own visual card for Codex-style appearance
+    // Using key() for efficient recomposition when tools list changes
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        section.tools.forEach { tool ->
+            key(tool.id) {
+                IndividualToolCard(
+                    tool = tool,
+                    isExpanded = section.isExpanded,
+                    onToggleExpand = onToggleExpand
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Individual Tool Card - Codex-style tool display
+ *
+ * Each tool is displayed as its own collapsible card with:
+ * - Tool name as the header (e.g., "Calculate Planetary Positions")
+ * - Status indicator (running spinner, check mark, error)
+ * - Expandable result/error details
+ */
+@Composable
+private fun IndividualToolCard(
+    tool: ToolExecution,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit
+) {
+    val colors = AppTheme.current
+
+    val (statusIcon, statusColor) = when (tool.status) {
+        ToolExecutionStatus.PENDING -> Icons.Outlined.Schedule to colors.TextMuted
+        ToolExecutionStatus.EXECUTING -> Icons.Outlined.Sync to colors.AccentTeal
+        ToolExecutionStatus.COMPLETED -> Icons.Filled.CheckCircle to colors.SuccessColor
+        ToolExecutionStatus.FAILED -> Icons.Outlined.ErrorOutline to colors.ErrorColor
+    }
+
+    Surface(
+        onClick = onToggleExpand,
+        color = statusColor.copy(alpha = 0.06f),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Header row with tool name
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Status icon
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(statusColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (tool.status == ToolExecutionStatus.EXECUTING) {
+                            val infiniteTransition = rememberInfiniteTransition(label = "tool_spin_${tool.id}")
+                            val rotation by infiniteTransition.animateFloat(
+                                initialValue = 0f,
+                                targetValue = 360f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(1000, easing = LinearEasing),
+                                    repeatMode = RepeatMode.Restart
+                                ),
+                                label = "tool_rotation_${tool.id}"
+                            )
+                            Icon(
+                                imageVector = statusIcon,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .rotate(rotation)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = statusIcon,
+                                contentDescription = null,
+                                tint = statusColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        // Tool display name as the primary title
+                        Text(
+                            text = tool.displayName,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        // Status text
+                        Text(
+                            text = when (tool.status) {
+                                ToolExecutionStatus.PENDING -> "Pending"
+                                ToolExecutionStatus.EXECUTING -> "Running..."
+                                ToolExecutionStatus.COMPLETED -> "Completed in ${tool.durationDisplay}"
+                                ToolExecutionStatus.FAILED -> "Failed"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = statusColor
+                        )
+                    }
+                }
+
+                // Expand/collapse indicator (only show if there's content to expand)
+                if (tool.result != null || tool.error != null) {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = colors.TextMuted,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+
+            // Expandable result/error content
+            AnimatedVisibility(
+                visible = isExpanded && (tool.result != null || tool.error != null),
+                enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
+            ) {
+                Surface(
+                    color = colors.ChipBackground,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        tool.result?.let { result ->
+                            if (result.isNotBlank()) {
+                                Text(
+                                    text = result,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.TextSecondary,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                        tool.error?.let { error ->
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.ErrorColor,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Legacy Tool Group Section - Grouped display
+ *
+ * Use this for a more compact grouped display when multiple tools
+ * should appear as a single "Astrological Tools" section.
+ */
+@Composable
+fun ToolGroupSectionGrouped(
     section: AgentSection.ToolGroup,
     onToggleExpand: () -> Unit,
     modifier: Modifier = Modifier
