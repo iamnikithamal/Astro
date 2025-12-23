@@ -760,6 +760,11 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     ERROR_RATE_LIMIT("Too many requests. Please wait.", "धेरै अनुरोधहरू। कृपया पर्खनुहोस्।"),
     ERROR_SEARCH_FAILED("Search failed. Please try again.", "खोज असफल भयो। कृपया फेरि प्रयास गर्नुहोस्।"),
     ERROR_RATE_LIMIT_EXCEEDED("Rate limit exceeded", "दर सीमा नाघ्यो"),
+    ERROR_NAME_TOO_LONG("Name must be 100 characters or less", "नाम १०० वर्ण वा कम हुनुपर्छ"),
+    ERROR_DATE_IN_FUTURE("Birth date cannot be in the future", "जन्म मिति भविष्यमा हुन सक्दैन"),
+    ERROR_DATE_TOO_OLD("Date must be after year 1800", "मिति वर्ष १८०० पछिको हुनुपर्छ"),
+    ERROR_LOCATION_REQUIRED("Please enter a location or coordinates", "कृपया स्थान वा निर्देशांक प्रविष्ट गर्नुहोस्"),
+    ERROR_TIMEZONE_INVALID("Please select a valid timezone", "कृपया मान्य समय क्षेत्र छान्नुहोस्"),
 
     // Location Search
     LOCATION_SEARCH("Search location", "स्थान खोज्नुहोस्"),
@@ -1009,7 +1014,39 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     ONBOARDING_BTN_NEXT("Next", "अर्को"),
     ONBOARDING_BTN_BACK("Back", "पछाडि"),
     ONBOARDING_BTN_GET_STARTED("Get Started", "सुरु गर्नुहोस्"),
-    ONBOARDING_BTN_SKIP("Skip", "छोड्नुहोस्");
+    ONBOARDING_BTN_SKIP("Skip", "छोड्नुहोस्"),
+
+    // ============================================
+    // COMMON TAB TITLES
+    // ============================================
+    TAB_OVERVIEW("Overview", "अवलोकन"),
+    TAB_BY_PLANET("By Planet", "ग्रहानुसार"),
+    TAB_BY_HOUSE("By House", "भावानुसार"),
+    TAB_ELEMENTS("Elements", "तत्वहरू"),
+    TAB_TODAY("Today", "आज"),
+    TAB_BIRTH_DAY("Birth Day", "जन्म दिन"),
+    TAB_CURRENT_POSITIONS("Current Positions", "हालको स्थिति"),
+    TAB_UPCOMING("Upcoming", "आगामी"),
+    TAB_ASPECTS("Aspects", "दृष्टिहरू"),
+    TAB_SARVASHTAKAVARGA("Sarvashtakavarga", "सर्वाष्टकवर्ग"),
+
+    // ============================================
+    // STRENGTH LABELS
+    // ============================================
+    STRENGTH_EXCELLENT("Excellent", "उत्कृष्ट"),
+    STRENGTH_STRONG("Strong", "बलियो"),
+    STRENGTH_GOOD("Good", "राम्रो"),
+    STRENGTH_AVERAGE("Average", "औसत"),
+    STRENGTH_WEAK("Weak", "कमजोर"),
+    STRENGTH_BELOW_AVERAGE("Below Average", "औसतमुनि"),
+
+    // ============================================
+    // ACCESSIBILITY STRINGS
+    // ============================================
+    A11Y_EXPAND("Expand", "विस्तार गर्नुहोस्"),
+    A11Y_COLLAPSE("Collapse", "संक्षिप्त गर्नुहोस्"),
+    A11Y_NAVIGATE_BACK("Navigate back", "पछाडि जानुहोस्"),
+    A11Y_SHOW_INFO("Show information", "जानकारी देखाउनुहोस्");
 
 }
 

@@ -250,7 +250,15 @@ fun ChartInputScreen(
                 isCalculating = isCalculating,
                 isEditMode = isEditMode,
                 onClick = {
-                    val validationKey = validateInputLocalized(latitude, longitude)
+                    // Use comprehensive validation for all birth data fields
+                    val validationKey = validateBirthDataInput(
+                        name = name,
+                        latitude = latitude,
+                        longitude = longitude,
+                        selectedDate = selectedDate,
+                        locationLabel = locationLabel,
+                        timezone = selectedTimezone
+                    )
                     if (validationKey != null) {
                         errorKey = validationKey
                         showErrorDialog = true
@@ -388,6 +396,75 @@ private fun validateInput(latitude: String, longitude: String): String? {
         lon < -180 || lon > 180 -> "Longitude must be between -180 and 180"
         else -> null
     }
+}
+
+/**
+ * Comprehensive input validation for birth data entry.
+ *
+ * Validates:
+ * - Name length (max 100 characters)
+ * - Date range (1800-present, not in future for birth charts)
+ * - Latitude range (-90 to 90)
+ * - Longitude range (-180 to 180)
+ * - Location presence (required if coordinates are provided)
+ * - Timezone validity
+ *
+ * @param name The name input
+ * @param latitude The latitude string input
+ * @param longitude The longitude string input
+ * @param selectedDate The selected date
+ * @param locationLabel The location label
+ * @param timezone The selected timezone
+ * @return StringKey for the validation error, or null if valid
+ */
+private fun validateBirthDataInput(
+    name: String,
+    latitude: String,
+    longitude: String,
+    selectedDate: LocalDate,
+    locationLabel: String,
+    timezone: String
+): StringKey? {
+    // Name validation - max 100 characters
+    if (name.length > 100) {
+        return StringKey.ERROR_NAME_TOO_LONG
+    }
+
+    // Date validation - not in the future for birth charts
+    if (selectedDate.isAfter(LocalDate.now())) {
+        return StringKey.ERROR_DATE_IN_FUTURE
+    }
+
+    // Date validation - reasonable historical limit (1800 CE)
+    // Swiss Ephemeris has data from 5401 BCE to 5399 CE, but 1800 is reasonable for birth charts
+    if (selectedDate.year < 1800) {
+        return StringKey.ERROR_DATE_TOO_OLD
+    }
+
+    // Location/coordinate validation - need either location label or valid coordinates
+    val lat = parseCoordinate(latitude)
+    val lon = parseCoordinate(longitude)
+
+    if (lat == null || lon == null) {
+        return StringKey.ERROR_INVALID_COORDS
+    }
+
+    if (lat < -90 || lat > 90) {
+        return StringKey.ERROR_LATITUDE_RANGE
+    }
+
+    if (lon < -180 || lon > 180) {
+        return StringKey.ERROR_LONGITUDE_RANGE
+    }
+
+    // Timezone validation - ensure it's a valid zone ID
+    try {
+        ZoneId.of(timezone)
+    } catch (_: Exception) {
+        return StringKey.ERROR_TIMEZONE_INVALID
+    }
+
+    return null
 }
 
 private fun validateInputLocalized(latitude: String, longitude: String): StringKey? {

@@ -88,16 +88,24 @@ object AstrologicalConstants {
     const val STANDARD_ASPECT_ORB = 12.0
 
     /**
-     * Special aspects for Mars, Jupiter, and Saturn as per BPHS
-     * - Mars: Casts 3/4 aspect on 4th and 8th houses
-     * - Jupiter: Casts full aspect on 5th and 9th houses
-     * - Saturn: Casts 3/4 aspect on 3rd and 10th houses
-     * All planets cast full aspect on 7th house
+     * Special aspects for Mars, Jupiter, and Saturn as per BPHS (Chapter 26)
+     *
+     * According to BPHS, the outer planets have special full aspects (Vishesh Drishti):
+     * - Mars: Full aspect (100%) on 4th and 8th houses from its position
+     * - Jupiter: Full aspect (100%) on 5th and 9th houses from its position
+     * - Saturn: Full aspect (100%) on 3rd and 10th houses from its position
+     *
+     * All planets cast full aspect on 7th house (standard Parashari aspect).
+     *
+     * Note: The fractional aspects (1/4, 1/2, 3/4) mentioned in some texts apply to
+     * secondary aspects, not the special aspects which are always full strength.
+     *
+     * Reference: BPHS Chapter 26, Verses 2-4
      */
     val SPECIAL_ASPECTS = mapOf(
-        Planet.MARS to mapOf(4 to THREE_QUARTER_ASPECT, 8 to THREE_QUARTER_ASPECT),
+        Planet.MARS to mapOf(4 to FULL_ASPECT_STRENGTH, 8 to FULL_ASPECT_STRENGTH),
         Planet.JUPITER to mapOf(5 to FULL_ASPECT_STRENGTH, 9 to FULL_ASPECT_STRENGTH),
-        Planet.SATURN to mapOf(3 to THREE_QUARTER_ASPECT, 10 to THREE_QUARTER_ASPECT)
+        Planet.SATURN to mapOf(3 to FULL_ASPECT_STRENGTH, 10 to FULL_ASPECT_STRENGTH)
     )
 
     // ============================================

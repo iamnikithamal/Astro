@@ -95,10 +95,10 @@ import java.time.format.DateTimeFormatter
  * - Smooth animations throughout
  */
 
-enum class PanchangaViewType(val title: String) {
-    TODAY("Today"),
-    BIRTH("Birth Day"),
-    ELEMENTS("Elements")
+enum class PanchangaViewType(val titleKey: StringKey) {
+    TODAY(StringKey.TAB_TODAY),
+    BIRTH(StringKey.TAB_BIRTH_DAY),
+    ELEMENTS(StringKey.TAB_ELEMENTS)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -155,10 +155,10 @@ fun PanchangaScreenRedesigned(
     val accentGold = AppTheme.AccentGold
     val accentTeal = AppTheme.AccentTeal
 
-    val tabs = remember(accentPrimary, accentGold, accentTeal) {
+    val tabs = remember(accentPrimary, accentGold, accentTeal, language) {
         PanchangaViewType.entries.map { type ->
             TabItem(
-                title = type.title,
+                title = stringResource(type.titleKey, language),
                 accentColor = when (type) {
                     PanchangaViewType.TODAY -> accentPrimary
                     PanchangaViewType.BIRTH -> accentGold

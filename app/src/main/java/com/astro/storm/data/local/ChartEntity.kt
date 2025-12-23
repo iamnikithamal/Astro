@@ -1,13 +1,26 @@
 package com.astro.storm.data.local
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 
 /**
  * Room entity for persisting chart data
+ *
+ * Indices are added for:
+ * - createdAt: Used for ordering charts in getAllCharts()
+ * - name: Used for searching charts in searchCharts()
+ * - location: Used for searching charts in searchCharts()
  */
-@Entity(tableName = "charts")
+@Entity(
+    tableName = "charts",
+    indices = [
+        Index(value = ["createdAt"]),
+        Index(value = ["name"]),
+        Index(value = ["location"])
+    ]
+)
 @TypeConverters(Converters::class)
 data class ChartEntity(
     @PrimaryKey(autoGenerate = true)

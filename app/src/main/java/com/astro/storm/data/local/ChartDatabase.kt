@@ -20,7 +20,7 @@ import com.astro.storm.data.local.chat.MessageEntity
         ConversationEntity::class,
         MessageEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -100,6 +100,20 @@ abstract class ChartDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 4 to 5: Add indices to charts table for query performance
+         * - createdAt: Used for ordering charts (getAllCharts)
+         * - name: Used for searching charts (searchCharts)
+         * - location: Used for searching charts (searchCharts)
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_charts_createdAt ON charts(createdAt)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_charts_name ON charts(name)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_charts_location ON charts(location)")
+            }
+        }
+
         fun getInstance(context: Context): ChartDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -107,7 +121,7 @@ abstract class ChartDatabase : RoomDatabase() {
                     ChartDatabase::class.java,
                     "astrostorm_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

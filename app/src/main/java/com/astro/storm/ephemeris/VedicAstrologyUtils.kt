@@ -36,6 +36,7 @@ object VedicAstrologyUtils {
     /**
      * Exaltation signs for each planet.
      * A planet in its exaltation sign is at its strongest state.
+     * Delegated to AstrologicalConstants for single source of truth.
      *
      * Classical references (per BPHS - Brihat Parashara Hora Shastra):
      * - Sun: Aries (10 degrees - exact exaltation point)
@@ -45,89 +46,41 @@ object VedicAstrologyUtils {
      * - Jupiter: Cancer (5 degrees)
      * - Venus: Pisces (27 degrees)
      * - Saturn: Libra (20 degrees)
-     * - Rahu: Taurus (20 degrees) - Per BPHS tradition; some texts use Gemini
-     * - Ketu: Scorpio (20 degrees) - Per BPHS tradition; some texts use Sagittarius
-     *
-     * Note: This app follows the BPHS tradition for Rahu/Ketu exaltation/debilitation.
-     * Rahu and Ketu are always 180° apart, so their exaltation signs are also opposite.
+     * - Rahu: Taurus (20 degrees) - Per BPHS tradition
+     * - Ketu: Scorpio (20 degrees) - Per BPHS tradition
      */
-    private val exaltationSigns = mapOf(
-        Planet.SUN to ZodiacSign.ARIES,
-        Planet.MOON to ZodiacSign.TAURUS,
-        Planet.MARS to ZodiacSign.CAPRICORN,
-        Planet.MERCURY to ZodiacSign.VIRGO,
-        Planet.JUPITER to ZodiacSign.CANCER,
-        Planet.VENUS to ZodiacSign.PISCES,
-        Planet.SATURN to ZodiacSign.LIBRA,
-        Planet.RAHU to ZodiacSign.TAURUS,    // BPHS tradition (20 degrees)
-        Planet.KETU to ZodiacSign.SCORPIO    // BPHS tradition (20 degrees)
-    )
+    private val exaltationSigns get() = AstrologicalConstants.EXALTATION_SIGNS
 
     /**
      * Debilitation signs for each planet (opposite of exaltation).
      * A planet in its debilitation sign is at its weakest state.
-     *
-     * Note: Rahu/Ketu debilitation follows BPHS tradition (opposite of exaltation signs).
+     * Delegated to AstrologicalConstants for single source of truth.
      */
-    private val debilitationSigns = mapOf(
-        Planet.SUN to ZodiacSign.LIBRA,
-        Planet.MOON to ZodiacSign.SCORPIO,
-        Planet.MARS to ZodiacSign.CANCER,
-        Planet.MERCURY to ZodiacSign.PISCES,
-        Planet.JUPITER to ZodiacSign.CAPRICORN,
-        Planet.VENUS to ZodiacSign.VIRGO,
-        Planet.SATURN to ZodiacSign.ARIES,
-        Planet.RAHU to ZodiacSign.SCORPIO,   // BPHS tradition (opposite of Taurus)
-        Planet.KETU to ZodiacSign.TAURUS     // BPHS tradition (opposite of Scorpio)
-    )
+    private val debilitationSigns get() = AstrologicalConstants.DEBILITATION_SIGNS
+
+    /**
+     * Moolatrikona data class alias for compatibility.
+     */
+    @Suppress("unused")
+    private typealias MoolatrikonaRange = AstrologicalConstants.MoolatrikonaRange
 
     /**
      * Moolatrikona signs and degree ranges.
-     * Moolatrikona is a special dignity between exaltation and own sign.
-     * The planet functions optimally in these degrees.
+     * Delegated to AstrologicalConstants for single source of truth.
      */
-    data class MoolatrikonaRange(val sign: ZodiacSign, val startDegree: Double, val endDegree: Double)
-
-    /**
-     * Moolatrikona signs and degree ranges.
-     * Using consolidated values from AstrologicalConstants for consistency.
-     *
-     * Per BPHS Chapter 3:
-     * - Moon's exaltation point is 3° Taurus
-     * - Moon's Moolatrikona is 3°-27° Taurus
-     * - Moon's own sign portion is 27°-30° Taurus (and all of Cancer)
-     */
-    private val moolatrikonaSigns = mapOf(
-        Planet.SUN to MoolatrikonaRange(ZodiacSign.LEO, 0.0, 20.0),
-        Planet.MOON to MoolatrikonaRange(ZodiacSign.TAURUS, 3.0, 27.0),
-        Planet.MARS to MoolatrikonaRange(ZodiacSign.ARIES, 0.0, 12.0),
-        Planet.MERCURY to MoolatrikonaRange(ZodiacSign.VIRGO, 16.0, 20.0),
-        Planet.JUPITER to MoolatrikonaRange(ZodiacSign.SAGITTARIUS, 0.0, 10.0),
-        Planet.VENUS to MoolatrikonaRange(ZodiacSign.LIBRA, 0.0, 15.0),
-        Planet.SATURN to MoolatrikonaRange(ZodiacSign.AQUARIUS, 0.0, 20.0)
-    )
+    private val moolatrikonaSigns get() = AstrologicalConstants.MOOLATRIKONA_RANGES
 
     /**
      * Own signs for each planet (Swakshetra).
-     * Each planet rules one or two signs.
+     * Delegated to AstrologicalConstants for single source of truth.
      */
-    private val ownSigns = mapOf(
-        Planet.SUN to listOf(ZodiacSign.LEO),
-        Planet.MOON to listOf(ZodiacSign.CANCER),
-        Planet.MARS to listOf(ZodiacSign.ARIES, ZodiacSign.SCORPIO),
-        Planet.MERCURY to listOf(ZodiacSign.GEMINI, ZodiacSign.VIRGO),
-        Planet.JUPITER to listOf(ZodiacSign.SAGITTARIUS, ZodiacSign.PISCES),
-        Planet.VENUS to listOf(ZodiacSign.TAURUS, ZodiacSign.LIBRA),
-        Planet.SATURN to listOf(ZodiacSign.CAPRICORN, ZodiacSign.AQUARIUS),
-        Planet.RAHU to listOf(ZodiacSign.AQUARIUS),  // Co-rulership
-        Planet.KETU to listOf(ZodiacSign.SCORPIO)    // Co-rulership
-    )
+    private val ownSigns get() = AstrologicalConstants.OWN_SIGNS
 
     /**
      * Check if a planet is exalted in its current sign.
      */
     fun isExalted(planet: Planet, sign: ZodiacSign): Boolean {
-        return exaltationSigns[planet] == sign
+        return AstrologicalConstants.isExalted(planet, sign)
     }
 
     /**
@@ -141,7 +94,7 @@ object VedicAstrologyUtils {
      * Check if a planet is debilitated in its current sign.
      */
     fun isDebilitated(planet: Planet, sign: ZodiacSign): Boolean {
-        return debilitationSigns[planet] == sign
+        return AstrologicalConstants.isDebilitated(planet, sign)
     }
 
     /**
@@ -155,7 +108,7 @@ object VedicAstrologyUtils {
      * Check if a planet is in its own sign (Swakshetra).
      */
     fun isInOwnSign(planet: Planet, sign: ZodiacSign): Boolean {
-        return ownSigns[planet]?.contains(sign) == true || sign.ruler == planet
+        return AstrologicalConstants.isInOwnSign(planet, sign) || sign.ruler == planet
     }
 
     /**
@@ -169,10 +122,7 @@ object VedicAstrologyUtils {
      * Check if a planet is in its Moolatrikona sign and degree range.
      */
     fun isInMoolatrikona(planet: Planet, sign: ZodiacSign, degreeInSign: Double): Boolean {
-        val moolatrikona = moolatrikonaSigns[planet] ?: return false
-        return sign == moolatrikona.sign &&
-               degreeInSign >= moolatrikona.startDegree &&
-               degreeInSign <= moolatrikona.endDegree
+        return AstrologicalConstants.isInMoolatrikona(planet, sign, degreeInSign)
     }
 
     /**
@@ -377,25 +327,26 @@ object VedicAstrologyUtils {
 
     // ============================================================================
     // HOUSE CLASSIFICATIONS
+    // Delegated to AstrologicalConstants for single source of truth
     // ============================================================================
 
     /** Kendra houses (Angular/Quadrant) - 1, 4, 7, 10 */
-    val KENDRA_HOUSES = setOf(1, 4, 7, 10)
+    val KENDRA_HOUSES get() = AstrologicalConstants.KENDRA_HOUSES
 
     /** Trikona houses (Trine) - 1, 5, 9 */
-    val TRIKONA_HOUSES = setOf(1, 5, 9)
+    val TRIKONA_HOUSES get() = AstrologicalConstants.TRIKONA_HOUSES
 
     /** Dusthana houses (Malefic) - 6, 8, 12 */
-    val DUSTHANA_HOUSES = setOf(6, 8, 12)
+    val DUSTHANA_HOUSES get() = AstrologicalConstants.DUSTHANA_HOUSES
 
     /** Upachaya houses (Growth) - 3, 6, 10, 11 */
-    val UPACHAYA_HOUSES = setOf(3, 6, 10, 11)
+    val UPACHAYA_HOUSES get() = AstrologicalConstants.UPACHAYA_HOUSES
 
     /** Maraka houses (Death-inflicting) - 2, 7 */
-    val MARAKA_HOUSES = setOf(2, 7)
+    val MARAKA_HOUSES get() = AstrologicalConstants.MARAKA_HOUSES
 
-    /** Dharma houses - 1, 5, 9 */
-    val DHARMA_HOUSES = setOf(1, 5, 9)
+    /** Dharma houses - 1, 5, 9 (same as Trikona) */
+    val DHARMA_HOUSES get() = AstrologicalConstants.TRIKONA_HOUSES
 
     /** Artha houses - 2, 6, 10 */
     val ARTHA_HOUSES = setOf(2, 6, 10)
@@ -409,17 +360,17 @@ object VedicAstrologyUtils {
     /**
      * Check if a house is a Kendra (angular) house.
      */
-    fun isKendra(house: Int): Boolean = house in KENDRA_HOUSES
+    fun isKendra(house: Int): Boolean = AstrologicalConstants.isKendra(house)
 
     /**
      * Check if a house is a Trikona (trine) house.
      */
-    fun isTrikona(house: Int): Boolean = house in TRIKONA_HOUSES
+    fun isTrikona(house: Int): Boolean = AstrologicalConstants.isTrikona(house)
 
     /**
      * Check if a house is a Dusthana (malefic) house.
      */
-    fun isDusthana(house: Int): Boolean = house in DUSTHANA_HOUSES
+    fun isDusthana(house: Int): Boolean = AstrologicalConstants.isDusthana(house)
 
     /**
      * Check if a house is an Upachaya (growth) house.

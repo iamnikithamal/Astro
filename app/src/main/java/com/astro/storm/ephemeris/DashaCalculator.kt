@@ -18,6 +18,18 @@ private val DAYS_PER_YEAR_BD = BigDecimal("365.25")
 private val NAKSHATRA_SPAN_BD = BigDecimal("13.333333333333333333")
 private val TOTAL_CYCLE_YEARS_BD = BigDecimal("120")
 
+/**
+ * Extension function to coerce a BigDecimal within a range.
+ * Used for ensuring nakshatra progress is within [0, 1].
+ */
+private fun BigDecimal.coerceIn(min: BigDecimal, max: BigDecimal): BigDecimal {
+    return when {
+        this < min -> min
+        this > max -> max
+        else -> this
+    }
+}
+
 private fun yearsToRoundedDays(years: Double): Long {
     return BigDecimal(years.toString())
         .multiply(DAYS_PER_YEAR_BD, MATH_CONTEXT)
@@ -1308,7 +1320,6 @@ object ConditionalDashaCalculator {
     }
 
     private const val YOGINI_CYCLE_YEARS = 36
-    private val NAKSHATRA_SPAN = 360.0 / 27.0
 
     fun calculateYoginiDasha(chart: VedicChart): List<YoginiDasha> {
         val birthDate = chart.birthData.dateTime.toLocalDate()
@@ -1321,15 +1332,22 @@ object ConditionalDashaCalculator {
         val yoginiIndex = ((nakshatra.number - 1 + 3) % Yogini.entries.size)
         val startingYogini = Yogini.entries[yoginiIndex]
 
-        val nakshatraStart = nakshatra.startDegree
-        val progressInNakshatra = ((moonLongitude - nakshatraStart) / NAKSHATRA_SPAN).coerceIn(0.0, 1.0)
+        // Use BigDecimal for precise nakshatra progress calculation
+        val moonLongitudeBd = BigDecimal(moonLongitude.toString())
+        val nakshatraStartBd = BigDecimal(nakshatra.startDegree.toString())
+        val progressInNakshatraBd = moonLongitudeBd.subtract(nakshatraStartBd, MATH_CONTEXT)
+            .divide(NAKSHATRA_SPAN_BD, MATH_CONTEXT)
+            .coerceIn(BigDecimal.ZERO, BigDecimal.ONE)
 
         val yoginis = mutableListOf<YoginiDasha>()
         var currentStart = birthDate
 
-        val firstYoginiYears = startingYogini.years.toDouble()
-        val balanceOfFirst = firstYoginiYears * (1.0 - progressInNakshatra)
-        val firstDays = yearsToRoundedDays(balanceOfFirst)
+        // Use BigDecimal for balance calculation
+        val firstYoginiYearsBd = BigDecimal(startingYogini.years)
+        val balanceOfFirstBd = firstYoginiYearsBd.multiply(
+            BigDecimal.ONE.subtract(progressInNakshatraBd, MATH_CONTEXT), MATH_CONTEXT
+        )
+        val firstDays = yearsToRoundedDays(balanceOfFirstBd)
         val firstEnd = currentStart.plusDays(firstDays)
 
         yoginis.add(
@@ -1337,7 +1355,7 @@ object ConditionalDashaCalculator {
                 yogini = startingYogini,
                 startDate = currentStart,
                 endDate = firstEnd,
-                durationYears = balanceOfFirst
+                durationYears = balanceOfFirstBd.toDouble()
             )
         )
         currentStart = firstEnd
@@ -1345,8 +1363,8 @@ object ConditionalDashaCalculator {
         repeat(80) { cycle ->
             val yoginiIdx = (yoginiIndex + 1 + cycle) % Yogini.entries.size
             val yogini = Yogini.entries[yoginiIdx]
-            val years = yogini.years.toDouble()
-            val days = yearsToRoundedDays(years)
+            val yearsBd = BigDecimal(yogini.years)
+            val days = yearsToRoundedDays(yearsBd)
             val endDate = currentStart.plusDays(days)
 
             yoginis.add(
@@ -1354,7 +1372,7 @@ object ConditionalDashaCalculator {
                     yogini = yogini,
                     startDate = currentStart,
                     endDate = endDate,
-                    durationYears = years
+                    durationYears = yearsBd.toDouble()
                 )
             )
             currentStart = endDate
@@ -1447,18 +1465,23 @@ object ConditionalDashaCalculator {
         val nakshatraGroup = ((nakshatra.number - 6 + 27) % 27) / 3
         val startingLord = ASHTOTTARI_NAKSHATRA_LORDS[nakshatraGroup % 8 + 1] ?: Planet.SUN
 
-        val nakshatraStart = nakshatra.startDegree
-        val nakshatraSpan = 360.0 / 27.0
-        val progressInNakshatra = ((moonLongitude - nakshatraStart) / nakshatraSpan).coerceIn(0.0, 1.0)
+        // Use BigDecimal for precise nakshatra progress calculation
+        val moonLongitudeBd = BigDecimal(moonLongitude.toString())
+        val nakshatraStartBd = BigDecimal(nakshatra.startDegree.toString())
+        val progressInNakshatraBd = moonLongitudeBd.subtract(nakshatraStartBd, MATH_CONTEXT)
+            .divide(NAKSHATRA_SPAN_BD, MATH_CONTEXT)
+            .coerceIn(BigDecimal.ZERO, BigDecimal.ONE)
 
         val dashas = mutableListOf<AshtottariDasha>()
         var currentStart = birthDate
 
         val startIndex = ASHTOTTARI_SEQUENCE.indexOf(startingLord)
-        val firstDashaYears = (ASHTOTTARI_YEARS[startingLord] ?: 0).toDouble()
-        val balanceOfFirst = firstDashaYears * (1.0 - progressInNakshatra)
+        val firstDashaYearsBd = BigDecimal(ASHTOTTARI_YEARS[startingLord] ?: 0)
+        val balanceOfFirstBd = firstDashaYearsBd.multiply(
+            BigDecimal.ONE.subtract(progressInNakshatraBd, MATH_CONTEXT), MATH_CONTEXT
+        )
 
-        val firstDays = yearsToRoundedDays(balanceOfFirst)
+        val firstDays = yearsToRoundedDays(balanceOfFirstBd)
         val firstEnd = currentStart.plusDays(firstDays)
 
         dashas.add(
@@ -1466,7 +1489,7 @@ object ConditionalDashaCalculator {
                 planet = startingLord,
                 startDate = currentStart,
                 endDate = firstEnd,
-                durationYears = balanceOfFirst
+                durationYears = balanceOfFirstBd.toDouble()
             )
         )
         currentStart = firstEnd
@@ -1474,8 +1497,8 @@ object ConditionalDashaCalculator {
         repeat(24) { cycle ->
             val planetIndex = (startIndex + 1 + cycle) % ASHTOTTARI_SEQUENCE.size
             val planet = ASHTOTTARI_SEQUENCE[planetIndex]
-            val years = (ASHTOTTARI_YEARS[planet] ?: 0).toDouble()
-            val days = yearsToRoundedDays(years)
+            val yearsBd = BigDecimal(ASHTOTTARI_YEARS[planet] ?: 0)
+            val days = yearsToRoundedDays(yearsBd)
             val endDate = currentStart.plusDays(days)
 
             dashas.add(
@@ -1483,7 +1506,7 @@ object ConditionalDashaCalculator {
                     planet = planet,
                     startDate = currentStart,
                     endDate = endDate,
-                    durationYears = years
+                    durationYears = yearsBd.toDouble()
                 )
             )
             currentStart = endDate

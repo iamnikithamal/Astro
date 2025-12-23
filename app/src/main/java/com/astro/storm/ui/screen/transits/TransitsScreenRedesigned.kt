@@ -101,11 +101,11 @@ import java.time.format.DateTimeFormatter
  * - Smooth animations throughout
  */
 
-enum class TransitViewType(val title: String) {
-    CURRENT("Current Positions"),
-    BY_HOUSE("By House"),
-    UPCOMING("Upcoming"),
-    ASPECTS("Aspects")
+enum class TransitViewType(val titleKey: StringKey) {
+    CURRENT(StringKey.TAB_CURRENT_POSITIONS),
+    BY_HOUSE(StringKey.TAB_BY_HOUSE),
+    UPCOMING(StringKey.TAB_UPCOMING),
+    ASPECTS(StringKey.TAB_ASPECTS)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,10 +141,10 @@ fun TransitsScreenRedesigned(
     val accentGold = AppTheme.AccentGold
     val lifeAreaSpiritual = AppTheme.LifeAreaSpiritual
 
-    val tabs = remember(accentPrimary, accentTeal, accentGold, lifeAreaSpiritual) {
+    val tabs = remember(accentPrimary, accentTeal, accentGold, lifeAreaSpiritual, language) {
         TransitViewType.entries.map { type ->
             TabItem(
-                title = type.title,
+                title = stringResource(type.titleKey, language),
                 accentColor = when (type) {
                     TransitViewType.CURRENT -> accentPrimary
                     TransitViewType.BY_HOUSE -> accentTeal
