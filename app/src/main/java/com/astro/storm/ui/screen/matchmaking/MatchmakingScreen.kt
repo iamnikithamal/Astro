@@ -2879,16 +2879,16 @@ private fun formatMatchmakingForAi(
             appendLine("### ${guna.name} (${guna.obtainedPoints}/${guna.maxPoints} points)")
             appendLine("- Bride: ${guna.brideValue}")
             appendLine("- Groom: ${guna.groomValue}")
-            appendLine("- Significance: ${guna.significance}")
-            if (guna.interpretation.isNotEmpty()) {
-                appendLine("- Analysis: ${guna.interpretation}")
+            appendLine("- Significance: ${guna.description}")
+            if (guna.analysis.isNotEmpty()) {
+                appendLine("- Analysis: ${guna.analysis}")
             }
             appendLine()
         }
 
         appendLine("## Manglik (Kuja Dosha) Analysis")
-        appendLine("- Bride Manglik Status: ${if (result.brideManglik) "Yes (Manglik)" else "No"}")
-        appendLine("- Groom Manglik Status: ${if (result.groomManglik) "Yes (Manglik)" else "No"}")
+        appendLine("- Bride Manglik Status: ${if (result.brideManglik.effectiveDosha != ManglikDosha.NONE) "Yes (Manglik)" else "No"}")
+        appendLine("- Groom Manglik Status: ${if (result.groomManglik.effectiveDosha != ManglikDosha.NONE) "Yes (Manglik)" else "No"}")
         appendLine("- Compatibility: ${result.manglikCompatibility}")
         appendLine()
 
