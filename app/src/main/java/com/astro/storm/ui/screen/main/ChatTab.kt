@@ -48,7 +48,9 @@ import com.astro.storm.data.local.chat.ChatConversation
 import com.astro.storm.data.local.chat.ChatMessageModel
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.StringResources
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.ui.components.ContentCleaner
@@ -184,7 +186,7 @@ private fun ConversationsListScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "New Chat"
+                    contentDescription = stringResource(StringKeyDosha.CHAT_NEW)
                 )
             }
         }
@@ -194,8 +196,8 @@ private fun ConversationsListScreen(
     conversationToDelete?.let { conversation ->
         AlertDialog(
             onDismissRequest = { conversationToDelete = null },
-            title = { Text("Delete Chat") },
-            text = { Text("Are you sure you want to delete \"${conversation.title}\"? This cannot be undone.") },
+            title = { Text(stringResource(StringKeyDosha.CHAT_DELETE)) },
+            text = { Text(stringResource(StringKeyDosha.CHAT_DELETE_CONFIRM, conversation.title)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -203,12 +205,12 @@ private fun ConversationsListScreen(
                         conversationToDelete = null
                     }
                 ) {
-                    Text("Delete", color = colors.ErrorColor)
+                    Text(stringResource(StringKeyDosha.CHAT_DELETE_BTN), color = colors.ErrorColor)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { conversationToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(StringKeyDosha.CHAT_CANCEL_BTN))
                 }
             },
             containerColor = colors.CardBackground
@@ -257,7 +259,7 @@ private fun EmptyChatState(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Meet Stormy",
+            text = stringResource(StringKeyDosha.STORMY_MEET),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = colors.TextPrimary
@@ -266,7 +268,7 @@ private fun EmptyChatState(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Your Vedic astrology AI assistant",
+            text = stringResource(StringKeyDosha.STORMY_SUBTITLE),
             style = MaterialTheme.typography.bodyLarge,
             color = colors.TextSecondary,
             textAlign = TextAlign.Center
@@ -275,7 +277,7 @@ private fun EmptyChatState(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Ask about your birth chart, planetary periods, transits, compatibility, remedies, and more.",
+            text = stringResource(StringKeyDosha.STORMY_INTRO),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.TextMuted,
             textAlign = TextAlign.Center,
@@ -299,7 +301,7 @@ private fun EmptyChatState(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Start New Chat")
+                Text(stringResource(StringKeyDosha.STORMY_START_CHAT))
             }
         } else {
             OutlinedButton(
@@ -316,7 +318,7 @@ private fun EmptyChatState(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Configure AI Models",
+                    text = stringResource(StringKeyDosha.STORMY_CONFIGURE_MODELS),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -325,7 +327,7 @@ private fun EmptyChatState(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Enable AI models to start chatting",
+                text = stringResource(StringKeyDosha.STORMY_ENABLE_MODELS),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.TextMuted
             )
@@ -411,7 +413,7 @@ private fun ConversationCard(
                     )
 
                     Text(
-                        text = "${conversation.messageCount} messages",
+                        text = stringResource(StringKeyDosha.CHAT_MESSAGES_COUNT, conversation.messageCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.TextSubtle
                     )
@@ -422,7 +424,7 @@ private fun ConversationCard(
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "More options",
+                        contentDescription = stringResource(StringKeyDosha.CHAT_MORE_OPTIONS),
                         tint = colors.TextMuted
                     )
                 }
@@ -432,7 +434,7 @@ private fun ConversationCard(
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Archive") },
+                        text = { Text(stringResource(StringKeyDosha.CHAT_ARCHIVE)) },
                         onClick = {
                             showMenu = false
                             onArchive()
@@ -442,7 +444,7 @@ private fun ConversationCard(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Delete", color = colors.ErrorColor) },
+                        text = { Text(stringResource(StringKeyDosha.CHAT_DELETE_BTN), color = colors.ErrorColor) },
                         onClick = {
                             showMenu = false
                             onDelete()
@@ -520,7 +522,7 @@ fun ChatScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Stormy",
+                            text = stringResource(StringKeyDosha.STORMY_TITLE),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = colors.TextPrimary
@@ -538,7 +540,7 @@ fun ChatScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(StringKeyDosha.CHAT_BACK),
                             tint = colors.TextPrimary
                         )
                     }
@@ -549,7 +551,7 @@ fun ChatScreen(
                         IconButton(onClick = { showModelOptions = true }) {
                             Icon(
                                 imageVector = Icons.Outlined.Tune,
-                                contentDescription = "Model options",
+                                contentDescription = stringResource(StringKeyDosha.CHAT_MODEL_OPTIONS),
                                 tint = colors.AccentPrimary
                             )
                         }
@@ -557,14 +559,14 @@ fun ChatScreen(
                     IconButton(onClick = { showModelSelector = true }) {
                         Icon(
                             imageVector = Icons.Outlined.Psychology,
-                            contentDescription = "Change model",
+                            contentDescription = stringResource(StringKeyDosha.CHAT_CHANGE_MODEL),
                             tint = colors.TextSecondary
                         )
                     }
                     IconButton(onClick = { showClearConfirm = true }) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteSweep,
-                            contentDescription = "Clear chat",
+                            contentDescription = stringResource(StringKeyDosha.CHAT_CLEAR),
                             tint = colors.TextSecondary
                         )
                     }
@@ -736,8 +738,8 @@ fun ChatScreen(
     if (showClearConfirm) {
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
-            title = { Text("Clear Chat") },
-            text = { Text("Are you sure you want to clear all messages in this conversation?") },
+            title = { Text(stringResource(StringKeyDosha.CHAT_CLEAR)) },
+            text = { Text(stringResource(StringKeyDosha.CHAT_CLEAR_CONFIRM)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -745,12 +747,12 @@ fun ChatScreen(
                         showClearConfirm = false
                     }
                 ) {
-                    Text("Clear", color = colors.ErrorColor)
+                    Text(stringResource(StringKeyDosha.CHAT_CLEAR_BTN), color = colors.ErrorColor)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(StringKeyDosha.CHAT_CANCEL_BTN))
                 }
             },
             containerColor = colors.CardBackground
@@ -763,7 +765,7 @@ fun ChatScreen(
             onDismissRequest = { showModelOptions = false },
             title = {
                 Text(
-                    text = "Model Options",
+                    text = stringResource(StringKeyDosha.MODEL_OPTIONS_TITLE),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -793,13 +795,13 @@ fun ChatScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Thinking Mode",
+                                    text = stringResource(StringKeyDosha.MODEL_THINKING_MODE),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.TextPrimary
                                 )
                                 Text(
-                                    text = "Extended reasoning before answering",
+                                    text = stringResource(StringKeyDosha.MODEL_THINKING_DESC),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = colors.TextMuted
                                 )
@@ -828,13 +830,13 @@ fun ChatScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Web Search",
+                                    text = stringResource(StringKeyDosha.MODEL_WEB_SEARCH),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.TextPrimary
                                 )
                                 Text(
-                                    text = "Search the web for current information",
+                                    text = stringResource(StringKeyDosha.MODEL_WEB_SEARCH_DESC),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = colors.TextMuted
                                 )
@@ -853,7 +855,7 @@ fun ChatScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showModelOptions = false }) {
-                    Text("Done", color = colors.AccentPrimary)
+                    Text(stringResource(StringKeyDosha.MODEL_DONE), color = colors.AccentPrimary)
                 }
             },
             containerColor = colors.CardBackground
@@ -898,7 +900,7 @@ private fun WelcomeMessage(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Hello! I'm Stormy",
+            text = stringResource(StringKeyDosha.STORMY_HELLO),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = colors.TextPrimary
@@ -907,7 +909,7 @@ private fun WelcomeMessage(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Your Vedic astrology assistant. Ask me anything about your birth chart, planetary periods, transits, compatibility, or remedies.",
+            text = stringResource(StringKeyDosha.STORMY_HELLO_DESC),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.TextMuted,
             textAlign = TextAlign.Center,
@@ -917,20 +919,24 @@ private fun WelcomeMessage(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Suggestion chips - clickable to populate input field
+        val suggestionDasha = stringResource(StringKeyDosha.CHAT_SUGGESTION_DASHA)
+        val suggestionChart = stringResource(StringKeyDosha.CHAT_SUGGESTION_CHART)
+        val suggestionYogas = stringResource(StringKeyDosha.CHAT_SUGGESTION_YOGAS)
+
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SuggestionChip(
-                text = "What's my current dasha period?",
-                onClick = { onSuggestionClick("What's my current dasha period?") }
+                text = suggestionDasha,
+                onClick = { onSuggestionClick(suggestionDasha) }
             )
             SuggestionChip(
-                text = "Analyze my birth chart",
-                onClick = { onSuggestionClick("Analyze my birth chart") }
+                text = suggestionChart,
+                onClick = { onSuggestionClick(suggestionChart) }
             )
             SuggestionChip(
-                text = "What yogas are present in my chart?",
-                onClick = { onSuggestionClick("What yogas are present in my chart?") }
+                text = suggestionYogas,
+                onClick = { onSuggestionClick(suggestionYogas) }
             )
         }
     }
@@ -1140,7 +1146,7 @@ private fun ChatInputArea(
                     .focusRequester(focusRequester),
                 placeholder = {
                     Text(
-                        text = "Ask Stormy...",
+                        text = stringResource(StringKeyDosha.STORMY_ASK_PLACEHOLDER),
                         color = colors.TextSubtle,
                         fontSize = 14.sp
                     )
@@ -1181,7 +1187,7 @@ private fun ChatInputArea(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop",
+                        contentDescription = stringResource(StringKeyDosha.CHAT_STOP),
                         tint = Color.White
                     )
                 }
@@ -1207,7 +1213,7 @@ private fun ChatInputArea(
                     } else {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send",
+                            contentDescription = stringResource(StringKeyDosha.CHAT_SEND),
                             tint = if (messageText.isNotBlank() && enabled) colors.ScreenBackground
                             else colors.TextMuted
                         )
@@ -1253,12 +1259,12 @@ private fun ModelSelectorRow(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "AI Model",
+                    text = stringResource(StringKeyDosha.MODEL_AI_LABEL),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.TextMuted
                 )
                 Text(
-                    text = selectedModel?.displayName ?: "Select a model",
+                    text = selectedModel?.displayName ?: stringResource(StringKeyDosha.MODEL_SELECT_PROMPT),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = colors.TextPrimary
@@ -1308,7 +1314,7 @@ private fun ModelSelectorBottomSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Select AI Model",
+                text = stringResource(StringKeyDosha.MODEL_SELECT_TITLE),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.TextPrimary
@@ -1331,13 +1337,13 @@ private fun ModelSelectorBottomSheet(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "No models available",
+                        text = stringResource(StringKeyDosha.MODEL_NONE_AVAILABLE),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.TextMuted
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = onNavigateToModels) {
-                        Text("Configure Models")
+                        Text(stringResource(StringKeyDosha.MODEL_CONFIGURE))
                     }
                 }
             } else {
@@ -1415,7 +1421,7 @@ private fun ModelSelectorBottomSheet(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Manage AI Models")
+                    Text(stringResource(StringKeyDosha.MODEL_MANAGE))
                 }
             }
         }
@@ -1426,15 +1432,18 @@ private fun ModelSelectorBottomSheet(
 // UTILITIES
 // ============================================
 
+@Composable
+@androidx.compose.runtime.ReadOnlyComposable
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
+    val language = LocalLanguage.current
 
     return when {
-        diff < 60_000 -> "Just now"
-        diff < 3600_000 -> "${diff / 60_000}m ago"
-        diff < 86400_000 -> "${diff / 3600_000}h ago"
-        diff < 604800_000 -> "${diff / 86400_000}d ago"
+        diff < 60_000 -> stringResource(StringKeyDosha.CHAT_JUST_NOW)
+        diff < 3600_000 -> stringResource(StringKeyDosha.CHAT_MINUTES_AGO, (diff / 60_000).toInt())
+        diff < 86400_000 -> stringResource(StringKeyDosha.CHAT_HOURS_AGO, (diff / 3600_000).toInt())
+        diff < 604800_000 -> stringResource(StringKeyDosha.CHAT_DAYS_AGO, (diff / 86400_000).toInt())
         else -> SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
     }
 }

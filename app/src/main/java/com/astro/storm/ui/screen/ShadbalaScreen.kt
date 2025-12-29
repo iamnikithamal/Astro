@@ -1056,11 +1056,11 @@ private fun ShadbalaComparisonTab(
                         color = AppTheme.TextMuted,
                         modifier = Modifier.width(60.dp)
                     )
-                    Text("Sthana", style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                    Text("Dig", style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                    Text("Kala", style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                    Text("Chesta", style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                    Text("Total", style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    Text(stringResource(StringKeyDosha.SHADBALA_STHANA), style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    Text(stringResource(StringKeyDosha.SHADBALA_DIG), style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    Text(stringResource(StringKeyDosha.SHADBALA_KALA), style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    Text(stringResource(StringKeyDosha.SHADBALA_CHESTA), style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    Text(stringResource(StringKeyDosha.SHADBALA_TOTAL), style = MaterialTheme.typography.labelSmall, color = AppTheme.TextMuted, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

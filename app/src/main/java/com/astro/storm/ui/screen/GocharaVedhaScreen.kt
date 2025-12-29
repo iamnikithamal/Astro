@@ -75,7 +75,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.LocalLanguage
+import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.localization.stringResource
 import android.content.Context
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.GocharaVedhaCalculator
@@ -1205,7 +1207,7 @@ private fun VedhaInfoDialog(onDismiss: () -> Unit) {
         },
         confirmButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Got it", color = AppTheme.AccentPrimary)
+                Text(stringResource(StringKeyDosha.BTN_GOT_IT), color = AppTheme.AccentPrimary)
             }
         },
         containerColor = AppTheme.CardBackground

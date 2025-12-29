@@ -67,20 +67,6 @@ class LocalizationManager private constructor(context: Context) {
     }
 
     /**
-     * @deprecated Date system is now automatically derived from language.
-     * This method is kept for backwards compatibility but does nothing.
-     */
-    @Deprecated(
-        message = "Date system is now automatically derived from language selection",
-        replaceWith = ReplaceWith("setLanguage(Language.NEPALI)"),
-        level = DeprecationLevel.WARNING
-    )
-    fun setDateSystem(dateSystem: DateSystem) {
-        // No-op: Date system is now derived from language
-        // Kept for backwards compatibility with existing code
-    }
-
-    /**
      * Get the persisted language from SharedPreferences
      */
     private fun getPersistedLanguage(): Language {

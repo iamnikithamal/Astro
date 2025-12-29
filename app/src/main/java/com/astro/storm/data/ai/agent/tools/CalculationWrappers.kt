@@ -77,12 +77,13 @@ class VimshottariDashaCalculator {
         return dashas
     }
 
-    fun getCurrentDasha(chart: VedicChart): CurrentDashaInfo {
+    fun getCurrentDasha(chart: VedicChart): CurrentDashaInfo? {
         val timeline = DashaCalculator.calculateDashaTimeline(chart)
-        val today = LocalDate.now()
 
-        val currentMaha = timeline.currentMahadasha ?: timeline.mahadashas.first()
-        val currentAntar = timeline.currentAntardasha ?: currentMaha.antardashas.first()
+        val currentMaha = timeline.currentMahadasha ?: timeline.mahadashas.firstOrNull()
+            ?: return null
+        val currentAntar = timeline.currentAntardasha ?: currentMaha.antardashas.firstOrNull()
+            ?: return null
         val currentPratyantar = timeline.currentPratyantardasha
 
         return CurrentDashaInfo(

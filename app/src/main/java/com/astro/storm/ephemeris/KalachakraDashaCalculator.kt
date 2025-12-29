@@ -4,9 +4,6 @@ import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
-import java.math.BigDecimal
-import java.math.MathContext
-import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -53,8 +50,8 @@ import java.time.temporal.ChronoUnit
  */
 object KalachakraDashaCalculator {
 
-    private val MATH_CONTEXT = MathContext(20, RoundingMode.HALF_EVEN)
-    private val DAYS_PER_YEAR = BigDecimal("365.25")
+    private val MATH_CONTEXT = DashaUtils.MATH_CONTEXT
+    private val DAYS_PER_YEAR = DashaUtils.DAYS_PER_YEAR
 
     // ============================================
     // KALACHAKRA DASHA CONSTANTS (from BPHS)
@@ -1132,13 +1129,7 @@ object KalachakraDashaCalculator {
     // HELPER METHODS
     // ============================================
 
-    private fun yearsToRoundedDays(years: Double): Long {
-        return BigDecimal(years.toString())
-            .multiply(DAYS_PER_YEAR, MATH_CONTEXT)
-            .setScale(0, RoundingMode.HALF_EVEN)
-            .toLong()
-            .coerceAtLeast(1L)
-    }
+    private fun yearsToRoundedDays(years: Double): Long = DashaUtils.yearsToRoundedDays(years)
 
     private fun getSignGeneralEffects(sign: ZodiacSign): String {
         return when (sign) {

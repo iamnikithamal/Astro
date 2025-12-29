@@ -7,44 +7,19 @@ import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
+import com.astro.storm.ephemeris.DashaUtils.coerceIn
 import java.math.BigDecimal
-import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-private val MATH_CONTEXT = MathContext(20, RoundingMode.HALF_EVEN)
-private val DAYS_PER_YEAR_BD = BigDecimal("365.25")
-private val NAKSHATRA_SPAN_BD = BigDecimal("13.333333333333333333")
+private val MATH_CONTEXT = DashaUtils.MATH_CONTEXT
+private val DAYS_PER_YEAR_BD = DashaUtils.DAYS_PER_YEAR
+private val NAKSHATRA_SPAN_BD = DashaUtils.NAKSHATRA_SPAN
 private val TOTAL_CYCLE_YEARS_BD = BigDecimal("120")
 
-/**
- * Extension function to coerce a BigDecimal within a range.
- * Used for ensuring nakshatra progress is within [0, 1].
- */
-private fun BigDecimal.coerceIn(min: BigDecimal, max: BigDecimal): BigDecimal {
-    return when {
-        this < min -> min
-        this > max -> max
-        else -> this
-    }
-}
-
-private fun yearsToRoundedDays(years: Double): Long {
-    return BigDecimal(years.toString())
-        .multiply(DAYS_PER_YEAR_BD, MATH_CONTEXT)
-        .setScale(0, RoundingMode.HALF_EVEN)
-        .toLong()
-        .coerceAtLeast(1L)
-}
-
-private fun yearsToRoundedDays(years: BigDecimal): Long {
-    return years
-        .multiply(DAYS_PER_YEAR_BD, MATH_CONTEXT)
-        .setScale(0, RoundingMode.HALF_EVEN)
-        .toLong()
-        .coerceAtLeast(1L)
-}
+private fun yearsToRoundedDays(years: Double): Long = DashaUtils.yearsToRoundedDays(years)
+private fun yearsToRoundedDays(years: BigDecimal): Long = DashaUtils.yearsToRoundedDays(years)
 
 object DashaCalculator {
 

@@ -20,9 +20,6 @@ interface ChartDao {
     @Update
     suspend fun updateChart(chart: ChartEntity)
 
-    @Delete
-    suspend fun deleteChart(chart: ChartEntity)
-
     @Query("DELETE FROM charts WHERE id = :id")
     suspend fun deleteChartById(id: Long)
 

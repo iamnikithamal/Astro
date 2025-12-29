@@ -544,7 +544,7 @@ private fun ReferencePointsCard(analysis: UpachayaTransitAnalysis, language: Lan
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Moon Sign", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.UPACHAYA_MOON_SIGN), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
                         analysis.moonSign.getLocalizedName(language),
                         fontSize = 13.sp,
@@ -569,7 +569,7 @@ private fun ReferencePointsCard(analysis: UpachayaTransitAnalysis, language: Lan
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Lagna", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.UPACHAYA_LAGNA), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
                         analysis.lagnaSign.getLocalizedName(language),
                         fontSize = 13.sp,
@@ -594,9 +594,9 @@ private fun ReferencePointsCard(analysis: UpachayaTransitAnalysis, language: Lan
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Active", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.UPACHAYA_ACTIVE), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
-                        "Upachaya",
+                        stringResource(StringKeyDosha.UPACHAYA_SCREEN_TITLE),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = AppTheme.TextPrimary
@@ -993,7 +993,7 @@ private fun TransitDetailsTab(analysis: UpachayaTransitAnalysis, language: Langu
                 FilterChip(
                     selected = selectedReference == TransitReference.MOON,
                     onClick = { selectedReference = TransitReference.MOON },
-                    label = { Text("From Moon") },
+                    label = { Text(stringResource(StringKeyDosha.UPACHAYA_FROM_MOON)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppTheme.PlanetMoon.copy(alpha = 0.2f),
                         selectedLabelColor = AppTheme.PlanetMoon
@@ -1003,7 +1003,7 @@ private fun TransitDetailsTab(analysis: UpachayaTransitAnalysis, language: Langu
                 FilterChip(
                     selected = selectedReference == TransitReference.LAGNA,
                     onClick = { selectedReference = TransitReference.LAGNA },
-                    label = { Text("From Lagna") },
+                    label = { Text(stringResource(StringKeyDosha.UPACHAYA_FROM_LAGNA)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppTheme.AccentPrimary.copy(alpha = 0.2f),
                         selectedLabelColor = AppTheme.AccentPrimary

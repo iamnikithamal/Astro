@@ -24,8 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.Language
+import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
@@ -296,7 +298,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
         if (analysis.sunHoraPlanets.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = "Sun Hora - Self-Earned Wealth",
+                    title = stringResource(StringKeyDosha.HORA_SUN_TITLE),
                     icon = Icons.Filled.WbSunny,
                     tint = AppTheme.PlanetSun
                 )
@@ -304,7 +306,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
             item {
                 PlanetChipsCard(
                     planets = analysis.sunHoraPlanets,
-                    description = "These planets indicate potential for wealth through your own efforts",
+                    description = stringResource(StringKeyDosha.HORA_SUN_DESC),
                     language = language
                 )
             }
@@ -314,7 +316,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
         if (analysis.moonHoraPlanets.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = "Moon Hora - Inherited/Liquid Wealth",
+                    title = stringResource(StringKeyDosha.HORA_MOON_TITLE),
                     icon = Icons.Filled.NightsStay,
                     tint = AppTheme.PlanetMoon
                 )
@@ -322,7 +324,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
             item {
                 PlanetChipsCard(
                     planets = analysis.moonHoraPlanets,
-                    description = "These planets indicate potential for inherited or liquid assets",
+                    description = stringResource(StringKeyDosha.HORA_MOON_DESC),
                     language = language
                 )
             }
@@ -332,7 +334,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
         if (analysis.wealthIndicators.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = "Wealth Sources",
+                    title = stringResource(StringKeyDosha.HORA_WEALTH_SOURCES),
                     icon = Icons.Filled.AccountBalance,
                     tint = AppTheme.AccentGold
                 )
@@ -353,13 +355,14 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
 
 @Composable
 private fun WealthPotentialCard(analysis: HoraAnalysis) {
-    val (color, icon, label) = when (analysis.overallWealthPotential) {
-        WealthPotential.EXCEPTIONAL -> Triple(AppTheme.SuccessColor, Icons.Filled.Star, "Exceptional")
-        WealthPotential.HIGH -> Triple(AppTheme.SuccessColor.copy(alpha = 0.8f), Icons.Filled.TrendingUp, "High")
-        WealthPotential.MODERATE -> Triple(AppTheme.AccentGold, Icons.Filled.TrendingFlat, "Moderate")
-        WealthPotential.AVERAGE -> Triple(AppTheme.TextMuted, Icons.Filled.HorizontalRule, "Average")
-        WealthPotential.LOW -> Triple(AppTheme.WarningColor, Icons.Filled.TrendingDown, "Needs Effort")
+    val (color, icon, labelKey) = when (analysis.overallWealthPotential) {
+        WealthPotential.EXCEPTIONAL -> Triple(AppTheme.SuccessColor, Icons.Filled.Star, StringKeyDosha.HORA_POTENTIAL_EXCEPTIONAL)
+        WealthPotential.HIGH -> Triple(AppTheme.SuccessColor.copy(alpha = 0.8f), Icons.Filled.TrendingUp, StringKeyDosha.HORA_POTENTIAL_HIGH)
+        WealthPotential.MODERATE -> Triple(AppTheme.AccentGold, Icons.Filled.TrendingFlat, StringKeyDosha.HORA_POTENTIAL_MODERATE)
+        WealthPotential.AVERAGE -> Triple(AppTheme.TextMuted, Icons.Filled.HorizontalRule, StringKeyDosha.HORA_POTENTIAL_AVERAGE)
+        WealthPotential.LOW -> Triple(AppTheme.WarningColor, Icons.Filled.TrendingDown, StringKeyDosha.HORA_POTENTIAL_NEEDS_EFFORT)
     }
+    val label = stringResource(labelKey)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -389,7 +392,7 @@ private fun WealthPotentialCard(analysis: HoraAnalysis) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Potential: $label",
+                    "${stringResource(StringKeyDosha.HORA_POTENTIAL)}: $label",
                     fontSize = 14.sp,
                     color = color,
                     fontWeight = FontWeight.Medium
@@ -460,7 +463,7 @@ private fun WealthIndicatorCard(indicator: com.astro.storm.ephemeris.WealthIndic
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        if (indicator.type == WealthType.SELF_EARNED) "Self-Earned" else "Inherited/Liquid",
+                        stringResource(if (indicator.type == WealthType.SELF_EARNED) StringKeyDosha.HORA_SELF_EARNED else StringKeyDosha.HORA_INHERITED),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted
                     )
@@ -525,7 +528,7 @@ private fun DrekkanaTab(analysis: DrekkanaAnalysis, language: Language) {
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Short Journeys",
+                                stringResource(StringKeyDosha.DREKKANA_SHORT_JOURNEYS),
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.TextPrimary
                             )
@@ -550,13 +553,14 @@ private fun DrekkanaTab(analysis: DrekkanaAnalysis, language: Language) {
 
 @Composable
 private fun CourageAnalysisCard(analysis: com.astro.storm.ephemeris.CourageAnalysis) {
-    val (color, label) = when (analysis.overallCourageLevel) {
-        CourageLevel.EXCEPTIONAL -> AppTheme.SuccessColor to "Exceptional"
-        CourageLevel.HIGH -> AppTheme.SuccessColor.copy(alpha = 0.8f) to "High"
-        CourageLevel.MODERATE -> AppTheme.AccentGold to "Moderate"
-        CourageLevel.LOW -> AppTheme.WarningColor to "Developing"
-        CourageLevel.VERY_LOW -> AppTheme.ErrorColor to "Needs Work"
+    val (color, labelKey) = when (analysis.overallCourageLevel) {
+        CourageLevel.EXCEPTIONAL -> AppTheme.SuccessColor to StringKeyDosha.COURAGE_EXCEPTIONAL
+        CourageLevel.HIGH -> AppTheme.SuccessColor.copy(alpha = 0.8f) to StringKeyDosha.COURAGE_HIGH
+        CourageLevel.MODERATE -> AppTheme.AccentGold to StringKeyDosha.COURAGE_MODERATE
+        CourageLevel.LOW -> AppTheme.WarningColor to StringKeyDosha.COURAGE_DEVELOPING
+        CourageLevel.VERY_LOW -> AppTheme.ErrorColor to StringKeyDosha.COURAGE_NEEDS_WORK
     }
+    val label = stringResource(labelKey)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -574,12 +578,12 @@ private fun CourageAnalysisCard(analysis: com.astro.storm.ephemeris.CourageAnaly
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        "Courage & Initiative",
+                        stringResource(StringKeyDosha.DREKKANA_COURAGE_TITLE),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = AppTheme.TextPrimary
                     )
-                    Text("Level: $label", fontSize = 14.sp, color = color, fontWeight = FontWeight.Medium)
+                    Text("${stringResource(StringKeyDosha.COURAGE_LEVEL)}: $label", fontSize = 14.sp, color = color, fontWeight = FontWeight.Medium)
                 }
             }
 
@@ -587,18 +591,18 @@ private fun CourageAnalysisCard(analysis: com.astro.storm.ephemeris.CourageAnaly
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Physical", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.COURAGE_PHYSICAL), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(analysis.physicalCourage, fontSize = 13.sp, color = AppTheme.TextPrimary)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Mental", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.COURAGE_MENTAL), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(analysis.mentalCourage, fontSize = 13.sp, color = AppTheme.TextPrimary)
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Initiative: ${analysis.initiativeAbility}",
+                "${stringResource(StringKeyDosha.COURAGE_INITIATIVE)}: ${analysis.initiativeAbility}",
                 fontSize = 12.sp,
                 color = AppTheme.TextSecondary
             )
@@ -641,7 +645,7 @@ private fun SiblingIndicatorsCard(indicators: com.astro.storm.ephemeris.SiblingI
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Younger", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DREKKANA_YOUNGER), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
                         "${indicators.estimatedYoungerSiblings.first}-${indicators.estimatedYoungerSiblings.last}",
                         fontSize = 16.sp,
@@ -650,7 +654,7 @@ private fun SiblingIndicatorsCard(indicators: com.astro.storm.ephemeris.SiblingI
                     )
                 }
                 Column {
-                    Text("Elder", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DREKKANA_ELDER), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
                         "${indicators.estimatedElderSiblings.first}-${indicators.estimatedElderSiblings.last}",
                         fontSize = 16.sp,
@@ -659,7 +663,7 @@ private fun SiblingIndicatorsCard(indicators: com.astro.storm.ephemeris.SiblingI
                     )
                 }
                 Column {
-                    Text("Relationship", fontSize = 11.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DREKKANA_RELATIONSHIP), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
                         indicators.relationshipQuality.name,
                         fontSize = 13.sp,
@@ -697,18 +701,18 @@ private fun CommunicationCard(analysis: com.astro.storm.ephemeris.CommunicationA
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Communication Skills", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                Text(stringResource(StringKeyDosha.DREKKANA_COMMUNICATION_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Overall: ${analysis.overallSkillLevel}", fontSize = 13.sp, color = AppTheme.TextSecondary)
-            Text("Writing: ${analysis.writingAbility}", fontSize = 13.sp, color = AppTheme.TextSecondary)
-            Text("Speaking: ${analysis.speakingAbility}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DREKKANA_OVERALL)}: ${analysis.overallSkillLevel}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DREKKANA_WRITING)}: ${analysis.writingAbility}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DREKKANA_SPEAKING)}: ${analysis.speakingAbility}", fontSize = 13.sp, color = AppTheme.TextSecondary)
 
             if (analysis.artisticTalents.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Artistic Talents:", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = AppTheme.TextPrimary)
+                Text("${stringResource(StringKeyDosha.DREKKANA_ARTISTIC_TALENTS)}:", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = AppTheme.TextPrimary)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(analysis.artisticTalents) { talent ->
                         Surface(
@@ -790,7 +794,7 @@ private fun SpouseCharacteristicsCard(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Spouse Characteristics",
+                    stringResource(StringKeyDosha.NAVAMSA_SPOUSE_TITLE),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = AppTheme.TextPrimary
@@ -799,14 +803,14 @@ private fun SpouseCharacteristicsCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            InfoRow("Nature", characteristics.generalNature)
-            InfoRow("Physical Traits", characteristics.physicalTraits)
-            InfoRow("Family Background", characteristics.familyBackground)
-            InfoRow("Direction", direction)
+            InfoRow(stringResource(StringKeyDosha.NAVAMSA_NATURE), characteristics.generalNature)
+            InfoRow(stringResource(StringKeyDosha.NAVAMSA_PHYSICAL_TRAITS), characteristics.physicalTraits)
+            InfoRow(stringResource(StringKeyDosha.NAVAMSA_FAMILY_BACKGROUND), characteristics.familyBackground)
+            InfoRow(stringResource(StringKeyDosha.NAVAMSA_DIRECTION), direction)
 
             if (characteristics.probableProfessions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Probable Professions:", fontSize = 12.sp, color = AppTheme.TextMuted)
+                Text("${stringResource(StringKeyDosha.NAVAMSA_PROBABLE_PROFESSIONS)}:", fontSize = 12.sp, color = AppTheme.TextMuted)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(characteristics.probableProfessions) { profession ->
                         Surface(color = AppTheme.ChipBackground, shape = RoundedCornerShape(12.dp)) {
@@ -845,19 +849,19 @@ private fun MarriageTimingCard(factors: com.astro.storm.ephemeris.MarriageTiming
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Marriage Timing Factors", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+            Text(stringResource(StringKeyDosha.NAVAMSA_TIMING_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatColumn("Venus", "${factors.venusNavamsaStrength.toInt()}%", AppTheme.PlanetVenus)
-                StatColumn("7th Lord", "${factors.seventhLordStrength.toInt()}%", AppTheme.AccentPrimary)
-                StatColumn("Darakaraka", "${factors.darakarakaStrength.toInt()}%", AppTheme.AccentGold)
+                StatColumn(stringResource(StringKeyDosha.NAVAMSA_VENUS), "${factors.venusNavamsaStrength.toInt()}%", AppTheme.PlanetVenus)
+                StatColumn(stringResource(StringKeyDosha.NAVAMSA_7TH_LORD), "${factors.seventhLordStrength.toInt()}%", AppTheme.AccentPrimary)
+                StatColumn(stringResource(StringKeyDosha.NAVAMSA_DARAKARAKA), "${factors.darakarakaStrength.toInt()}%", AppTheme.AccentGold)
             }
 
             if (factors.favorableDashaPlanets.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Favorable Dasha Periods:", fontSize = 12.sp, color = AppTheme.TextMuted)
+                Text("${stringResource(StringKeyDosha.NAVAMSA_FAVORABLE_DASHA)}:", fontSize = 12.sp, color = AppTheme.TextMuted)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(factors.favorableDashaPlanets) { planet ->
                         Surface(
@@ -894,24 +898,24 @@ private fun NavamsaKeyPlanetsCard(analysis: NavamsaMarriageAnalysis, language: L
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Key Planet Positions (D-9)", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+            Text(stringResource(StringKeyDosha.NAVAMSA_KEY_PLANETS_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
             Spacer(modifier = Modifier.height(12.dp))
 
             analysis.venusInNavamsa?.let {
-                PlanetPositionRow("Venus", it.sign.getLocalizedName(language), AppTheme.PlanetVenus)
+                PlanetPositionRow(stringResource(StringKeyDosha.NAVAMSA_VENUS), it.sign.getLocalizedName(language), AppTheme.PlanetVenus)
             }
             analysis.jupiterInNavamsa?.let {
-                PlanetPositionRow("Jupiter", it.sign.getLocalizedName(language), AppTheme.PlanetJupiter)
+                PlanetPositionRow(stringResource(StringKeyDosha.NAVAMSA_JUPITER), it.sign.getLocalizedName(language), AppTheme.PlanetJupiter)
             }
             analysis.seventhLordNavamsa?.let {
-                PlanetPositionRow("7th Lord", it.sign.getLocalizedName(language), AppTheme.AccentPrimary)
+                PlanetPositionRow(stringResource(StringKeyDosha.NAVAMSA_7TH_LORD), it.sign.getLocalizedName(language), AppTheme.AccentPrimary)
             }
             analysis.darakarakaNavamsa?.let {
-                PlanetPositionRow("Darakaraka (${analysis.darakaraka.displayName})", it.sign.getLocalizedName(language), AppTheme.AccentGold)
+                PlanetPositionRow("${stringResource(StringKeyDosha.NAVAMSA_DARAKARAKA)} (${analysis.darakaraka.getLocalizedName(language)})", it.sign.getLocalizedName(language), AppTheme.AccentGold)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Upapada: ${analysis.upapadaSign.getLocalizedName(language)}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.NAVAMSA_UPAPADA)}: ${analysis.upapadaSign.getLocalizedName(language)}", fontSize = 13.sp, color = AppTheme.TextSecondary)
         }
     }
 }
@@ -958,12 +962,12 @@ private fun MultipleMarriageCard(indicators: com.astro.storm.ephemeris.MultipleM
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Relationship Stability", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                Text(stringResource(StringKeyDosha.NAVAMSA_RELATIONSHIP_STABILITY), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
             }
 
             if (indicators.riskFactors.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Areas of Attention:", fontSize = 12.sp, color = AppTheme.WarningColor)
+                Text("${stringResource(StringKeyDosha.NAVAMSA_AREAS_ATTENTION)}:", fontSize = 12.sp, color = AppTheme.WarningColor)
                 indicators.riskFactors.forEach { factor ->
                     Text("• $factor", fontSize = 12.sp, color = AppTheme.TextSecondary)
                 }
@@ -971,7 +975,7 @@ private fun MultipleMarriageCard(indicators: com.astro.storm.ephemeris.MultipleM
 
             if (indicators.mitigatingFactors.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Protective Factors:", fontSize = 12.sp, color = AppTheme.SuccessColor)
+                Text("${stringResource(StringKeyDosha.NAVAMSA_PROTECTIVE_FACTORS)}:", fontSize = 12.sp, color = AppTheme.SuccessColor)
                 indicators.mitigatingFactors.forEach { factor ->
                     Text("• $factor", fontSize = 12.sp, color = AppTheme.TextSecondary)
                 }
@@ -1016,7 +1020,7 @@ private fun DashamsaTab(analysis: DashamsaAnalysis, language: Language) {
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Professional Strengths", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                        Text(stringResource(StringKeyDosha.DASHAMSA_PROFESSIONAL_STRENGTHS), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
                         Spacer(modifier = Modifier.height(8.dp))
                         analysis.professionalStrengths.forEach { strength ->
                             Row(modifier = Modifier.padding(vertical = 2.dp)) {
@@ -1100,13 +1104,13 @@ private fun BusinessVsServiceCard(analysis: com.astro.storm.ephemeris.BusinessVs
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Business vs Service Aptitude", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+            Text(stringResource(StringKeyDosha.DASHAMSA_BUSINESS_VS_SERVICE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Business", fontSize = 12.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DASHAMSA_BUSINESS), fontSize = 12.sp, color = AppTheme.TextMuted)
                     LinearProgressIndicator(
                         progress = { analysis.businessAptitude / 100f },
                         modifier = Modifier
@@ -1120,7 +1124,7 @@ private fun BusinessVsServiceCard(analysis: com.astro.storm.ephemeris.BusinessVs
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Service", fontSize = 12.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DASHAMSA_SERVICE), fontSize = 12.sp, color = AppTheme.TextMuted)
                     LinearProgressIndicator(
                         progress = { analysis.serviceAptitude / 100f },
                         modifier = Modifier
@@ -1156,11 +1160,11 @@ private fun GovernmentServiceCard(analysis: com.astro.storm.ephemeris.Government
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Government Service Potential", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                Text(stringResource(StringKeyDosha.DASHAMSA_GOVT_SERVICE_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Potential: ${analysis.potential}", fontSize = 14.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DASHAMSA_POTENTIAL)}: ${analysis.potential}", fontSize = 14.sp, color = AppTheme.TextSecondary)
 
             if (analysis.favorableFactors.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1171,7 +1175,7 @@ private fun GovernmentServiceCard(analysis: com.astro.storm.ephemeris.Government
 
             if (analysis.recommendedDepartments.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Recommended Areas:", fontSize = 12.sp, color = AppTheme.TextMuted)
+                Text("${stringResource(StringKeyDosha.DASHAMSA_RECOMMENDED_AREAS)}:", fontSize = 12.sp, color = AppTheme.TextMuted)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(analysis.recommendedDepartments) { dept ->
                         Surface(color = AppTheme.ChipBackground, shape = RoundedCornerShape(12.dp)) {
@@ -1201,12 +1205,12 @@ private fun DwadasamsaTab(analysis: DwadasamsaAnalysis, language: Language) {
     ) {
         // Father Analysis
         item {
-            ParentAnalysisCard(analysis.fatherAnalysis, "Father", Icons.Filled.Man, AppTheme.PlanetSun)
+            ParentAnalysisCard(analysis.fatherAnalysis, stringResource(StringKeyDosha.DWADASAMSA_FATHER), Icons.Filled.Man, AppTheme.PlanetSun)
         }
 
         // Mother Analysis
         item {
-            ParentAnalysisCard(analysis.motherAnalysis, "Mother", Icons.Filled.Woman, AppTheme.PlanetMoon)
+            ParentAnalysisCard(analysis.motherAnalysis, stringResource(StringKeyDosha.DWADASAMSA_MOTHER), Icons.Filled.Woman, AppTheme.PlanetMoon)
         }
 
         // Inheritance Analysis
@@ -1231,7 +1235,7 @@ private fun DwadasamsaTab(analysis: DwadasamsaAnalysis, language: Language) {
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Ancestral Property", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                            Text(stringResource(StringKeyDosha.DWADASAMSA_ANCESTRAL_PROPERTY), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         analysis.ancestralPropertyIndicators.forEach { indicator ->
@@ -1281,13 +1285,13 @@ private fun ParentAnalysisCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatColumn("Significator", "${analysis.significatorStrength.toInt()}%", color)
-                StatColumn("House Lord", "${analysis.houseLordStrength.toInt()}%", AppTheme.AccentPrimary)
+                StatColumn(stringResource(StringKeyDosha.DWADASAMSA_SIGNIFICATOR), "${analysis.significatorStrength.toInt()}%", color)
+                StatColumn(stringResource(StringKeyDosha.DWADASAMSA_HOUSE_LORD), "${analysis.houseLordStrength.toInt()}%", AppTheme.AccentPrimary)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Characteristics: ${analysis.characteristics}", fontSize = 13.sp, color = AppTheme.TextSecondary)
-            Text("Relationship: ${analysis.relationship}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DWADASAMSA_CHARACTERISTICS)}: ${analysis.characteristics}", fontSize = 13.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DWADASAMSA_RELATIONSHIP)}: ${analysis.relationship}", fontSize = 13.sp, color = AppTheme.TextSecondary)
         }
     }
 }
@@ -1308,16 +1312,16 @@ private fun InheritanceCard(analysis: com.astro.storm.ephemeris.InheritanceAnaly
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Inheritance Potential", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+                Text(stringResource(StringKeyDosha.DWADASAMSA_INHERITANCE_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Potential: ${analysis.potential}", fontSize = 14.sp, color = AppTheme.TextSecondary)
-            Text("Timing: ${analysis.timing}", fontSize = 13.sp, color = AppTheme.TextMuted)
+            Text("${stringResource(StringKeyDosha.DWADASAMSA_POTENTIAL)}: ${analysis.potential}", fontSize = 14.sp, color = AppTheme.TextSecondary)
+            Text("${stringResource(StringKeyDosha.DWADASAMSA_TIMING)}: ${analysis.timing}", fontSize = 13.sp, color = AppTheme.TextMuted)
 
             if (analysis.sources.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Sources:", fontSize = 12.sp, color = AppTheme.TextMuted)
+                Text("${stringResource(StringKeyDosha.DWADASAMSA_SOURCES)}:", fontSize = 12.sp, color = AppTheme.TextMuted)
                 analysis.sources.forEach { source ->
                     Text("• $source", fontSize = 12.sp, color = AppTheme.TextSecondary)
                 }
@@ -1334,17 +1338,17 @@ private fun LongevityCard(indicators: com.astro.storm.ephemeris.ParentalLongevit
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Longevity Indicators", fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
+            Text(stringResource(StringKeyDosha.DWADASAMSA_LONGEVITY_TITLE), fontWeight = FontWeight.SemiBold, color = AppTheme.TextPrimary)
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Father", fontSize = 12.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DWADASAMSA_FATHER), fontSize = 12.sp, color = AppTheme.TextMuted)
                     Text(indicators.fatherLongevity, fontSize = 13.sp, color = AppTheme.TextPrimary)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Mother", fontSize = 12.sp, color = AppTheme.TextMuted)
+                    Text(stringResource(StringKeyDosha.DWADASAMSA_MOTHER), fontSize = 12.sp, color = AppTheme.TextMuted)
                     Text(indicators.motherLongevity, fontSize = 13.sp, color = AppTheme.TextPrimary)
                 }
             }
