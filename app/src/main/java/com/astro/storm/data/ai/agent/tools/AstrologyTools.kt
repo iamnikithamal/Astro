@@ -813,6 +813,15 @@ class GetCurrentDashaTool : AstrologyTool {
             val dashaCalculator = VimshottariDashaCalculator()
             val currentDasha = dashaCalculator.getCurrentDasha(chart)
 
+            if (currentDasha == null) {
+                return ToolExecutionResult(
+                    success = false,
+                    data = null,
+                    error = "Unable to calculate current dasha period",
+                    summary = "Dasha calculation failed - please check birth data"
+                )
+            }
+
             val data = JSONObject().apply {
                 put("mahaDasha", JSONObject().apply {
                     put("planet", currentDasha.mahaDasha.displayName)

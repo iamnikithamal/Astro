@@ -5810,7 +5810,6 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     // DIVISIONAL CHARTS - DREKKANA (D-3) SIBLINGS
     // ============================================
     DREKKANA_COURAGE_TITLE("Courage & Initiative", "साहस र पहल"),
-    DREKKANA_COURAGE_LEVEL("Level", "स्तर"),
     DREKKANA_PHYSICAL("Physical", "शारीरिक"),
     DREKKANA_MENTAL("Mental", "मानसिक"),
     DREKKANA_INITIATIVE("Initiative", "पहल"),
@@ -5823,8 +5822,13 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     DREKKANA_WRITING("Writing", "लेखन"),
     DREKKANA_SPEAKING("Speaking", "बोल्ने"),
     DREKKANA_ARTISTIC("Artistic Talents", "कलात्मक प्रतिभाहरू"),
+    DREKKANA_ARTISTIC_TALENTS("Artistic Talents", "कलात्मक प्रतिभाहरू"),
 
     // Courage Levels
+    COURAGE_LEVEL("Level", "स्तर"),
+    COURAGE_PHYSICAL("Physical Courage", "शारीरिक साहस"),
+    COURAGE_MENTAL("Mental Courage", "मानसिक साहस"),
+    COURAGE_INITIATIVE("Initiative", "पहल"),
     COURAGE_EXCEPTIONAL("Exceptional", "असाधारण"),
     COURAGE_HIGH("High", "उच्च"),
     COURAGE_MODERATE("Moderate", "मध्यम"),
@@ -5840,16 +5844,16 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     NAVAMSA_FAMILY_BACKGROUND("Family Background", "पारिवारिक पृष्ठभूमि"),
     NAVAMSA_DIRECTION("Direction", "दिशा"),
     NAVAMSA_PROBABLE_PROFESSIONS("Probable Professions", "सम्भावित पेशाहरू"),
-    NAVAMSA_MARRIAGE_TIMING("Marriage Timing Factors", "विवाह समय कारकहरू"),
+    NAVAMSA_TIMING_TITLE("Marriage Timing", "विवाह समय"),
     NAVAMSA_VENUS("Venus", "शुक्र"),
-    NAVAMSA_7TH_LORD("7th Lord", "७औं भाव स्वामी"),
+    NAVAMSA_JUPITER("Jupiter", "बृहस्पति"),
     NAVAMSA_DARAKARAKA("Darakaraka", "दारकारक"),
-    NAVAMSA_FAVORABLE_DASHAS("Favorable Dasha Periods", "अनुकूल दशा अवधिहरू"),
-    NAVAMSA_KEY_PLANETS("Key Planet Positions (D-9)", "मुख्य ग्रह स्थितिहरू (D-9)"),
+    NAVAMSA_FAVORABLE_DASHA("Favorable Dasha Periods", "अनुकूल दशा अवधिहरू"),
+    NAVAMSA_KEY_PLANETS_TITLE("Key Planet Positions (D-9)", "मुख्य ग्रह स्थितिहरू (D-9)"),
     NAVAMSA_UPAPADA("Upapada", "उपपद"),
-    NAVAMSA_STABILITY("Relationship Stability", "सम्बन्ध स्थिरता"),
-    NAVAMSA_ATTENTION("Areas of Attention", "ध्यान दिनुपर्ने क्षेत्रहरू"),
-    NAVAMSA_PROTECTIVE("Protective Factors", "सुरक्षात्मक कारकहरू"),
+    NAVAMSA_RELATIONSHIP_STABILITY("Relationship Stability", "सम्बन्ध स्थिरता"),
+    NAVAMSA_AREAS_ATTENTION("Areas of Attention", "ध्यान दिनुपर्ने क्षेत्रहरू"),
+    NAVAMSA_PROTECTIVE_FACTORS("Protective Factors", "सुरक्षात्मक कारकहरू"),
 
     // ============================================
     // DIVISIONAL CHARTS - DASHAMSA (D-10) CAREER
@@ -5857,10 +5861,10 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     DASHAMSA_BUSINESS_VS_SERVICE("Business vs Service Aptitude", "व्यापार बनाम सेवा योग्यता"),
     DASHAMSA_BUSINESS("Business", "व्यापार"),
     DASHAMSA_SERVICE("Service", "सेवा"),
-    DASHAMSA_GOVT_SERVICE("Government Service Potential", "सरकारी सेवा सम्भावना"),
+    DASHAMSA_GOVT_SERVICE_TITLE("Government Service Potential", "सरकारी सेवा सम्भावना"),
     DASHAMSA_POTENTIAL("Potential", "सम्भावना"),
     DASHAMSA_RECOMMENDED_AREAS("Recommended Areas", "सिफारिस गरिएका क्षेत्रहरू"),
-    DASHAMSA_PROF_STRENGTHS("Professional Strengths", "व्यावसायिक बलहरू"),
+    DASHAMSA_PROFESSIONAL_STRENGTHS("Professional Strengths", "व्यावसायिक बलहरू"),
 
     // ============================================
     // DIVISIONAL CHARTS - DWADASAMSA (D-12) PARENTS
@@ -5870,11 +5874,13 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     DWADASAMSA_SIGNIFICATOR("Significator", "कारक"),
     DWADASAMSA_HOUSE_LORD("House Lord", "भाव स्वामी"),
     DWADASAMSA_CHARACTERISTICS("Characteristics", "विशेषताहरू"),
-    DWADASAMSA_INHERITANCE("Inheritance Potential", "विरासत सम्भावना"),
+    DWADASAMSA_RELATIONSHIP("Relationship", "सम्बन्ध"),
+    DWADASAMSA_INHERITANCE_TITLE("Inheritance", "विरासत"),
+    DWADASAMSA_POTENTIAL("Potential", "सम्भावना"),
     DWADASAMSA_TIMING("Timing", "समय"),
     DWADASAMSA_SOURCES("Sources", "स्रोतहरू"),
-    DWADASAMSA_ANCESTRAL("Ancestral Property", "पैतृक सम्पत्ति"),
-    DWADASAMSA_LONGEVITY("Longevity Indicators", "दीर्घायु सूचकहरू"),
+    DWADASAMSA_ANCESTRAL_PROPERTY("Ancestral Property", "पैतृक सम्पत्ति"),
+    DWADASAMSA_LONGEVITY_TITLE("Longevity Indicators", "दीर्घायु सूचकहरू"),
     DWADASAMSA_HEALTH_CONCERNS("Health Concerns", "स्वास्थ्य चिन्ताहरू"),
 
     // ============================================
@@ -5919,9 +5925,7 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     // ============================================
     UPACHAYA_MOON_SIGN("Moon Sign", "चन्द्र राशि"),
     UPACHAYA_LAGNA("Lagna", "लग्न"),
-    UPACHAYA_ACTIVE("Active", "सक्रिय"),
-    UPACHAYA_FROM_MOON("From Moon", "चन्द्रबाट"),
-    UPACHAYA_FROM_LAGNA("From Lagna", "लग्नबाट");
+    UPACHAYA_ACTIVE("Active", "सक्रिय");
 }
 
 /**
