@@ -1762,12 +1762,6 @@ private fun YoginiDashaEmptyContent(onBack: () -> Unit) {
         }
     }
 }
-        YoginiDashaCalculator.YoginiNature.DIFFICULT -> when (language) {
-            Language.ENGLISH -> "Difficult"
-            Language.NEPALI -> "कठिन"
-        }
-    }
-}
 
 @Composable
 private fun getYoginiColor(yogini: YoginiDashaCalculator.Yogini): Color {

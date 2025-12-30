@@ -2938,3 +2938,4 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     SUDARSHANA_THEME_H11_2("Income", "आम्दानी"),
     SUDARSHANA_THEME_H12_1("Losses", "हानि"),
     SUDARSHANA_THEME_H12_2("Expenses", "खर्च");
+}
