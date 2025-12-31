@@ -1488,8 +1488,9 @@ private fun LagnaAnalysisCard(lagnaAnalysis: PrashnaCalculator.LagnaAnalysis) {
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
+                        val language = currentLanguage()
                         Text(
-                            "$planetsInLagnaLabel: ${lagnaAnalysis.planetsInLagna.joinToString { it.planet.localizedName() }}",
+                            "$planetsInLagnaLabel: ${lagnaAnalysis.planetsInLagna.joinToString { it.planet.getLocalizedName(language) }}",
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.InfoColor
                         )

@@ -1916,6 +1916,38 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     PRASHNA_OMEN_RETROGRADE_DESC("%s is retrograde", "%s वक्री छ"),
     PRASHNA_OMEN_GANDANTA_DESC("%s is in Gandanta", "%s गण्डान्तमा छ"),
     PRASHNA_OMEN_PUSHKARA_DESC("%s is in Pushkara Navamsha", "%s पुष्कर नवांशमा छ"),
+    PRASHNA_OMEN_WAR_IND("Planetary War with %s", "सँग ग्रहयुद्ध %s"),
+    PRASHNA_OMEN_COMBUST_IND("%s is Combust", "%s अस्त छ"),
+    PRASHNA_OMEN_RETRO_IND("%s is Retrograde", "%s वक्री छ"),
+
+    // Prashna Factors
+    PRASHNA_FACTOR_MOON_EXCELLENT("Moon is exceptionally strong", "चन्द्रमा अत्यन्त बलियो छ"),
+    PRASHNA_FACTOR_MOON_GOOD("Moon is well-placed and strong", "चन्द्रमा राम्रो अवस्थामा र बलियो छ"),
+    PRASHNA_FACTOR_MOON_AVERAGE("Moon has moderate strength", "चन्द्रमाको बल औसत छ"),
+    PRASHNA_FACTOR_MOON_WEAK("Moon is weak", "चन्द्रमा कमजोर छ"),
+    PRASHNA_FACTOR_MOON_VERY_WEAK("Moon is very weak or afflicted", "चन्द्रमा धेरै कमजोर वा पीडित छ"),
+    PRASHNA_FACTOR_MOON_AFFLICTED("Moon is severely afflicted", "चन्द्रमा गम्भीर रूपमा पीडित छ"),
+    PRASHNA_FACTOR_MOON_WAXING("Moon is waxing (increasing strength)", "चन्द्रमा शुक्ल पक्षमा छ (बल बढ्दै)"),
+    PRASHNA_FACTOR_MOON_WANING("Moon is waning (decreasing strength)", "चन्द्रमा कृष्ण पक्षमा छ (बल घट्दै)"),
+    PRASHNA_FACTOR_MOON_VOID("Moon is Void of Course", "चन्द्रमा शून्य अवस्थामा छ"),
+    PRASHNA_FACTOR_LAGNA_STRONG("Lagna and its lord are strong", "लग्न र लग्नेश बलियो छ"),
+    PRASHNA_FACTOR_LAGNA_MODERATE("Lagna has moderate strength", "लग्नको बल औसत छ"),
+    PRASHNA_FACTOR_LAGNA_WEAK("Lagna is weak", "लग्न कमजोर छ"),
+    PRASHNA_FACTOR_LAGNA_COMBUST("Lagna lord is combust", "लग्नेश अस्त छ"),
+    PRASHNA_FACTOR_LAGNA_RETRO("Lagna lord is retrograde", "लग्नेश वक्री छ"),
+    PRASHNA_FACTOR_HOUSES_FAVORABLE("Relevant houses are well-disposed", "सम्बन्धित भावहरू अनुकूल छन्"),
+    PRASHNA_FACTOR_HOUSES_AFFLICTED("Relevant houses are afflicted", "सम्बन्धित भावहरू पीडित छन्"),
+
+    // Prashna Reasons/Verdicts
+    PRASHNA_REASON_STRONGLY_YES("Multiple highly favorable factors indicate success", "धेरै अनुकूल कारकहरूले सफलता संकेत गर्छन्"),
+    PRASHNA_REASON_YES("Favorable planetary positions support the matter", "अनुकूल ग्रह स्थितिले विषयलाई समर्थन गर्छ"),
+    PRASHNA_REASON_UNCERTAIN("Mixed influences make the outcome uncertain", "मिश्रित प्रभावले परिणाम अनिश्चित बनाउँछ"),
+    PRASHNA_REASON_CHALLENGES("Several challenging factors may hinder progress", "धेरै चुनौतीपूर्ण कारकहरूले प्रगतिमा बाधा पुर्याउन सक्छन्"),
+    PRASHNA_REASON_STRONGLY_NO("Serious afflictions suggest unfavorable outcome", "गम्भीर पीडाहरूले प्रतिकूल परिणाम सुझाव दिन्छ"),
+
+    // Prashna Timing (additional)
+    PRASHNA_TIMING_WITHIN("Within %s", "%s भित्र"),
+    PRASHNA_TIMING_ABOUT("About %s", "लगभग %s"),
 
     // Prashna Yogas
     PRASHNA_YOGA_ITHASALA_NAME("Ithasala Yoga", "इत्थशाल योग"),
