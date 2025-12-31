@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
 import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Brightness4

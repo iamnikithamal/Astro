@@ -2961,5 +2961,49 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     SUDARSHANA_THEME_H11_1("Gains", "लाभ"),
     SUDARSHANA_THEME_H11_2("Income", "आम्दानी"),
     SUDARSHANA_THEME_H12_1("Losses", "हानि"),
-    SUDARSHANA_THEME_H12_2("Expenses", "खर्च");
+    SUDARSHANA_THEME_H12_2("Expenses", "खर्च"),
+
+    // ============================================
+    // GENERIC UI KEYS (Used in LalKitabScreen)
+    // ============================================
+    SCREEN_OVERVIEW("Overview", "अवलोकन"),
+    SCREEN_CALCULATING("Calculating...", "गणना गर्दै..."),
+    SCREEN_ERROR_CALCULATION("Calculation Failed", "गणना असफल भयो"),
+    EFFECTS_LABEL("Effects", "प्रभावहरू"),
+
+    // ============================================
+    // LAL KITAB REMEDIES
+    // ============================================
+    LAL_KITAB_SCREEN_TITLE("Lal Kitab Remedies", "लाल किताब उपचार"),
+    LAL_KITAB_SCREEN_SUBTITLE("Planetary Afflictions & Karmic Debts", "ग्रह पीडा र कर्म ऋण"),
+    LAL_KITAB_SCREEN_ABOUT("About Lal Kitab", "लाल किताब बारे"),
+    LAL_KITAB_SCREEN_ABOUT_DESC("Lal Kitab is a unique system of astrology that focuses on planetary afflictions and practical remedies.", "लाल किताब ज्योतिषको एक अनौठो प्रणाली हो जसले ग्रह पीडा र व्यावहारिक उपायहरूमा केन्द्रित छ।"),
+    LAL_KITAB_NOTE_DISTINCT("Note: Lal Kitab principles are distinct from Vedic Astrology.", "नोट: लाल किताबका सिद्धान्तहरू वैदिक ज्योतिष भन्दा फरक छन्।"),
+
+    LAL_KITAB_SCREEN_PLANETARY_AFFLICTIONS("Planetary Afflictions", "ग्रह पीडा"),
+    LAL_KITAB_RECOMMENDED_REMEDIES("Recommended Remedies", "सिफारिस गरिएका उपायहरू"),
+    LAL_KITAB_GENERAL_PRINCIPLES("General Principles", "सामान्य सिद्धान्तहरू"),
+
+    LAL_KITAB_SCREEN_KARMIC_DEBTS("Karmic Debts", "कर्म ऋण"),
+    LAL_KITAB_RIN_TITLE("Karmic Debts Analysis", "कर्म ऋण विश्लेषण"),
+    LAL_KITAB_RIN_DESC("Karmic debts are residues of past life actions that affect the present.", "कर्म ऋणहरू विगतको जीवनका कार्यहरूका अवशेष हुन् जसले वर्तमानलाई असर गर्छ।"),
+    LAL_KITAB_RIN_NONE_TITLE("No Karmic Debts", "कुनै कर्म ऋण छैन"),
+    LAL_KITAB_RIN_NONE_DESC("Your chart is free from major karmic debts.", "तपाईंको कुण्डली प्रमुख कर्म ऋणहरूबाट मुक्त छ।"),
+
+    LAL_KITAB_WEEKLY_SCHEDULE("Weekly Schedule", "साप्ताहिक तालिका"),
+    LAL_KITAB_COLOR_THERAPY("Color Therapy", "रंग चिकित्सा"),
+
+    LAL_KITAB_DEBT_PITRU("Pitru Rin", "पितृ ऋण"),
+    LAL_KITAB_DEBT_MATRU("Matru Rin", "मातृ ऋण"),
+    LAL_KITAB_DEBT_STRI("Stri Rin", "स्त्री ऋण"),
+    LAL_KITAB_DEBT_KANYA("Kanya Rin", "कन्या ऋण"),
+
+    LAL_KITAB_AFFLICTION_KANYA("Kanya Dosh", "कन्या दोष"),
+    LAL_KITAB_AFFLICTION_GRAHAN("Grahan Dosh", "ग्रहण दोष"),
+    LAL_KITAB_AFFLICTION_SHANI("Shani Peeda", "शनि पीडा"),
+    LAL_KITAB_AFFLICTION_GENERAL("General Affliction", "सामान्य पीडा"),
+
+    LAL_KITAB_SECTION_REMEDIES("Remedies", "उपायहरू"),
+
+    UPACHAYA_TRANSITS_LABEL("Upachaya House Transits", "उपचय भाव गोचर");
 }

@@ -123,6 +123,7 @@ fun CharaDashaScreen(
     var isCalculating by remember { mutableStateOf(false) }
     var calculationError by remember { mutableStateOf<String?>(null) }
     var charaDashaResult by remember { mutableStateOf<CharaDashaCalculator.CharaDashaResult?>(null) }
+    val errorString = stringResource(StringKeyAnalysis.CHARA_DASHA_CALC_ERROR)
 
     // Calculate Chara Dasha on chart change
     LaunchedEffect(chart) {
@@ -133,7 +134,7 @@ fun CharaDashaScreen(
                 charaDashaResult = CharaDashaCalculator.calculateCharaDasha(chart, numberOfCycles = 3)
                 isCalculating = false
             } catch (e: Exception) {
-                calculationError = e.message ?: stringResource(StringKeyAnalysis.CHARA_DASHA_CALC_ERROR)
+                calculationError = e.message ?: errorString
                 isCalculating = false
             }
         }
@@ -187,7 +188,7 @@ fun CharaDashaScreen(
                                     charaDashaResult = CharaDashaCalculator.calculateCharaDasha(chart, numberOfCycles = 3)
                                     isCalculating = false
                                 } catch (e: Exception) {
-                                    calculationError = e.message ?: stringResource(StringKeyAnalysis.CHARA_DASHA_CALC_ERROR)
+                                    calculationError = e.message ?: errorString
                                     isCalculating = false
                                 }
                             }

@@ -84,6 +84,7 @@ fun ChartAnalysisScreen(
     var selectedPlanetPosition by remember { mutableStateOf<PlanetPosition?>(null) }
     var selectedNakshatra by remember { mutableStateOf<Pair<Nakshatra, Int>?>(null) }
     var selectedHouse by remember { mutableStateOf<Int?>(null) }
+    var showFullScreenChart by remember { mutableStateOf(false) }
 
     // Render dialogs
     if (showFullScreenChart) {

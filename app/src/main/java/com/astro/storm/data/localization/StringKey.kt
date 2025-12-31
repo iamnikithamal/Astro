@@ -949,6 +949,34 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     A11Y_EXPAND("Expand", "विस्तार गर्नुहोस्"),
     A11Y_COLLAPSE("Collapse", "संक्षिप्त गर्नुहोस्"),
     A11Y_NAVIGATE_BACK("Navigate back", "पछाडि जानुहोस्"),
-    A11Y_SHOW_INFO("Show information", "जानकारी देखाउनुहोस्");
+    A11Y_SHOW_INFO("Show information", "जानकारी देखाउनुहोस्"),
+
+    // ============================================
+    // SETTINGS & ABOUT
+    // ============================================
+    SETTINGS_AI_CHAT("AI Chat", "एआई च्याट"),
+    SETTINGS_AI_MODELS("AI Assistants", "एआई सहायकहरू"),
+    SETTINGS_AI_MODELS_DESC("Manage AI models for analysis", "विश्लेषणको लागि एआई मोडेलहरू व्यवस्थापन"),
+
+    SETTINGS_CALC_ENGINE("Calculation Engine", "गणना इन्जिन"),
+    SETTINGS_CALC_ENGINE_DESC("Swiss Ephemeris v2.10", "स्विस एफिमेरिस v2.10"),
+
+    SETTINGS_ABOUT("About", "बारेमा"),
+    SETTINGS_ABOUT_APP("Astro App", "एस्ट्रो एप"),
+    SETTINGS_VERSION("Version %s", "संस्करण %s"),
+
+    // ============================================
+    // ONBOARDING SCREEN
+    // ============================================
+    ONBOARDING_WELCOME_TITLE("Welcome to AstroStorm", "एस्ट्रोस्टर्ममा स्वागत छ"),
+    ONBOARDING_LANGUAGE_TITLE("Choose Language", "भाषा छान्नुहोस्"),
+    ONBOARDING_THEME_TITLE("Choose Experience", "अनुभव छान्नुहोस्"),
+    ONBOARDING_THEME_DESC("You can change this later in settings", "तपाईं पछि सेटिंग्समा यो परिवर्तन गर्न सक्नुहुन्छ"),
+    ONBOARDING_THEME_LIGHT("Light Mode", "हल्का मोड"),
+    ONBOARDING_THEME_DARK("Dark Mode", "गाढा मोड"),
+    ONBOARDING_THEME_SYSTEM("System Default", "प्रणाली पूर्वनिर्धारित"),
+    ONBOARDING_READY_TITLE("You are Ready!", "तपाईं तयार हुनुहुन्छ!"),
+
+    REPORT_PLANET("Planet", "ग्रह");
 
 }
