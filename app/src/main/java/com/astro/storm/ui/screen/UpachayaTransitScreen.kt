@@ -92,12 +92,12 @@ fun UpachayaTransitScreen(
     )
 
     // Calculate analysis
-    LaunchedEffect(chart, transitPositions) {
+    LaunchedEffect(chart, transitPositions, language) {
         isCalculating = true
         delay(300)
         withContext(Dispatchers.Default) {
-            analysisResult = UpachayaTransitTracker.analyzeUpachayaTransits(chart, transitPositions)
-            upcomingTransits = UpachayaTransitTracker.getUpcomingTransits(chart)
+            analysisResult = UpachayaTransitTracker.analyzeUpachayaTransits(chart, transitPositions, language)
+            upcomingTransits = UpachayaTransitTracker.getUpcomingTransits(chart, language)
         }
         isCalculating = false
     }
@@ -202,13 +202,13 @@ fun UpachayaTransitScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                "Upachaya Houses:",
+                                stringResource(StringKeyDosha.UPACHAYA_ACTIVE_TRANSITS),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 color = AppTheme.TextPrimary
                             )
                             Text(
-                                "3rd (Courage), 6th (Enemies), 10th (Career), 11th (Gains)",
+                                "${getHouseName(3, language)}, ${getHouseName(6, language)}, ${getHouseName(10, language)}, ${getHouseName(11, language)}",
                                 fontSize = 12.sp,
                                 color = AppTheme.TextSecondary
                             )
@@ -432,7 +432,7 @@ private fun OverallAssessmentCard(analysis: UpachayaTransitAnalysis) {
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        "Level: ${assessment.level.name}",
+                        "${stringResource(StringKeyDosha.QUALITY_LABEL)}: ${assessment.level.name}",
                         fontSize = 14.sp,
                         color = iconColor,
                         fontWeight = FontWeight.Medium
@@ -448,7 +448,7 @@ private fun OverallAssessmentCard(analysis: UpachayaTransitAnalysis) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Transit Strength",
+                    stringResource(StringKeyDosha.UPACHAYA_SIGNIFICANCE),
                     fontSize = 12.sp,
                     color = AppTheme.TextMuted
                 )
@@ -734,7 +734,7 @@ private fun SignificantTransitCard(transit: UpachayaTransit, language: Language)
                     }
                 }
                 Text(
-                    "${transit.transitSign.getLocalizedName(language)} • ${getHouseName(transit.houseFromReference)} from ${transit.reference.name}",
+                    "${transit.transitSign.getLocalizedName(language)} • ${getHouseName(transit.houseFromReference, language)} ${stringResource(StringKeyDosha.FROM_LABEL)} ${transit.reference.name}",
                     fontSize = 12.sp,
                     color = AppTheme.TextMuted
                 )
@@ -819,7 +819,7 @@ private fun HouseAnalysisTab(analysis: UpachayaTransitAnalysis, language: Langua
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Upachaya houses (3, 6, 10, 11) are 'growth houses' where planets, especially malefics, give increasingly positive results over time. Transits through these houses bring opportunities for growth and success.",
+                        stringResource(StringKeyDosha.UPACHAYA_TRANSIT_ABOUT_DESC),
                         fontSize = 13.sp,
                         color = AppTheme.TextSecondary,
                         lineHeight = 20.sp
@@ -886,7 +886,7 @@ private fun HouseAnalysisCard(analysis: HouseTransitAnalysis, language: Language
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            "${analysis.houseName} House",
+                            "${getHouseName(analysis.house, language)} ${stringResource(StringKeyDosha.HOUSE_LABEL)}",
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
                         )
@@ -917,7 +917,7 @@ private fun HouseAnalysisCard(analysis: HouseTransitAnalysis, language: Language
             // Transiting Planets
             if (analysis.transitingPlanets.isNotEmpty()) {
                 Text(
-                    "Transiting Planets:",
+                    stringResource(StringKeyDosha.PLANETS_TITLE),
                     fontSize = 12.sp,
                     color = AppTheme.TextMuted
                 )
@@ -1077,7 +1077,7 @@ private fun TransitDetailCard(transit: UpachayaTransit, language: Language) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "${getHouseName(transit.houseFromReference)} House",
+                        "${getHouseName(transit.houseFromReference, language)} ${stringResource(StringKeyDosha.HOUSE_LABEL)}",
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
                         color = if (transit.isInUpachaya) AppTheme.SuccessColor else AppTheme.TextSecondary
@@ -1197,7 +1197,7 @@ private fun UpcomingTransitsTab(upcomingTransits: List<UpcomingUpachayaTransit>,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                "Key planetary transits to watch for Upachaya house activation",
+                stringResource(StringKeyDosha.UPACHAYA_TRANSIT_SUBTITLE),
                 fontSize = 13.sp,
                 color = AppTheme.TextMuted,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -1210,7 +1210,7 @@ private fun UpcomingTransitsTab(upcomingTransits: List<UpcomingUpachayaTransit>,
         groupedByHouse.forEach { (house, transits) ->
             item {
                 Text(
-                    "${getHouseName(house)} House Transits",
+                    "${getHouseName(house, language)} ${stringResource(StringKeyDosha.UPACHAYA_TRANSITS_LABEL)}",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = AppTheme.TextPrimary,
@@ -1283,11 +1283,14 @@ private fun UpcomingTransitCard(transit: UpcomingUpachayaTransit, language: Lang
 }
 
 // Helper function
-private fun getHouseName(house: Int): String {
-    return when (house) {
-        1 -> "1st"
-        2 -> "2nd"
-        3 -> "3rd"
-        else -> "${house}th"
+private fun getHouseName(house: Int, language: Language): String {
+    return when (language) {
+        Language.NEPALI -> "$house भाव"
+        else -> when (house) {
+            1 -> "1st"
+            2 -> "2nd"
+            3 -> "3rd"
+            else -> "${house}th"
+        }
     }
 }

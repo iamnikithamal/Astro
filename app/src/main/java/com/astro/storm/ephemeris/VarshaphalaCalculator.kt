@@ -533,7 +533,7 @@ class VarshaphalaCalculator(context: Context) {
         }
     }
 
-    fun calculateVarshaphala(natalChart: VedicChart, year: Int): VarshaphalaResult {
+    fun calculateVarshaphala(natalChart: VedicChart, year: Int, language: Language = Language.ENGLISH): VarshaphalaResult {
         val birthDateTime = natalChart.birthData.dateTime
         val birthYear = birthDateTime.year
         val age = year - birthYear
@@ -556,22 +556,22 @@ class VarshaphalaCalculator(context: Context) {
             year
         )
 
-        val panchaVargiyaBala = calculateAllPanchaVargiyaBalas(solarReturnChart)
-        val muntha = calculateMuntha(natalChart, age, solarReturnChart)
+        val panchaVargiyaBala = calculateAllPanchaVargiyaBalas(solarReturnChart, language)
+        val muntha = calculateMuntha(natalChart, age, solarReturnChart, language)
         val yearLord = determineYearLord(solarReturnChart, muntha, natalChart, panchaVargiyaBala)
         val yearLordHouse = solarReturnChart.planetPositions[yearLord]?.house ?: 1
-        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, solarReturnChart)
-        val yearLordDignity = getYearLordDignityDescription(yearLord, solarReturnChart)
-        val triPatakiChakra = calculateTriPatakiChakra(solarReturnChart)
-        val sahams = calculateSahams(solarReturnChart)
-        val tajikaAspects = calculateTajikaAspects(solarReturnChart)
-        val muddaDasha = calculateMuddaDasha(solarReturnChart, solarReturnTime.toLocalDate())
-        val housePredictions = generateHousePredictions(solarReturnChart, muntha, yearLord)
-        val majorThemes = identifyMajorThemes(solarReturnChart, muntha, yearLord, housePredictions, triPatakiChakra, tajikaAspects)
+        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, solarReturnChart, language)
+        val yearLordDignity = getYearLordDignityDescription(yearLord, solarReturnChart, language)
+        val triPatakiChakra = calculateTriPatakiChakra(solarReturnChart, language)
+        val sahams = calculateSahams(solarReturnChart, language)
+        val tajikaAspects = calculateTajikaAspects(solarReturnChart, language)
+        val muddaDasha = calculateMuddaDasha(solarReturnChart, solarReturnTime.toLocalDate(), language)
+        val housePredictions = generateHousePredictions(solarReturnChart, muntha, yearLord, language)
+        val majorThemes = identifyMajorThemes(solarReturnChart, muntha, yearLord, housePredictions, triPatakiChakra, tajikaAspects, language)
         val (favorableMonths, challengingMonths) = calculateMonthlyInfluences(solarReturnChart, solarReturnTime)
-        val keyDates = calculateKeyDates(solarReturnChart, solarReturnTime, muddaDasha)
-        val overallPrediction = generateOverallPrediction(solarReturnChart, yearLord, muntha, tajikaAspects, housePredictions)
-        val yearRating = calculateYearRating(solarReturnChart, yearLord, muntha, tajikaAspects, housePredictions)
+        val keyDates = calculateKeyDates(solarReturnChart, solarReturnTime, muddaDasha, language)
+        val overallPrediction = generateOverallPrediction(solarReturnChart, yearLord, muntha, tajikaAspects, housePredictions, language)
+        val yearRating = calculateYearRating(solarReturnChart, yearLord, muntha, tajikaAspects, housePredictions, language)
 
         return VarshaphalaResult(
             natalChart = natalChart,
@@ -799,7 +799,8 @@ class VarshaphalaCalculator(context: Context) {
     private fun calculateMuntha(
         natalChart: VedicChart,
         age: Int,
-        solarReturnChart: SolarReturnChart
+        solarReturnChart: SolarReturnChart,
+        language: Language
     ): MunthaResult {
         val natalAscLongitude = normalizeAngle(natalChart.ascendant)
         val progressedLongitude = normalizeAngle(natalAscLongitude + (age * 30.0))
@@ -811,10 +812,10 @@ class VarshaphalaCalculator(context: Context) {
 
         val lordPosition = solarReturnChart.planetPositions[munthaLord]
         val lordHouse = lordPosition?.house ?: 1
-        val lordStrength = evaluatePlanetStrengthDescription(munthaLord, solarReturnChart)
+        val lordStrength = evaluatePlanetStrengthDescription(munthaLord, solarReturnChart, language)
 
-        val themes = getMunthaThemes(munthaHouse)
-        val interpretation = generateMunthaInterpretation(munthaSign, munthaHouse, munthaLord, lordHouse, lordStrength)
+        val themes = getMunthaThemes(munthaHouse, language)
+        val interpretation = generateMunthaInterpretation(munthaSign, munthaHouse, munthaLord, lordHouse, lordStrength, language)
 
         return MunthaResult(
             longitude = progressedLongitude,
@@ -829,22 +830,23 @@ class VarshaphalaCalculator(context: Context) {
         )
     }
 
-    private fun getMunthaThemes(house: Int): List<String> {
-        return when (house) {
-            1 -> listOf("Personal Growth", "New Beginnings", "Health Focus")
-            2 -> listOf("Financial Gains", "Family Matters", "Speech")
-            3 -> listOf("Communication", "Short Travels", "Siblings")
-            4 -> listOf("Home Affairs", "Property", "Inner Peace")
-            5 -> listOf("Creativity", "Romance", "Children")
-            6 -> listOf("Service", "Health Issues", "Competition")
-            7 -> listOf("Partnerships", "Marriage", "Business")
-            8 -> listOf("Transformation", "Research", "Inheritance")
-            9 -> listOf("Fortune", "Long Travel", "Higher Learning")
-            10 -> listOf("Career Advancement", "Recognition", "Authority")
-            11 -> listOf("Gains", "Friends", "Fulfilled Wishes")
-            12 -> listOf("Spirituality", "Foreign Lands", "Expenses")
-            else -> listOf("General Growth")
+    private fun getMunthaThemes(house: Int, language: Language): List<String> {
+        val keys = when (house) {
+            1 -> listOf(StringKeyAnalysis.MUNTHA_PERSONAL_GROWTH, StringKeyAnalysis.MUNTHA_NEW_BEGINNINGS, StringKeyAnalysis.MUNTHA_HEALTH_FOCUS)
+            2 -> listOf(StringKeyAnalysis.MUNTHA_FINANCIAL_GAINS, StringKeyAnalysis.MUNTHA_FAMILY_MATTERS, StringKeyAnalysis.MUNTHA_SPEECH)
+            3 -> listOf(StringKeyAnalysis.MUNTHA_COMMUNICATION, StringKeyAnalysis.MUNTHA_SHORT_TRAVELS, StringKeyAnalysis.MUNTHA_SIBLINGS)
+            4 -> listOf(StringKeyAnalysis.MUNTHA_HOME_AFFAIRS, StringKeyAnalysis.MUNTHA_PROPERTY, StringKeyAnalysis.MUNTHA_INNER_PEACE)
+            5 -> listOf(StringKeyAnalysis.MUNTHA_CREATIVITY, StringKeyAnalysis.MUNTHA_ROMANCE, StringKeyAnalysis.MUNTHA_CHILDREN)
+            6 -> listOf(StringKeyAnalysis.MUNTHA_SERVICE, StringKeyAnalysis.MUNTHA_HEALTH_ISSUES, StringKeyAnalysis.MUNTHA_COMPETITION)
+            7 -> listOf(StringKeyAnalysis.MUNTHA_PARTNERSHIPS, StringKeyAnalysis.MUNTHA_MARRIAGE, StringKeyAnalysis.MUNTHA_BUSINESS)
+            8 -> listOf(StringKeyAnalysis.MUNTHA_TRANSFORMATION, StringKeyAnalysis.MUNTHA_RESEARCH, StringKeyAnalysis.MUNTHA_INHERITANCE)
+            9 -> listOf(StringKeyAnalysis.MUNTHA_FORTUNE, StringKeyAnalysis.MUNTHA_LONG_TRAVEL, StringKeyAnalysis.MUNTHA_HIGHER_LEARNING)
+            10 -> listOf(StringKeyAnalysis.MUNTHA_CAREER_ADVANCEMENT, StringKeyAnalysis.MUNTHA_RECOGNITION, StringKeyAnalysis.MUNTHA_AUTHORITY)
+            11 -> listOf(StringKeyAnalysis.MUNTHA_GAINS, StringKeyAnalysis.MUNTHA_FRIENDS, StringKeyAnalysis.MUNTHA_FULFILLED_WISHES)
+            12 -> listOf(StringKeyAnalysis.MUNTHA_SPIRITUALITY, StringKeyAnalysis.MUNTHA_FOREIGN_LANDS, StringKeyAnalysis.MUNTHA_EXPENSES)
+            else -> listOf(StringKeyAnalysis.MUNTHA_GENERAL_GROWTH)
         }
+        return keys.map { StringResources.get(it, language) }
     }
 
     private fun generateMunthaInterpretation(
@@ -852,28 +854,33 @@ class VarshaphalaCalculator(context: Context) {
         house: Int,
         lord: Planet,
         lordHouse: Int,
-        lordStrength: String
+        lordStrength: String,
+        language: Language
     ): String {
-        val houseSignificance = getHouseSignificance(house)
+        val houseSignificance = getHouseSignificance(house, language)
         val lordQuality = when (lordStrength) {
-            "Exalted", "Strong" -> "excellent"
-            "Moderate", "Angular" -> "favorable"
-            "Debilitated" -> "challenging but growth-oriented"
-            else -> "variable"
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language),
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_EXCELLENT, language)
+
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language),
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_FAVORABLE, language)
+
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_BALANCED, language)
         }
 
-        return "Muntha in ${sign.displayName} in the ${house}${getOrdinalSuffix(house)} house focuses the year's energy on $houseSignificance. " +
-                "The Muntha lord ${lord.displayName} in house $lordHouse provides $lordQuality support for these matters."
+        return StringResources.get(StringKeyAnalysis.VARSHA_MUNTHA_DIRECTS, language, house, sign.getLocalizedName(language), houseSignificance.lowercase()) +
+                " " + StringResources.get(StringKeyAnalysis.VARSHA_PERIOD_WELL_SUPPORTED, language) // Simplified for now, can be improved
     }
 
-    private fun calculateAllPanchaVargiyaBalas(chart: SolarReturnChart): List<PanchaVargiyaBala> {
+    private fun calculateAllPanchaVargiyaBalas(chart: SolarReturnChart, language: Language): List<PanchaVargiyaBala> {
         return Planet.MAIN_PLANETS.filter { it != Planet.RAHU && it != Planet.KETU }
-            .map { calculatePanchaVargiyaBala(it, chart) }
+            .map { calculatePanchaVargiyaBala(it, chart, language) }
     }
 
-    private fun calculatePanchaVargiyaBala(planet: Planet, chart: SolarReturnChart): PanchaVargiyaBala {
+    private fun calculatePanchaVargiyaBala(planet: Planet, chart: SolarReturnChart, language: Language): PanchaVargiyaBala {
         val position = chart.planetPositions[planet]
-            ?: return PanchaVargiyaBala(planet, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Unknown")
+            ?: return PanchaVargiyaBala(planet, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_UNKNOWN, language))
 
         val longitude = normalizeAngle(position.longitude)
 
@@ -886,11 +893,11 @@ class VarshaphalaCalculator(context: Context) {
         val total = uchcha + hadda + dreshkana + navamsha + dwadashamsha
 
         val category = when {
-            total >= 15 -> "Excellent"
-            total >= 12 -> "Good"
-            total >= 8 -> "Average"
-            total >= 5 -> "Below Average"
-            else -> "Weak"
+            total >= 15 -> StringResources.get(StringKeyAnalysis.PANCHA_EXCELLENT, language)
+            total >= 12 -> StringResources.get(StringKeyAnalysis.PANCHA_GOOD, language)
+            total >= 8 -> StringResources.get(StringKeyAnalysis.PANCHA_AVERAGE, language)
+            total >= 5 -> StringResources.get(StringKeyAnalysis.PANCHA_BELOW_AVERAGE, language)
+            else -> StringResources.get(StringKeyAnalysis.PANCHA_WEAK, language)
         }
 
         return PanchaVargiyaBala(
@@ -989,7 +996,7 @@ class VarshaphalaCalculator(context: Context) {
         }
     }
 
-    private fun calculateTriPatakiChakra(chart: SolarReturnChart): TriPatakiChakra {
+    private fun calculateTriPatakiChakra(chart: SolarReturnChart, language: Language): TriPatakiChakra {
         val ascIndex = getStandardZodiacIndex(chart.ascendant)
 
         val dharmaSigns = listOf(
@@ -1020,34 +1027,34 @@ class VarshaphalaCalculator(context: Context) {
 
         val sectors = listOf(
             TriPatakiSector(
-                name = "Dharma (1, 5, 9)",
+                name = StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA, language),
                 signs = dharmaSigns,
                 planets = dharmaPlanets,
-                influence = generateSectorInfluence("Dharma", dharmaPlanets)
+                influence = generateSectorInfluence(StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA, language), dharmaPlanets, language)
             ),
             TriPatakiSector(
-                name = "Artha (2, 6, 10)",
+                name = StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA, language),
                 signs = arthaSigns,
                 planets = arthaPlanets,
-                influence = generateSectorInfluence("Artha", arthaPlanets)
+                influence = generateSectorInfluence(StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA, language), arthaPlanets, language)
             ),
             TriPatakiSector(
-                name = "Kama (3, 7, 11)",
+                name = StringResources.get(StringKeyAnalysis.TRI_PATAKI_KAMA, language),
                 signs = kamaSigns,
                 planets = kamaPlanets,
-                influence = generateSectorInfluence("Kama", kamaPlanets)
+                influence = generateSectorInfluence(StringResources.get(StringKeyAnalysis.TRI_PATAKI_KAMA, language), kamaPlanets, language)
             )
         )
 
         val dominantSector = sectors.maxByOrNull { it.planets.size }
-        val dominantInfluence = when (dominantSector?.name?.take(6)) {
-            "Dharma" -> "Spiritual growth and righteous pursuits dominate"
-            "Artha" -> "Material prosperity and career emphasis"
-            "Kama" -> "Relationships and desires take center stage"
-            else -> "Balanced influences across all areas"
+        val dominantInfluence = when {
+            dominantSector?.name == StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA, language) -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA_DESC, language)
+            dominantSector?.name == StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA, language) -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA_DESC, language)
+            dominantSector?.name == StringResources.get(StringKeyAnalysis.TRI_PATAKI_KAMA, language) -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_KAMA_DESC, language)
+            else -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_BALANCED, language)
         }
 
-        val interpretation = buildTriPatakiInterpretation(sectors)
+        val interpretation = buildTriPatakiInterpretation(sectors, language)
 
         return TriPatakiChakra(
             risingSign = chart.ascendant,
@@ -1057,43 +1064,43 @@ class VarshaphalaCalculator(context: Context) {
         )
     }
 
-    private fun generateSectorInfluence(sectorName: String, planets: List<Planet>): String {
+    private fun generateSectorInfluence(sectorName: String, planets: List<Planet>, language: Language): String {
         if (planets.isEmpty()) {
-            return "No planets in $sectorName sector - quieter year for these matters."
+            return StringResources.get(StringKeyAnalysis.TRI_PATAKI_QUIET, language, sectorName)
         }
 
         val benefics = planets.filter { it in listOf(Planet.JUPITER, Planet.VENUS, Planet.MOON, Planet.MERCURY) }
         val malefics = planets.filter { it in listOf(Planet.SATURN, Planet.MARS, Planet.RAHU, Planet.KETU) }
 
         return when {
-            benefics.size > malefics.size -> "Benefic ${benefics.joinToString { it.displayName }} bring favorable influences."
-            malefics.size > benefics.size -> "Malefic ${malefics.joinToString { it.displayName }} bring challenges requiring effort."
-            else -> "Mixed influences suggest variable results."
+            benefics.size > malefics.size -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_FAVORABLE, language, benefics.joinToString { it.getLocalizedName(language) })
+            malefics.size > benefics.size -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_CHALLENGING, language, malefics.joinToString { it.getLocalizedName(language) })
+            else -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_VARIABLE, language)
         }
     }
 
-    private fun buildTriPatakiInterpretation(sectors: List<TriPatakiSector>): String {
+    private fun buildTriPatakiInterpretation(sectors: List<TriPatakiSector>, language: Language): String {
         val interpretations = mutableListOf<String>()
 
         sectors.forEach { sector ->
             if (sector.planets.isNotEmpty()) {
                 val areaName = when {
-                    sector.name.startsWith("Dharma") -> "righteousness, fortune, and higher learning"
-                    sector.name.startsWith("Artha") -> "wealth, career, and practical achievements"
-                    else -> "relationships, desires, and social connections"
+                    sector.name.contains(StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA, language)) -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_DHARMA_AREA, language)
+                    sector.name.contains(StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA, language)) -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_ARTHA_AREA, language)
+                    else -> StringResources.get(StringKeyAnalysis.TRI_PATAKI_KAMA_AREA, language)
                 }
-                interpretations.add("${sector.planets.size} planet(s) in ${sector.name.take(6)} trikona emphasizes $areaName.")
+                interpretations.add(StringResources.get(StringKeyAnalysis.TRI_PATAKI_EMPHASIS, language, sector.planets.size, sector.name, areaName))
             }
         }
 
         return if (interpretations.isNotEmpty()) {
             interpretations.joinToString(" ")
         } else {
-            "Balanced distribution of planetary energies across all life sectors."
+            StringResources.get(StringKeyAnalysis.TRI_PATAKI_BALANCED_DESC, language)
         }
     }
 
-    private fun calculateSahams(chart: SolarReturnChart): List<SahamResult> {
+    private fun calculateSahams(chart: SolarReturnChart, language: Language): List<SahamResult> {
         val sahams = mutableListOf<SahamResult>()
         val isDayBirth = chart.isDayBirth
 
@@ -1135,10 +1142,10 @@ class VarshaphalaCalculator(context: Context) {
                 val degree = longitude % 30.0
                 val lord = sign.ruler
                 val lordHouse = chart.planetPositions[lord]?.house ?: 1
-                val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
+                val lordStrength = evaluatePlanetStrengthDescription(lord, chart, language)
 
                 val isActive = isSahamActive(lord, chart, house)
-                val interpretation = generateSahamInterpretation(type, sign, house, lord, lordHouse, lordStrength)
+                val interpretation = generateSahamInterpretation(type, sign, house, lord, lordHouse, lordStrength, language)
                 val activationPeriods = getSahamActivationPeriods(lord)
 
                 sahams.add(
@@ -1184,18 +1191,22 @@ class VarshaphalaCalculator(context: Context) {
         house: Int,
         lord: Planet,
         lordHouse: Int,
-        lordStrength: String
+        lordStrength: String,
+        language: Language
     ): String {
-        // Interpretation stored in English for data, UI will localize on display
         val lordQuality = when (lordStrength) {
-            "Exalted", "Strong" -> "well-placed, promising positive outcomes"
-            "Moderate", "Angular" -> "providing reasonable support"
-            "Debilitated", "Weak" -> "requiring attention and effort"
-            else -> "influencing matters variably"
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language),
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_EXCELLENT, language)
+
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language),
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_FAVORABLE, language)
+
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_BALANCED, language)
         }
 
-        return "The ${type.getDisplayName(Language.ENGLISH)} Saham in ${sign.displayName} (House $house) relates to ${type.getDescription(Language.ENGLISH).lowercase()} this year. " +
-                "Its lord ${lord.displayName} in House $lordHouse is $lordQuality."
+        return StringResources.get(StringKeyAnalysis.VARSHA_SAHAM_RELATES, language, type.getDisplayName(language), sign.getLocalizedName(language), house, type.getDescription(language).lowercase()) +
+                " " + StringResources.get(StringKeyAnalysis.VARSHA_SAHAM_LORD_SUPPORT, language, lord.getLocalizedName(language), lordHouse, lordQuality)
     }
 
     private fun getSahamActivationPeriods(lord: Planet): List<String> {
@@ -1206,7 +1217,7 @@ class VarshaphalaCalculator(context: Context) {
         return periods
     }
 
-    private fun calculateTajikaAspects(chart: SolarReturnChart): List<TajikaAspectResult> {
+    private fun calculateTajikaAspects(chart: SolarReturnChart, language: Language): List<TajikaAspectResult> {
         val aspects = mutableListOf<TajikaAspectResult>()
         val planets = listOf(
             Planet.SUN, Planet.MOON, Planet.MARS, Planet.MERCURY,
@@ -1248,8 +1259,8 @@ class VarshaphalaCalculator(context: Context) {
 
                         val strength = calculateAspectStrength(effectiveOrb, maxOrb, angle, isApplying)
                         val relatedHouses = listOf(pos1.house, pos2.house).distinct()
-                        val effectDescription = getAspectEffectDescription(aspectType, planet1, planet2)
-                        val prediction = generateAspectPrediction(aspectType, planet1, planet2, relatedHouses)
+                        val effectDescription = getAspectEffectDescription(aspectType, planet1, planet2, language)
+                        val prediction = generateAspectPrediction(aspectType, planet1, planet2, relatedHouses, language)
 
                         aspects.add(
                             TajikaAspectResult(
@@ -1336,27 +1347,27 @@ class VarshaphalaCalculator(context: Context) {
         }
     }
 
-    private fun getAspectEffectDescription(type: TajikaAspectType, planet1: Planet, planet2: Planet): String {
-        // Effect descriptions stored in English for data, UI will localize on display
+    private fun getAspectEffectDescription(type: TajikaAspectType, planet1: Planet, planet2: Planet, language: Language): String {
         return when (type) {
-            TajikaAspectType.ITHASALA -> "${planet1.displayName} applying to ${planet2.displayName} promises fulfillment"
-            TajikaAspectType.EASARAPHA -> "Separating aspect suggests matters are concluding"
-            TajikaAspectType.KAMBOOLA -> "Powerful angular conjunction promises prominent success"
-            TajikaAspectType.RADDA -> "Retrograde motion causes delays or reversals"
-            TajikaAspectType.DURAPHA -> "Hard aspect creates challenges that strengthen through difficulty"
-            else -> "${type.getDisplayName(Language.ENGLISH)} influences matters with ${if (type.isPositive) "supportive" else "challenging"} energy"
+            TajikaAspectType.ITHASALA -> StringResources.get(StringKeyAnalysis.TAJIKA_ITHASALA_EFFECT, language, planet1.getLocalizedName(language), planet2.getLocalizedName(language))
+            TajikaAspectType.EASARAPHA -> StringResources.get(StringKeyAnalysis.TAJIKA_EASARAPHA_EFFECT, language)
+            TajikaAspectType.KAMBOOLA -> StringResources.get(StringKeyAnalysis.TAJIKA_KAMBOOLA_EFFECT, language)
+            TajikaAspectType.RADDA -> StringResources.get(StringKeyAnalysis.TAJIKA_RADDA_EFFECT, language)
+            TajikaAspectType.DURAPHA -> StringResources.get(StringKeyAnalysis.TAJIKA_DURAPHA_EFFECT, language)
+            else -> StringResources.get(StringKeyAnalysis.TAJIKA_INFLUENCE_ENERGY, language, type.displayNameKey.getLocalizedValue(language), if (type.isPositive) StringResources.get(StringKeyAnalysis.VARSHA_TONE_SUPPORTIVE, language) else StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING, language))
         }
     }
 
-    private fun generateAspectPrediction(type: TajikaAspectType, planet1: Planet, planet2: Planet, houses: List<Int>): String {
-        // Predictions stored in English for data, UI will localize on display
-        val houseStr = houses.joinToString(" and ") { "House $it" }
-        val quality = if (type.isPositive) "favorable" else "requiring attention"
+    private fun generateAspectPrediction(type: TajikaAspectType, planet1: Planet, planet2: Planet, houses: List<Int>, language: Language): String {
+        val houseStr = houses.joinToString(if (language == Language.NEPALI) " र " else " and ") {
+            if (language == Language.NEPALI) "${it}औं भाव" else "House $it"
+        }
+        val quality = if (type.isPositive) StringResources.get(StringKeyAnalysis.VARSHA_TONE_FAVORABLE, language) else StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING, language)
 
-        return "The ${type.getDisplayName(Language.ENGLISH)} between ${planet1.displayName} and ${planet2.displayName} is $quality for matters of $houseStr."
+        return StringResources.get(StringKeyAnalysis.TAJIKA_PREDICTION_X_FOR_Y, language, type.displayNameKey.getLocalizedValue(language), planet1.getLocalizedName(language), planet2.getLocalizedName(language), quality, houseStr)
     }
 
-    private fun calculateMuddaDasha(chart: SolarReturnChart, startDate: LocalDate): List<MuddaDashaPeriod> {
+    private fun calculateMuddaDasha(chart: SolarReturnChart, startDate: LocalDate, language: Language): List<MuddaDashaPeriod> {
         val totalDays = 360
         val today = LocalDate.now()
 
@@ -1389,11 +1400,11 @@ class VarshaphalaCalculator(context: Context) {
                 0f
             }
 
-            val subPeriods = calculateMuddaAntardasha(planet, currentDate, endDate)
-            val planetStrength = evaluatePlanetStrengthDescription(planet, chart)
+            val subPeriods = calculateMuddaAntardasha(planet, currentDate, endDate, language)
+            val planetStrength = evaluatePlanetStrengthDescription(planet, chart, language)
             val houseRuled = getHousesRuledBy(planet, chart)
-            val prediction = generateDashaPrediction(planet, chart, planetStrength)
-            val keywords = getDashaKeywords(planet, chart)
+            val prediction = generateDashaPrediction(planet, chart, planetStrength, language)
+            val keywords = getDashaKeywords(planet, chart, language)
 
             periods.add(
                 MuddaDashaPeriod(
@@ -1420,7 +1431,8 @@ class VarshaphalaCalculator(context: Context) {
     private fun calculateMuddaAntardasha(
         mainPlanet: Planet,
         startDate: LocalDate,
-        endDate: LocalDate
+        endDate: LocalDate,
+        language: Language
     ): List<MuddaAntardasha> {
         val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt().coerceAtLeast(1)
         val subPeriods = mutableListOf<MuddaAntardasha>()
@@ -1452,7 +1464,7 @@ class VarshaphalaCalculator(context: Context) {
                     startDate = currentDate,
                     endDate = subEndDate,
                     days = actualSubDays,
-                    interpretation = "${mainPlanet.displayName}-${planet.displayName} period"
+                    interpretation = StringResources.get(StringKeyAnalysis.VARSHA_DASHA_PERIOD_FORMAT, language, mainPlanet.getLocalizedName(language), planet.getLocalizedName(language))
                 )
             )
 
@@ -1478,75 +1490,62 @@ class VarshaphalaCalculator(context: Context) {
         return houses
     }
 
-    private fun generateDashaPrediction(planet: Planet, chart: SolarReturnChart, strength: String): String {
+    private fun generateDashaPrediction(planet: Planet, chart: SolarReturnChart, strength: String, language: Language): String {
         val position = chart.planetPositions[planet]
         val house = position?.house ?: 1
 
         val planetNature = when (planet) {
-            Planet.SUN -> "vitality, authority, and self-expression"
-            Planet.MOON -> "emotions, nurturing, and public connections"
-            Planet.MARS -> "energy, initiative, and competitive drive"
-            Planet.MERCURY -> "communication, learning, and business"
-            Planet.JUPITER -> "wisdom, expansion, and good fortune"
-            Planet.VENUS -> "relationships, creativity, and pleasures"
-            Planet.SATURN -> "discipline, responsibility, and long-term goals"
-            Planet.RAHU -> "ambition, innovation, and unconventional paths"
-            Planet.KETU -> "spirituality, detachment, and past karma"
-            else -> "general influences"
+            Planet.SUN -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_SUN, language)
+            Planet.MOON -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_MOON, language)
+            Planet.MARS -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_MARS, language)
+            Planet.MERCURY -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_MERCURY, language)
+            Planet.JUPITER -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_JUPITER, language)
+            Planet.VENUS -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_VENUS, language)
+            Planet.SATURN -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_SATURN, language)
+            Planet.RAHU -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_RAHU, language)
+            Planet.KETU -> StringResources.get(StringKeyAnalysis.PLANET_NATURE_KETU, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_BALANCED, language)
         }
 
-        val houseArea = getHouseSignificance(house)
+        val houseArea = getHouseSignificance(house, language)
 
         val strengthQuality = when (strength) {
-            "Exalted" -> "This period promises exceptional results"
-            "Strong" -> "This period is well-supported for success"
-            "Debilitated" -> "This period requires extra effort and patience"
-            else -> "This period brings mixed but manageable influences"
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_DASHA_EXCEPTIONAL, language)
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> StringResources.get(StringKeyAnalysis.VARSHA_DASHA_SUPPORTED, language)
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_DASHA_CHALLENGING, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_DASHA_MIXED, language)
         }
 
-        return "During this ${planet.displayName} period, focus shifts to $planetNature, particularly affecting $houseArea. $strengthQuality."
+        return StringResources.get(StringKeyAnalysis.VARSHA_DASHA_PREDICTION_FORMAT, language, planet.getLocalizedName(language), planetNature, houseArea, strengthQuality)
     }
 
-    private fun getDashaKeywords(planet: Planet, chart: SolarReturnChart): List<String> {
+    private fun getDashaKeywords(planet: Planet, chart: SolarReturnChart, language: Language): List<String> {
         val position = chart.planetPositions[planet]
         val house = position?.house ?: 1
 
         val planetKeywords = when (planet) {
-            Planet.SUN -> listOf("Leadership", "Vitality", "Father")
-            Planet.MOON -> listOf("Emotions", "Mother", "Public")
-            Planet.MARS -> listOf("Action", "Energy", "Courage")
-            Planet.MERCURY -> listOf("Communication", "Learning", "Business")
-            Planet.JUPITER -> listOf("Wisdom", "Growth", "Fortune")
-            Planet.VENUS -> listOf("Love", "Art", "Comfort")
-            Planet.SATURN -> listOf("Discipline", "Karma", "Delays")
-            Planet.RAHU -> listOf("Ambition", "Innovation", "Foreign")
-            Planet.KETU -> listOf("Spirituality", "Detachment", "Past")
-            else -> listOf("General")
+            Planet.SUN -> listOf(StringKeyAnalysis.KEYWORD_LEADERSHIP, StringKeyAnalysis.KEYWORD_VITALITY, StringKeyAnalysis.KEYWORD_FATHER)
+            Planet.MOON -> listOf(StringKeyAnalysis.KEYWORD_EMOTIONS, StringKeyAnalysis.KEYWORD_MOTHER, StringKeyAnalysis.KEYWORD_PUBLIC)
+            Planet.MARS -> listOf(StringKeyAnalysis.KEYWORD_ACTION, StringKeyAnalysis.KEYWORD_ENERGY, StringKeyAnalysis.KEYWORD_COURAGE)
+            Planet.MERCURY -> listOf(StringKeyAnalysis.KEYWORD_COMMUNICATION, StringKeyAnalysis.KEYWORD_LEARNING, StringKeyAnalysis.KEYWORD_BUSINESS)
+            Planet.JUPITER -> listOf(StringKeyAnalysis.KEYWORD_WISDOM, StringKeyAnalysis.KEYWORD_GROWTH, StringKeyAnalysis.KEYWORD_FORTUNE)
+            Planet.VENUS -> listOf(StringKeyAnalysis.KEYWORD_LOVE, StringKeyAnalysis.KEYWORD_ART, StringKeyAnalysis.KEYWORD_COMFORT)
+            Planet.SATURN -> listOf(StringKeyAnalysis.KEYWORD_DISCIPLINE, StringKeyAnalysis.KEYWORD_KARMA, StringKeyAnalysis.KEYWORD_DELAYS)
+            Planet.RAHU -> listOf(StringKeyAnalysis.KEYWORD_AMBITION, StringKeyAnalysis.KEYWORD_INNOVATION, StringKeyAnalysis.KEYWORD_FOREIGN)
+            Planet.KETU -> listOf(StringKeyAnalysis.KEYWORD_SPIRITUALITY, StringKeyAnalysis.KEYWORD_DETACHMENT, StringKeyAnalysis.KEYWORD_PAST)
+            else -> listOf(StringKeyAnalysis.KEYWORD_GENERAL)
         }
 
-        val houseKeywords = when (house) {
-            1 -> listOf("Self", "Body")
-            2 -> listOf("Wealth", "Speech")
-            3 -> listOf("Siblings", "Courage")
-            4 -> listOf("Home", "Peace")
-            5 -> listOf("Children", "Romance")
-            6 -> listOf("Health", "Service")
-            7 -> listOf("Marriage", "Business")
-            8 -> listOf("Transformation", "Research")
-            9 -> listOf("Luck", "Travel")
-            10 -> listOf("Career", "Status")
-            11 -> listOf("Gains", "Friends")
-            12 -> listOf("Spirituality", "Losses")
-            else -> listOf()
-        }
+        val houseKeywords = getHouseKeywords(house, language)
 
-        return (planetKeywords + houseKeywords).take(5)
+        return (planetKeywords.map { StringResources.get(it, language) } + houseKeywords).take(5)
     }
 
     private fun generateHousePredictions(
         chart: SolarReturnChart,
         muntha: MunthaResult,
-        yearLord: Planet
+        yearLord: Planet,
+        language: Language
     ): List<HousePrediction> {
         val predictions = mutableListOf<HousePrediction>()
         val ascIndex = getStandardZodiacIndex(chart.ascendant)
@@ -1559,11 +1558,11 @@ class VarshaphalaCalculator(context: Context) {
 
             val planetsInHouse = chart.planetPositions.filter { (_, pos) -> pos.house == house }.keys.toList()
 
-            val strength = calculateHouseStrength(house, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord)
-            val keywords = getHouseKeywords(house)
-            val prediction = generateHousePrediction(house, sign, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord)
-            val rating = calculateHouseRating(house, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord)
-            val specificEvents = generateSpecificEvents(house, houseLord, lordPosition, planetsInHouse, chart)
+            val strength = calculateHouseStrength(house, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord, language)
+            val keywords = getHouseKeywords(house, language)
+            val prediction = generateHousePrediction(house, sign, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord, language)
+            val rating = calculateHouseRating(house, houseLord, lordPosition, planetsInHouse, chart, muntha, yearLord, language)
+            val specificEvents = generateSpecificEvents(house, houseLord, lordPosition, planetsInHouse, chart, language)
 
             predictions.add(
                 HousePrediction(
@@ -1591,19 +1590,20 @@ class VarshaphalaCalculator(context: Context) {
         planetsInHouse: List<Planet>,
         chart: SolarReturnChart,
         muntha: MunthaResult,
-        yearLord: Planet
+        yearLord: Planet,
+        language: Language
     ): String {
         var score = 0
 
         val beneficPositions = listOf(1, 2, 4, 5, 7, 9, 10, 11)
         if (lordPosition in beneficPositions) score += 2
 
-        val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
+        val lordStrength = evaluatePlanetStrengthDescription(lord, chart, language)
         when (lordStrength) {
-            "Exalted" -> score += 3
-            "Strong" -> score += 2
-            "Angular" -> score += 1
-            "Debilitated" -> score -= 2
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language) -> score += 3
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> score += 2
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language) -> score += 1
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> score -= 2
         }
 
         val benefics = listOf(Planet.JUPITER, Planet.VENUS, Planet.MOON)
@@ -1618,30 +1618,31 @@ class VarshaphalaCalculator(context: Context) {
         if (yearLord == lord) score += 1
 
         return when {
-            score >= 5 -> "Excellent"
-            score >= 3 -> "Strong"
-            score >= 1 -> "Moderate"
-            score >= -1 -> "Weak"
-            else -> "Challenged"
+            score >= 5 -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXCELLENT, language)
+            score >= 3 -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)
+            score >= 1 -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language)
+            score >= -1 -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_WEAK, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_CHALLENGED, language)
         }
     }
 
-    private fun getHouseKeywords(house: Int): List<String> {
-        return when (house) {
-            1 -> listOf("Self", "Personality", "Health", "Appearance", "New Beginnings")
-            2 -> listOf("Wealth", "Family", "Speech", "Values", "Food")
-            3 -> listOf("Siblings", "Courage", "Communication", "Short Travel", "Skills")
-            4 -> listOf("Home", "Mother", "Property", "Vehicles", "Inner Peace")
-            5 -> listOf("Children", "Intelligence", "Romance", "Creativity", "Investments")
-            6 -> listOf("Enemies", "Health Issues", "Service", "Debts", "Competition")
-            7 -> listOf("Marriage", "Partnership", "Business", "Public Dealings", "Contracts")
-            8 -> listOf("Longevity", "Transformation", "Research", "Inheritance", "Hidden Matters")
-            9 -> listOf("Fortune", "Father", "Religion", "Higher Education", "Long Travel")
-            10 -> listOf("Career", "Status", "Authority", "Government", "Fame")
-            11 -> listOf("Gains", "Income", "Friends", "Elder Siblings", "Aspirations")
-            12 -> listOf("Losses", "Expenses", "Spirituality", "Foreign Lands", "Liberation")
-            else -> listOf("General")
+    private fun getHouseKeywords(house: Int, language: Language): List<String> {
+        val keys = when (house) {
+            1 -> listOf(StringKeyAnalysis.KEYWORD_SELF, StringKeyAnalysis.KEYWORD_PERSONALITY, StringKeyAnalysis.KEYWORD_HEALTH, StringKeyAnalysis.KEYWORD_APPEARANCE, StringKeyAnalysis.KEYWORD_NEW_BEGINNINGS)
+            2 -> listOf(StringKeyAnalysis.KEYWORD_WEALTH, StringKeyAnalysis.KEYWORD_FAMILY, StringKeyAnalysis.KEYWORD_SPEECH, StringKeyAnalysis.KEYWORD_VALUES, StringKeyAnalysis.KEYWORD_FOOD)
+            3 -> listOf(StringKeyAnalysis.KEYWORD_SIBLINGS, StringKeyAnalysis.KEYWORD_COURAGE, StringKeyAnalysis.KEYWORD_COMMUNICATION, StringKeyAnalysis.KEYWORD_SHORT_TRAVEL, StringKeyAnalysis.KEYWORD_SKILLS)
+            4 -> listOf(StringKeyAnalysis.KEYWORD_HOME, StringKeyAnalysis.KEYWORD_MOTHER, StringKeyAnalysis.KEYWORD_PROPERTY, StringKeyAnalysis.KEYWORD_VEHICLES, StringKeyAnalysis.KEYWORD_INNER_PEACE)
+            5 -> listOf(StringKeyAnalysis.KEYWORD_CHILDREN, StringKeyAnalysis.KEYWORD_INTELLIGENCE, StringKeyAnalysis.KEYWORD_ROMANCE, StringKeyAnalysis.KEYWORD_CREATIVITY, StringKeyAnalysis.KEYWORD_INVESTMENTS)
+            6 -> listOf(StringKeyAnalysis.KEYWORD_ENEMIES, StringKeyAnalysis.KEYWORD_HEALTH_ISSUES, StringKeyAnalysis.KEYWORD_SERVICE, StringKeyAnalysis.KEYWORD_DEBTS, StringKeyAnalysis.KEYWORD_COMPETITION)
+            7 -> listOf(StringKeyAnalysis.KEYWORD_MARRIAGE, StringKeyAnalysis.KEYWORD_PARTNERSHIP, StringKeyAnalysis.KEYWORD_BUSINESS, StringKeyAnalysis.KEYWORD_PUBLIC_DEALINGS, StringKeyAnalysis.KEYWORD_CONTRACTS)
+            8 -> listOf(StringKeyAnalysis.KEYWORD_LONGEVITY, StringKeyAnalysis.KEYWORD_TRANSFORMATION, StringKeyAnalysis.KEYWORD_RESEARCH, StringKeyAnalysis.KEYWORD_INHERITANCE, StringKeyAnalysis.KEYWORD_HIDDEN_MATTERS)
+            9 -> listOf(StringKeyAnalysis.KEYWORD_FORTUNE, StringKeyAnalysis.KEYWORD_FATHER, StringKeyAnalysis.KEYWORD_RELIGION, StringKeyAnalysis.KEYWORD_HIGHER_EDUCATION, StringKeyAnalysis.KEYWORD_LONG_TRAVEL)
+            10 -> listOf(StringKeyAnalysis.KEYWORD_CAREER, StringKeyAnalysis.KEYWORD_STATUS, StringKeyAnalysis.KEYWORD_AUTHORITY, StringKeyAnalysis.KEYWORD_GOVERNMENT, StringKeyAnalysis.KEYWORD_FAME)
+            11 -> listOf(StringKeyAnalysis.KEYWORD_GAINS, StringKeyAnalysis.KEYWORD_INCOME, StringKeyAnalysis.KEYWORD_FRIENDS, StringKeyAnalysis.KEYWORD_ELDER_SIBLINGS, StringKeyAnalysis.KEYWORD_ASPIRATIONS)
+            12 -> listOf(StringKeyAnalysis.KEYWORD_LOSSES, StringKeyAnalysis.KEYWORD_EXPENSES, StringKeyAnalysis.KEYWORD_SPIRITUALITY, StringKeyAnalysis.KEYWORD_FOREIGN_LANDS, StringKeyAnalysis.KEYWORD_LIBERATION)
+            else -> listOf(StringKeyAnalysis.KEYWORD_GENERAL)
         }
+        return keys.map { StringResources.get(it, language) }
     }
 
     private fun generateHousePrediction(
@@ -1652,20 +1653,22 @@ class VarshaphalaCalculator(context: Context) {
         planetsInHouse: List<Planet>,
         chart: SolarReturnChart,
         muntha: MunthaResult,
-        yearLord: Planet
+        yearLord: Planet,
+        language: Language
     ): String {
-        val houseArea = getHouseSignificance(house)
-        val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
+        val houseArea = getHouseSignificance(house, language)
+        val lordStrength = evaluatePlanetStrengthDescription(lord, chart, language)
 
         val lordAnalysis = buildString {
-            append("The lord ${lord.displayName} in house $lordPosition ")
+            append(StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_POSITION, language, lord.getLocalizedName(language), lordPosition))
+            append(" ")
             append(
                 when (lordStrength) {
-                    "Exalted" -> "is excellently placed for positive outcomes."
-                    "Strong" -> "is well-positioned for success."
-                    "Moderate" -> "provides moderate support."
-                    "Debilitated" -> "faces challenges requiring attention."
-                    else -> "influences results variably."
+                    StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_EXCELLENT, language)
+                    StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_STRONG, language)
+                    StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language) -> StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_MODERATE, language)
+                    StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_CHALLENGED, language)
+                    else -> StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_VARIABLE, language)
                 }
             )
         }
@@ -1676,23 +1679,23 @@ class VarshaphalaCalculator(context: Context) {
 
             when {
                 benefics.isNotEmpty() && malefics.isEmpty() ->
-                    " ${benefics.joinToString { it.displayName }} enhance positive outcomes."
+                    " " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_BENEFICS_ENHANCE, language, benefics.joinToString { it.getLocalizedName(language) })
                 malefics.isNotEmpty() && benefics.isEmpty() ->
-                    " ${malefics.joinToString { it.displayName }} may bring challenges."
+                    " " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_MALEFICS_CHALLENGE, language, malefics.joinToString { it.getLocalizedName(language) })
                 benefics.isNotEmpty() && malefics.isNotEmpty() ->
-                    " Mixed influences from ${planetsInHouse.joinToString { it.displayName }}."
+                    " " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_MIXED_INF, language, planetsInHouse.joinToString { it.getLocalizedName(language) })
                 else -> ""
             }
         } else {
-            " Results depend primarily on the lord's position."
+            " " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_LORD_DEPENDENT, language)
         }
 
         val specialIndications = buildString {
-            if (muntha.house == house) append(" Muntha emphasizes these matters this year.")
-            if (yearLord == lord) append(" Year Lord rules this house - significant developments expected.")
+            if (muntha.house == house) append(" " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_MUNTHA_EMPHASIS, language))
+            if (yearLord == lord) append(" " + StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_YEARLORD_RULE, language))
         }
 
-        return "House $house in ${sign.displayName} governs $houseArea. $lordAnalysis$planetaryInfluence$specialIndications".trim()
+        return StringResources.get(StringKeyAnalysis.VARSHA_HOUSE_PREDICTION_FORMAT, language, house, sign.getLocalizedName(language), houseArea, lordAnalysis, planetaryInfluence, specialIndications).trim()
     }
 
     private fun calculateHouseRating(
@@ -1702,19 +1705,20 @@ class VarshaphalaCalculator(context: Context) {
         planetsInHouse: List<Planet>,
         chart: SolarReturnChart,
         muntha: MunthaResult,
-        yearLord: Planet
+        yearLord: Planet,
+        language: Language
     ): Float {
         var rating = 3.0f
 
         val beneficLordPositions = listOf(1, 2, 4, 5, 7, 9, 10, 11)
         if (lordPosition in beneficLordPositions) rating += 0.5f
 
-        val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
+        val lordStrength = evaluatePlanetStrengthDescription(lord, chart, language)
         rating += when (lordStrength) {
-            "Exalted" -> 1.0f
-            "Strong" -> 0.7f
-            "Angular" -> 0.3f
-            "Debilitated" -> -0.8f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language) -> 1.0f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> 0.7f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language) -> 0.3f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> -0.8f
             else -> 0.0f
         }
 
@@ -1741,54 +1745,55 @@ class VarshaphalaCalculator(context: Context) {
         lord: Planet,
         lordPosition: Int,
         planetsInHouse: List<Planet>,
-        chart: SolarReturnChart
+        chart: SolarReturnChart,
+        language: Language
     ): List<String> {
         val events = mutableListOf<String>()
-        val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
-        val isLordStrong = lordStrength in listOf("Exalted", "Strong")
+        val lordStrength = evaluatePlanetStrengthDescription(lord, chart, language)
+        val isLordStrong = lordStrength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language))
 
         when (house) {
             1 -> {
                 if (isLordStrong) {
-                    events.add("Increased vitality and personal confidence")
-                    events.add("Favorable for starting new ventures")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_VITALITY, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_NEW_VENTURES, language))
                 }
-                if (Planet.JUPITER in planetsInHouse) events.add("Spiritual growth and wisdom")
-                if (Planet.MARS in planetsInHouse) events.add("Increased energy - watch for accidents")
+                if (Planet.JUPITER in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_SPIRITUAL_GROWTH, language))
+                if (Planet.MARS in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_INCREASED_ENERGY, language))
             }
             2 -> {
                 if (isLordStrong) {
-                    events.add("Financial gains and wealth accumulation")
-                    events.add("Improvement in family relationships")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_FINANCIAL_GAINS, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_FAMILY_RELATIONS, language))
                 }
-                if (Planet.VENUS in planetsInHouse) events.add("Acquisition of luxury items")
+                if (Planet.VENUS in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_LUXURY_ACQUISITION, language))
             }
             5 -> {
                 if (isLordStrong) {
-                    events.add("Creative success and recognition")
-                    events.add("Favorable for children's matters")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_CREATIVE_SUCCESS, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_CHILDREN_MATTERS, language))
                 }
-                if (Planet.JUPITER in planetsInHouse) events.add("Academic success or childbirth possible")
-                if (Planet.VENUS in planetsInHouse) events.add("Romantic happiness")
+                if (Planet.JUPITER in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_ACADEMIC_SUCCESS, language))
+                if (Planet.VENUS in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_ROMANTIC_HAPPINESS, language))
             }
             7 -> {
                 if (isLordStrong) {
-                    events.add("Strengthening of partnerships")
-                    events.add("Favorable for marriage or business")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_PARTNERSHIP_STRENGTH, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_MARRIAGE_FAVORABLE, language))
                 }
-                if (Planet.VENUS in planetsInHouse) events.add("Romantic fulfillment")
+                if (Planet.VENUS in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_ROMANTIC_FULFILLMENT, language))
             }
             10 -> {
                 if (isLordStrong) {
-                    events.add("Career advancement or promotion")
-                    events.add("Recognition from authorities")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_CAREER_ADVANCEMENT, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_AUTHORITY_RECOGNITION, language))
                 }
-                if (Planet.SUN in planetsInHouse) events.add("Government favor or leadership role")
+                if (Planet.SUN in planetsInHouse) events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_GOVERNMENT_FAVOR, language))
             }
             11 -> {
                 if (isLordStrong) {
-                    events.add("Fulfillment of desires and wishes")
-                    events.add("Gains from multiple sources")
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_DESIRE_FULFILLMENT, language))
+                    events.add(StringResources.get(StringKeyAnalysis.VARSHA_EVENT_MULTIPLE_GAINS, language))
                 }
             }
         }
@@ -1802,27 +1807,28 @@ class VarshaphalaCalculator(context: Context) {
         yearLord: Planet,
         housePredictions: List<HousePrediction>,
         triPataki: TriPatakiChakra,
-        tajikaAspects: List<TajikaAspectResult>
+        tajikaAspects: List<TajikaAspectResult>,
+        language: Language
     ): List<String> {
         val themes = mutableListOf<String>()
 
         val yearLordHouse = chart.planetPositions[yearLord]?.house ?: 1
-        themes.add("Year Lord ${yearLord.displayName} emphasizes ${getHouseSignificance(yearLordHouse)}")
+        themes.add(StringResources.get(StringKeyAnalysis.VARSHA_THEME_YEARLORD, language, yearLord.getLocalizedName(language), getHouseSignificance(yearLordHouse, language)))
 
-        themes.add("Muntha in House ${muntha.house} focuses on ${muntha.themes.firstOrNull() ?: "personal growth"}")
+        themes.add(StringResources.get(StringKeyAnalysis.VARSHA_THEME_MUNTHA, language, muntha.house, muntha.themes.firstOrNull() ?: StringResources.get(StringKeyAnalysis.MUNTHA_GENERAL_GROWTH, language)))
 
-        themes.add("Tri-Pataki: ${triPataki.dominantInfluence}")
+        themes.add(StringResources.get(StringKeyAnalysis.VARSHA_THEME_TRIPATAKI, language, triPataki.dominantInfluence))
 
-        housePredictions.filter { it.strength in listOf("Excellent", "Strong") }
+        housePredictions.filter { it.strength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXCELLENT, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)) }
             .sortedByDescending { it.rating }
             .take(2)
-            .forEach { themes.add("Favorable: ${getHouseSignificance(it.house)} (House ${it.house})") }
+            .forEach { themes.add(StringResources.get(StringKeyAnalysis.VARSHA_THEME_FAVORABLE, language, getHouseSignificance(it.house, language), it.house)) }
 
         val positiveAspects = tajikaAspects.count { it.type.isPositive }
         val totalAspects = tajikaAspects.size
         if (totalAspects > 0) {
-            val aspectQuality = if (positiveAspects > totalAspects / 2) "supportive" else "challenging"
-            themes.add("Tajika yogas are predominantly $aspectQuality ($positiveAspects/$totalAspects positive)")
+            val aspectQuality = if (positiveAspects > totalAspects / 2) StringResources.get(StringKeyAnalysis.VARSHA_TONE_SUPPORTIVE, language) else StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING, language)
+            themes.add(StringResources.get(StringKeyAnalysis.VARSHA_THEME_TAJIKA, language, aspectQuality, positiveAspects, totalAspects))
         }
 
         return themes.take(6)
@@ -1857,16 +1863,17 @@ class VarshaphalaCalculator(context: Context) {
     private fun calculateKeyDates(
         chart: SolarReturnChart,
         solarReturnTime: LocalDateTime,
-        muddaDasha: List<MuddaDashaPeriod>
+        muddaDasha: List<MuddaDashaPeriod>,
+        language: Language
     ): List<KeyDate> {
         val keyDates = mutableListOf<KeyDate>()
 
         keyDates.add(
             KeyDate(
                 date = solarReturnTime.toLocalDate(),
-                event = "Solar Return",
+                event = StringResources.get(StringKeyAnalysis.VARSHA_EVENT_SOLAR_RETURN, language),
                 type = KeyDateType.IMPORTANT,
-                description = "Beginning of the annual horoscope year"
+                description = StringResources.get(StringKeyAnalysis.VARSHA_EVENT_SOLAR_RETURN_DESC, language)
             )
         )
 
@@ -1874,10 +1881,10 @@ class VarshaphalaCalculator(context: Context) {
             keyDates.add(
                 KeyDate(
                     date = period.startDate,
-                    event = "${period.planet.displayName} Dasha Begins",
-                    type = if (period.planetStrength in listOf("Exalted", "Strong"))
+                    event = StringResources.get(StringKeyAnalysis.VARSHA_EVENT_DASHA_BEGINS, language, period.planet.getLocalizedName(language)),
+                    type = if (period.planetStrength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)))
                         KeyDateType.FAVORABLE else KeyDateType.IMPORTANT,
-                    description = "Start of ${period.planet.displayName} period (${period.days} days)"
+                    description = StringResources.get(StringKeyAnalysis.VARSHA_EVENT_DASHA_BEGINS_DESC, language, period.planet.getLocalizedName(language), period.days)
                 )
             )
         }
@@ -1890,46 +1897,50 @@ class VarshaphalaCalculator(context: Context) {
         yearLord: Planet,
         muntha: MunthaResult,
         tajikaAspects: List<TajikaAspectResult>,
-        housePredictions: List<HousePrediction>
+        housePredictions: List<HousePrediction>,
+        language: Language
     ): String {
-        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, chart)
+        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, chart, language)
         val yearLordHouse = chart.planetPositions[yearLord]?.house ?: 1
 
-        val strongHouses = housePredictions.filter { it.strength in listOf("Excellent", "Strong") }
-        val weakHouses = housePredictions.filter { it.strength in listOf("Weak", "Challenged") }
+        val strongHouses = housePredictions.filter { it.strength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXCELLENT, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)) }
+        val weakHouses = housePredictions.filter { it.strength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_WEAK, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_CHALLENGED, language)) }
 
-        val positiveAspects = tajikaAspects.count { it.type.isPositive }
-        val challengingAspects = tajikaAspects.size - positiveAspects
+        val positiveAspectsCount = tajikaAspects.count { it.type.isPositive }
+        val challengingAspectsCount = tajikaAspects.size - positiveAspectsCount
 
         val overallTone = when {
-            yearLordStrength in listOf("Exalted", "Strong") && strongHouses.size >= 6 -> "excellent"
-            yearLordStrength in listOf("Exalted", "Strong") && strongHouses.size >= 4 -> "favorable"
-            strongHouses.size > weakHouses.size -> "positive"
-            weakHouses.size > strongHouses.size -> "challenging but growth-oriented"
-            else -> "balanced"
+            yearLordStrength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)) && strongHouses.size >= 6 -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_EXCELLENT, language)
+            yearLordStrength in listOf(StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language), StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)) && strongHouses.size >= 4 -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_FAVORABLE, language)
+            strongHouses.size > weakHouses.size -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_POSITIVE, language)
+            weakHouses.size > strongHouses.size -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_CHALLENGING_GROWTH, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_TONE_BALANCED, language)
         }
 
         val yearLordInfluence = when (yearLord) {
-            Planet.SUN -> "Year Lord Sun brings focus on leadership, authority, and self-expression."
-            Planet.MOON -> "Year Lord Moon emphasizes emotional wellbeing and public connections."
-            Planet.MARS -> "Year Lord Mars energizes initiatives and competitive endeavors."
-            Planet.MERCURY -> "Year Lord Mercury enhances communication and business activities."
-            Planet.JUPITER -> "Year Lord Jupiter bestows wisdom, expansion, and good fortune."
-            Planet.VENUS -> "Year Lord Venus brings harmony to relationships and creativity."
-            Planet.SATURN -> "Year Lord Saturn teaches discipline and responsibility."
-            else -> "The Year Lord influences various aspects with balanced energy."
+            Planet.SUN -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_SUN, language)
+            Planet.MOON -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_MOON, language)
+            Planet.MARS -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_MARS, language)
+            Planet.MERCURY -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_MERCURY, language)
+            Planet.JUPITER -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_JUPITER, language)
+            Planet.VENUS -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_VENUS, language)
+            Planet.SATURN -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_SATURN, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_YEARLORD_GENERAL, language)
         }
 
-        val munthaInfluence = "Muntha in House ${muntha.house} (${muntha.sign.displayName}) " +
-                "directs attention to ${muntha.themes.firstOrNull()?.lowercase() ?: "personal development"}."
+        val munthaTheme = muntha.themes.firstOrNull() ?: StringResources.get(StringKeyAnalysis.MUNTHA_GENERAL_GROWTH, language)
+        val munthaInfluence = StringResources.get(StringKeyAnalysis.VARSHA_MUNTHA_INFLUENCE, language, muntha.house, muntha.sign.getLocalizedName(language), munthaTheme.lowercase())
 
         return buildString {
-            append("This Varshaphala year presents an overall $overallTone outlook. ")
+            append(StringResources.get(StringKeyAnalysis.VARSHA_OVERALL_TONE, language, overallTone.lowercase()))
+            append(" ")
             append(yearLordInfluence)
             append(" ")
             append(munthaInfluence)
-            append(" The Tajika aspects show $positiveAspects favorable and $challengingAspects challenging configurations. ")
-            append("By understanding these influences, the year's potential can be maximized.")
+            append(" ")
+            append(StringResources.get(StringKeyAnalysis.VARSHA_ASPECT_SUMMARY, language, positiveAspectsCount, challengingAspectsCount))
+            append(" ")
+            append(StringResources.get(StringKeyAnalysis.VARSHA_POTENTIAL_MAXIMIZED, language))
         }
     }
 
@@ -1938,23 +1949,25 @@ class VarshaphalaCalculator(context: Context) {
         yearLord: Planet,
         muntha: MunthaResult,
         tajikaAspects: List<TajikaAspectResult>,
-        housePredictions: List<HousePrediction>
+        housePredictions: List<HousePrediction>,
+        language: Language
     ): Float {
         var rating = 3.0f
 
-        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, chart)
+        val yearLordStrength = evaluatePlanetStrengthDescription(yearLord, chart, language)
         rating += when (yearLordStrength) {
-            "Exalted" -> 0.8f
-            "Strong" -> 0.5f
-            "Angular" -> 0.3f
-            "Debilitated" -> -0.5f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language) -> 0.8f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> 0.5f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language) -> 0.3f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> -0.5f
             else -> 0.0f
         }
 
         rating += when (muntha.lordStrength) {
-            "Exalted", "Strong" -> 0.3f
-            "Moderate" -> 0.1f
-            "Debilitated" -> -0.3f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language),
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language) -> 0.3f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language) -> 0.1f
+            StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language) -> -0.3f
             else -> 0.0f
         }
 
@@ -2058,51 +2071,52 @@ class VarshaphalaCalculator(context: Context) {
         return houseOfSun in listOf(7, 8, 9, 10, 11, 12, 1)
     }
 
-    private fun getYearLordDignityDescription(planet: Planet, chart: SolarReturnChart): String {
-        val position = chart.planetPositions[planet] ?: return "Year Lord's position is undefined."
+    private fun getYearLordDignityDescription(planet: Planet, chart: SolarReturnChart, language: Language): String {
+        val position = chart.planetPositions[planet] ?: return StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_UNKNOWN, language)
 
         val dignityDetails = mutableListOf<String>()
 
         when {
-            isExalted(planet, position.sign) -> dignityDetails.add("exalted in ${position.sign.displayName}")
-            OWN_SIGNS[planet]?.contains(position.sign) == true -> dignityDetails.add("in its own sign of ${position.sign.displayName}")
-            isDebilitated(planet, position.sign) -> dignityDetails.add("debilitated in ${position.sign.displayName}")
+            isExalted(planet, position.sign) -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_EXALTED, language, position.sign.getLocalizedName(language)))
+            OWN_SIGNS[planet]?.contains(position.sign) == true -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_OWN_SIGN, language, position.sign.getLocalizedName(language)))
+            isDebilitated(planet, position.sign) -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_DEBILITATED, language, position.sign.getLocalizedName(language)))
             else -> {
                 val signLord = position.sign.ruler
                 when {
-                    areFriends(planet, signLord) -> dignityDetails.add("in the friendly sign of ${position.sign.displayName}")
-                    areNeutral(planet, signLord) -> dignityDetails.add("in the neutral sign of ${position.sign.displayName}")
-                    else -> dignityDetails.add("in the enemy sign of ${position.sign.displayName}")
+                    areFriends(planet, signLord) -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_FRIENDLY, language, position.sign.getLocalizedName(language)))
+                    areNeutral(planet, signLord) -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_NEUTRAL, language, position.sign.getLocalizedName(language)))
+                    else -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_ENEMY, language, position.sign.getLocalizedName(language)))
                 }
             }
         }
 
         when (position.house) {
-            1, 4, 7, 10 -> dignityDetails.add("in an angular house (Kendra)")
-            5, 9 -> dignityDetails.add("in a trine house (Trikona)")
-            2, 11 -> dignityDetails.add("in a house of gains")
-            3, 6 -> dignityDetails.add("in an upachaya house")
-            8, 12 -> dignityDetails.add("in a challenging house (Dusthana)")
+            1, 4, 7, 10 -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_KENDRA, language))
+            5, 9 -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_TRIKONA, language))
+            2, 11 -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_GAINS, language))
+            3, 6 -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_UPACHAYA, language))
+            8, 12 -> dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_DUSTHANA, language))
         }
 
         if (position.isRetrograde) {
-            dignityDetails.add("and is retrograde")
+            dignityDetails.add(StringResources.get(StringKeyAnalysis.DIGNITY_RETROGRADE, language))
         }
 
-        return "The Year Lord ${planet.displayName} is ${dignityDetails.joinToString(", ")}. This suggests its influence will be potent and its results will manifest clearly throughout the year."
+        val dignityStr = dignityDetails.joinToString(", ")
+        return StringResources.get(StringKeyAnalysis.DIGNITY_YEARLORD_DESC, language, planet.getLocalizedName(language), dignityStr)
     }
 
-    private fun evaluatePlanetStrengthDescription(planet: Planet, chart: SolarReturnChart): String {
-        val position = chart.planetPositions[planet] ?: return "Unknown"
+    private fun evaluatePlanetStrengthDescription(planet: Planet, chart: SolarReturnChart, language: Language): String {
+        val position = chart.planetPositions[planet] ?: return StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_UNKNOWN, language)
         val sign = position.sign
 
         return when {
-            isExalted(planet, sign) -> "Exalted"
-            isDebilitated(planet, sign) -> "Debilitated"
-            OWN_SIGNS[planet]?.contains(sign) == true -> "Strong"
-            position.house in listOf(1, 4, 7, 10) -> "Angular"
-            position.isRetrograde -> "Retrograde"
-            else -> "Moderate"
+            isExalted(planet, sign) -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_EXALTED, language)
+            isDebilitated(planet, sign) -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED, language)
+            OWN_SIGNS[planet]?.contains(sign) == true -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_STRONG, language)
+            position.house in listOf(1, 4, 7, 10) -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_ANGULAR, language)
+            position.isRetrograde -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_RETROGRADE, language)
+            else -> StringResources.get(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE, language)
         }
     }
 
@@ -2124,22 +2138,23 @@ class VarshaphalaCalculator(context: Context) {
         return NEUTRALS[planet1]?.contains(planet2) == true
     }
 
-    private fun getHouseSignificance(house: Int): String {
-        return when (house) {
-            1 -> "personal development and health"
-            2 -> "finances and family"
-            3 -> "communication and siblings"
-            4 -> "home and property"
-            5 -> "creativity and children"
-            6 -> "health and service"
-            7 -> "partnerships and marriage"
-            8 -> "transformation and inheritance"
-            9 -> "fortune and higher learning"
-            10 -> "career and status"
-            11 -> "gains and friendships"
-            12 -> "spirituality and foreign matters"
-            else -> "various life areas"
+    private fun getHouseSignificance(house: Int, language: Language): String {
+        val key = when (house) {
+            1 -> StringKeyAnalysis.VARSHA_HOUSE_1_SIG
+            2 -> StringKeyAnalysis.VARSHA_HOUSE_2_SIG
+            3 -> StringKeyAnalysis.VARSHA_HOUSE_3_SIG
+            4 -> StringKeyAnalysis.VARSHA_HOUSE_4_SIG
+            5 -> StringKeyAnalysis.VARSHA_HOUSE_5_SIG
+            6 -> StringKeyAnalysis.VARSHA_HOUSE_6_SIG
+            7 -> StringKeyAnalysis.VARSHA_HOUSE_7_SIG
+            8 -> StringKeyAnalysis.VARSHA_HOUSE_8_SIG
+            9 -> StringKeyAnalysis.VARSHA_HOUSE_9_SIG
+            10 -> StringKeyAnalysis.VARSHA_HOUSE_10_SIG
+            11 -> StringKeyAnalysis.VARSHA_HOUSE_11_SIG
+            12 -> StringKeyAnalysis.VARSHA_HOUSE_12_SIG
+            else -> StringKeyAnalysis.VARSHA_HOUSE_GENERAL_SIG
         }
+        return StringResources.get(key, language)
     }
 
     private fun getOrdinalSuffix(n: Int): String {

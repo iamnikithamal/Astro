@@ -100,15 +100,15 @@ fun VarshaphalaScreen(
         stringResource(StringKeyMatch.TAB_HOUSES)
     )
 
-    LaunchedEffect(chart, selectedYear) {
+    LaunchedEffect(chart, selectedYear, currentLanguage) {
         if (chart != null && selectedYear >= birthYear) {
             isLoading = true
             error = null
             withContext(Dispatchers.IO) {
                 try {
-                    varshaphalaResult = calculator.calculateVarshaphala(chart, selectedYear)
+                    varshaphalaResult = calculator.calculateVarshaphala(chart, selectedYear, currentLanguage)
                 } catch (e: Exception) {
-                    error = "Calculation error: ${e.message ?: "Unknown error"}"
+                    error = if (currentLanguage == Language.NEPALI) "गणना त्रुटि: ${e.message ?: "अज्ञात त्रुटि"}" else "Calculation error: ${e.message ?: "Unknown error"}"
                 }
             }
             isLoading = false
@@ -607,13 +607,13 @@ private fun SolarReturnCard(result: VarshaphalaResult) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 InfoChip(
                     label = stringResource(StringKey.CHART_ASCENDANT),
-                    value = "${result.solarReturnChart.ascendant.displayName} ${String.format("%.1f", result.solarReturnChart.ascendantDegree)}°",
+                    value = "${result.solarReturnChart.ascendant.getLocalizedName(currentLanguage)} ${String.format("%.1f", result.solarReturnChart.ascendantDegree)}°",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 InfoChip(
                     label = stringResource(StringKey.PLANET_MOON),
-                    value = result.solarReturnChart.moonSign.displayName,
+                    value = result.solarReturnChart.moonSign.getLocalizedName(currentLanguage),
                     subValue = result.solarReturnChart.moonNakshatra,
                     modifier = Modifier.weight(1f)
                 )
@@ -706,7 +706,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                             color = AppTheme.TextMuted
                         )
                         Text(
-                            result.yearLord.displayName,
+                            result.yearLord.getLocalizedName(currentLanguage),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = AppTheme.TextPrimary
@@ -779,7 +779,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
                                 color = AppTheme.TextMuted
                             )
                             Text(
-                                result.muntha.sign.displayName,
+                                result.muntha.sign.getLocalizedName(currentLanguage),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = AppTheme.TextPrimary
@@ -793,7 +793,7 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                stringResource(StringKeyAnalysis.VARSHAPHALA_LORD_PREFIX, result.muntha.lord.displayName),
+                                stringResource(StringKeyAnalysis.VARSHAPHALA_LORD_PREFIX, result.muntha.lord.getLocalizedName(currentLanguage)),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = getPlanetColor(result.muntha.lord),
                                 fontWeight = FontWeight.Medium
@@ -839,16 +839,16 @@ private fun YearLordMunthaCard(result: VarshaphalaResult) {
 }
 
 @Composable
-private fun StrengthBadge(strength: String) {
+private fun StrengthBadge(strength: String, language: Language) {
     Surface(
-        color = getStrengthColor(strength).copy(alpha = 0.15f),
+        color = getStrengthColor(strength, language).copy(alpha = 0.15f),
         shape = RoundedCornerShape(6.dp)
     ) {
         Text(
             strength,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = getStrengthColor(strength),
+            color = getStrengthColor(strength, language),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
@@ -1194,7 +1194,7 @@ private fun PlanetBalaRow(bala: PanchaVargiyaBala) {
         )
 
         Text(
-            bala.planet.displayName,
+            bala.planet.getLocalizedName(currentLanguage),
             style = MaterialTheme.typography.bodyMedium,
             color = AppTheme.TextPrimary,
             modifier = Modifier.width(80.dp)
@@ -2071,7 +2071,7 @@ private fun MuddaDashaPeriodCard(period: MuddaDashaPeriod) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            period.planet.displayName,
+                            period.planet.getLocalizedName(currentLanguage),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextPrimary
@@ -2106,7 +2106,7 @@ private fun MuddaDashaPeriodCard(period: MuddaDashaPeriod) {
                         fontWeight = FontWeight.Medium,
                         color = AppTheme.TextPrimary
                     )
-                    StrengthBadge(period.planetStrength)
+                    StrengthBadge(period.planetStrength, currentLanguage)
                 }
             }
 
@@ -2220,13 +2220,13 @@ private fun HousePredictionCard(prediction: HousePrediction) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        stringResource(StringKeyAnalysis.VARSHAPHALA_HOUSE_SIGN, prediction.house, prediction.signOnCusp.displayName),
+                        stringResource(StringKeyAnalysis.VARSHAPHALA_HOUSE_SIGN, prediction.house, prediction.signOnCusp.getLocalizedName(currentLanguage)),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        stringResource(StringKeyAnalysis.VARSHAPHALA_LORD_IN_HOUSE, prediction.houseLord.displayName, prediction.lordPosition),
+                        stringResource(StringKeyAnalysis.VARSHAPHALA_LORD_IN_HOUSE, prediction.houseLord.getLocalizedName(currentLanguage), prediction.lordPosition),
                         style = MaterialTheme.typography.labelSmall,
                         color = AppTheme.TextMuted
                     )
@@ -2245,7 +2245,7 @@ private fun HousePredictionCard(prediction: HousePrediction) {
                             )
                         }
                     }
-                    StrengthBadge(prediction.strength)
+                    StrengthBadge(prediction.strength, currentLanguage)
                 }
             }
 
@@ -2353,13 +2353,29 @@ private fun getPlanetColor(planet: Planet): Color {
 }
 
 @Composable
-private fun getStrengthColor(strength: String): Color {
+private fun getStrengthColor(strength: String, language: Language): Color {
+    val excellent = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_EXCELLENT)
+    val strong = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_STRONG)
+    val good = stringResource(StringKeyAnalysis.PANCHA_GOOD)
+    val average = stringResource(StringKeyAnalysis.PANCHA_AVERAGE)
+    val moderate = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_MODERATE)
+    val weak = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_WEAK)
+    val challenged = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_CHALLENGED)
+    val debilitated = stringResource(StringKeyAnalysis.VARSHA_STRENGTH_DEBILITATED)
+
     return when {
+        strength.contains(excellent, ignoreCase = true) -> AppTheme.SuccessColor
+        strength.contains(strong, ignoreCase = true) -> AppTheme.SuccessColor
+        strength.contains(good, ignoreCase = true) -> AppTheme.SuccessColor
+        strength.contains(moderate, ignoreCase = true) -> AppTheme.AccentGold
+        strength.contains(average, ignoreCase = true) -> AppTheme.AccentGold
+        strength.contains(weak, ignoreCase = true) -> AppTheme.WarningColor
+        strength.contains(challenged, ignoreCase = true) -> AppTheme.ErrorColor
+        strength.contains(debilitated, ignoreCase = true) -> AppTheme.ErrorColor
+        // Fallback to English for safety
         strength.contains("Excellent", ignoreCase = true) -> AppTheme.SuccessColor
         strength.contains("Strong", ignoreCase = true) -> AppTheme.SuccessColor
-        strength.contains("Good", ignoreCase = true) -> AppTheme.SuccessColor
         strength.contains("Moderate", ignoreCase = true) -> AppTheme.AccentGold
-        strength.contains("Average", ignoreCase = true) -> AppTheme.AccentGold
         strength.contains("Weak", ignoreCase = true) -> AppTheme.WarningColor
         strength.contains("Challenged", ignoreCase = true) -> AppTheme.ErrorColor
         strength.contains("Debilitated", ignoreCase = true) -> AppTheme.ErrorColor
@@ -2414,45 +2430,3 @@ private fun getMonthName(month: Int): String {
     }
 }
 
-@Composable
-private fun getMunthaThemeLocalized(theme: String): String {
-    return when (theme) {
-        "Personal Growth" -> stringResource(StringKeyAnalysis.MUNTHA_PERSONAL_GROWTH)
-        "New Beginnings" -> stringResource(StringKeyAnalysis.MUNTHA_NEW_BEGINNINGS)
-        "Health Focus" -> stringResource(StringKeyAnalysis.MUNTHA_HEALTH_FOCUS)
-        "Financial Gains" -> stringResource(StringKeyAnalysis.MUNTHA_FINANCIAL_GAINS)
-        "Family Matters" -> stringResource(StringKeyAnalysis.MUNTHA_FAMILY_MATTERS)
-        "Speech" -> stringResource(StringKeyAnalysis.MUNTHA_SPEECH)
-        "Communication" -> stringResource(StringKeyAnalysis.MUNTHA_COMMUNICATION)
-        "Short Travels" -> stringResource(StringKeyAnalysis.MUNTHA_SHORT_TRAVELS)
-        "Siblings" -> stringResource(StringKeyAnalysis.MUNTHA_SIBLINGS)
-        "Home Affairs" -> stringResource(StringKeyAnalysis.MUNTHA_HOME_AFFAIRS)
-        "Property" -> stringResource(StringKeyAnalysis.MUNTHA_PROPERTY)
-        "Inner Peace" -> stringResource(StringKeyAnalysis.MUNTHA_INNER_PEACE)
-        "Creativity" -> stringResource(StringKeyAnalysis.MUNTHA_CREATIVITY)
-        "Romance" -> stringResource(StringKeyAnalysis.MUNTHA_ROMANCE)
-        "Children" -> stringResource(StringKeyAnalysis.MUNTHA_CHILDREN)
-        "Service" -> stringResource(StringKeyAnalysis.MUNTHA_SERVICE)
-        "Health Issues" -> stringResource(StringKeyAnalysis.MUNTHA_HEALTH_ISSUES)
-        "Competition" -> stringResource(StringKeyAnalysis.MUNTHA_COMPETITION)
-        "Partnerships" -> stringResource(StringKeyAnalysis.MUNTHA_PARTNERSHIPS)
-        "Marriage" -> stringResource(StringKeyAnalysis.MUNTHA_MARRIAGE)
-        "Business" -> stringResource(StringKeyAnalysis.MUNTHA_BUSINESS)
-        "Transformation" -> stringResource(StringKeyAnalysis.MUNTHA_TRANSFORMATION)
-        "Research" -> stringResource(StringKeyAnalysis.MUNTHA_RESEARCH)
-        "Inheritance" -> stringResource(StringKeyAnalysis.MUNTHA_INHERITANCE)
-        "Fortune" -> stringResource(StringKeyAnalysis.MUNTHA_FORTUNE)
-        "Long Travel" -> stringResource(StringKeyAnalysis.MUNTHA_LONG_TRAVEL)
-        "Higher Learning" -> stringResource(StringKeyAnalysis.MUNTHA_HIGHER_LEARNING)
-        "Career Advancement" -> stringResource(StringKeyAnalysis.MUNTHA_CAREER_ADVANCEMENT)
-        "Recognition" -> stringResource(StringKeyAnalysis.MUNTHA_RECOGNITION)
-        "Authority" -> stringResource(StringKeyAnalysis.MUNTHA_AUTHORITY)
-        "Gains" -> stringResource(StringKeyAnalysis.MUNTHA_GAINS)
-        "Friends" -> stringResource(StringKeyAnalysis.MUNTHA_FRIENDS)
-        "Fulfilled Wishes" -> stringResource(StringKeyAnalysis.MUNTHA_FULFILLED_WISHES)
-        "Spirituality" -> stringResource(StringKeyAnalysis.MUNTHA_SPIRITUALITY)
-        "Foreign Lands" -> stringResource(StringKeyAnalysis.MUNTHA_FOREIGN_LANDS)
-        "Expenses" -> stringResource(StringKeyAnalysis.MUNTHA_EXPENSES)
-        else -> theme
-    }
-}
