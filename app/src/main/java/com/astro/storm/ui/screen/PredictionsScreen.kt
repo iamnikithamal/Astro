@@ -1587,20 +1587,6 @@ private fun ErrorState(
 }
 
 // Helper Functions
-private suspend fun calculatePredictions(chart: VedicChart): PredictionData {
-    // Calculate Dasha Timeline
-    val dashaTimeline = DashaCalculator.calculateDashaTimeline(chart)
-
-    // Get current dasha information
-    val currentDashaInfo = buildString {
-        dashaTimeline.currentMahadasha?.let { md ->
-            append("${md.planet.displayName} Mahadasha")
-            dashaTimeline.currentAntardasha?.let { ad ->
-                append(" - ${ad.planet.displayName} Antardasha")
-            }
-        }
-    }
-
 private fun calculatePredictions(chart: VedicChart, language: Language): PredictionData {
     // Calculate dasha timeline
     val dashaTimeline = DashaCalculator.calculateDashaTimeline(chart)

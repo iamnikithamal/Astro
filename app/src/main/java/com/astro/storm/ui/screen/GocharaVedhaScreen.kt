@@ -463,6 +463,7 @@ private fun VedhaQuickStatsRow(analysis: GocharaVedhaCalculator.CompleteVedhaAna
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        VedhaStatCard(
             title = stringResource(StringKeyDosha.SANDHI_ACTIVE), // Reuse "Active" or define GOCHARA_ACTIVE
             value = "${analysis.activeVedhas.size}",
             subtitle = stringResource(StringKeyDosha.GOCHARA_VEDHAS),
@@ -796,14 +797,11 @@ private fun TransitCard(transit: GocharaVedhaCalculator.PlanetTransitVedha) {
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                Text(
                                     text = "${stringResource(StringKeyDosha.GOCHARA_FROM)} ${transit.vedhaSourcePlanets.joinToString { it.getLocalizedName(language) }}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = AppTheme.TextSecondary
                                 )
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = AppTheme.TextSecondary
-                                )
+                                Text(
                                     text = "${stringResource(StringKeyDosha.GOCHARA_SEVERITY)} ${transit.vedhaSeverity.displayName}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = AppTheme.TextSecondary
@@ -1164,6 +1162,7 @@ private fun EmptyContentVedha(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(64.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
+            Text(
                 text = stringResource(StringKeyDosha.UI_NO_CHART_DATA),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -1185,7 +1184,6 @@ private fun VedhaInfoDialog(onDismiss: () -> Unit) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
             Text(
                 text = stringResource(StringKeyDosha.GOCHARA_ABOUT_TITLE),
                 style = MaterialTheme.typography.titleMedium,
