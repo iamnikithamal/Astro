@@ -67,6 +67,11 @@ enum class HoroscopePeriod(val titleKey: StringKey) {
 }
 
 private object InsightsFormatters {
+    // Static formatters for default locale (English)
+    val monthDay: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
+    val monthYear: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH)
+    val fullDate: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+    
     fun getDayMonth(language: Language): DateTimeFormatter {
         val locale = if (language == Language.NEPALI) Locale("ne", "NP") else Locale.ENGLISH
         return DateTimeFormatter.ofPattern("EEEE, MMMM d", locale)

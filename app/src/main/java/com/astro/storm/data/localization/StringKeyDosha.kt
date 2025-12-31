@@ -2963,45 +2963,39 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     SUDARSHANA_THEME_H12_1("Losses", "हानि"),
     SUDARSHANA_THEME_H12_2("Expenses", "खर्च"),
 
-    // Upachaya Screen Keys
-    UPACHAYA_SCREEN_TITLE("Upachaya Transit", "उपचय गोचर"),
-    UPACHAYA_SCREEN_SUBTITLE("Growth & Improvement Opportunities", "वृद्धि र सुधारका अवसरहरू"),
-    UPACHAYA_SCREEN_ABOUT("About Upachaya Transits", "उपचय गोचर बारे"),
-    UPACHAYA_SCREEN_ABOUT_DESC("Transits through Upachaya houses (3, 6, 10, 11) operate on the principle of gradual growth and improvement. Malefic planets (Sun, Mars, Saturn, Rahu, Ketu) give especially good results here, representing the ability to overcome challenges and achieve success through effort.", "उपचय भावहरू (३, ६, १०, ११) मा हुने गोचर क्रमिक वृद्धि र सुधारको सिद्धान्तमा काम गर्दछ। पाप ग्रहहरू (सूर्य, मंगल, शनि, राहु, केतु) ले यहाँ विशेष राम्रो परिणाम दिन्छन्, जसले चुनौतीहरू पार गर्ने र प्रयासद्वारा सफलता प्राप्त गर्ने क्षमतालाई जनाउँछ।"),
-    
-    UPACHAYA_ACTIVE_TRANSITS("Active Transits", "सक्रिय गोचर"),
-    UPACHAYA_HOUSE_ANALYSIS("House Analysis", "भाव विश्लेषण"),
-    UPACHAYA_TRANSIT_DETAILS("Transit Details", "गोचर विवरण"),
-    UPACHAYA_UPCOMING_TRANSITS("Upcoming", "आगामी"),
-    
-    QUALITY_LABEL("Quality", "गुणस्तर"),
-    QUALITY_GOOD("Good", "राम्रो"),
-    QUALITY_AVERAGE("Average", "औसत"),
-    QUALITY_BAD("Bad", "खराब"),
-    IMPACT_LABEL("Impact", "प्रभाव"),
-    FROM_LABEL("from", "बाट"),
-    
-    UPACHAYA_SIGNIFICANCE("Overall Significance", "समग्र महत्व"),
-    UPACHAYA_REFERENCE_POINTS("Reference Points", "सन्दर्भ बिन्दुहरू"),
-    UPACHAYA_MOON_SIGN("Moon Sign", "चन्द्र राशि"),
-    UPACHAYA_LAGNA("Lagna", "लग्न"),
-    UPACHAYA_ACTIVE("Active", "सक्रिय"),
-    UPACHAYA_ACTIVE_ALERTS("Active Alerts", "सक्रिय अलर्टहरू"),
-    UPACHAYA_SIGNIFICANT_TRANSITS("Significant Transits", "महत्वपूर्ण गोचर"),
-    UPACHAYA_TRANSIT_ASSESSMENT("Transit Assessment", "गोचर मूल्यांकन"),
-    
-    SCREEN_OVERVIEW("Overview", "अवलोकन"),
-    SCREEN_ERROR_CALCULATION("Error calculating data", "तथ्यांक गणना गर्दा त्रुटि"),
-    SCREEN_CALCULATING("Calculating...", "गणना गर्दै..."),
-    SCREEN_RECOMMENDATIONS("Recommendations", "सुझावहरू"),
-    
-    UPACHAYA_ABOUT("About Upachaya", "उपचय बारे"),
-    UPACHAYA_TRANSIT_ABOUT_DESC("Transits through Upachaya houses (3, 6, 10, 11) operate on the principle of gradual growth and improvement.", "उपचय भावहरू (३, ६, १०, ११) मा हुने गोचर क्रमिक वृद्धि र सुधारको सिद्धान्तमा काम गर्दछ।"),
-    HOUSE_LABEL("House", "भाव"),
-    PLANETS_TITLE("Planets", "ग्रहहरू"),
-    EFFECTS_LABEL("Effects", "प्रभाव"),
-    UPACHAYA_FROM_MOON("From Moon", "चन्द्रमाबाट"),
-    UPACHAYA_FROM_LAGNA("From Lagna", "लग्नबाट"),
-    UPACHAYA_TRANSIT_SUBTITLE("Based on Upachaya House Transits", "उपचय भाव गोचरमा आधारित"),
-    UPACHAYA_TRANSITS_LABEL("Transits", "गोचर");
+    // ============================================
+    // LAL KITAB REMEDIES SCREEN
+    // ============================================
+    LAL_KITAB_NOTE_DISTINCT("Lal Kitab remedies are unique and different from traditional Vedic remedies.", "लाल किताब उपायहरू अद्वितीय छन् र परम्परागत वैदिक उपायहरूभन्दा फरक छन्।"),
+    LAL_KITAB_RECOMMENDED_REMEDIES("Recommended Remedies", "सिफारिस गरिएका उपायहरू"),
+    LAL_KITAB_AFFLICTION_KANYA("Kanya Rin (Debt of Young Women)", "कन्या ऋण"),
+    LAL_KITAB_AFFLICTION_GRAHAN("Grahan Dosha", "ग्रहण दोष"),
+    LAL_KITAB_AFFLICTION_SHANI("Shani Affliction", "शनि पीडा"),
+    LAL_KITAB_AFFLICTION_GENERAL("General Affliction", "सामान्य पीडा"),
+    LAL_KITAB_SECTION_REMEDIES("Remedies", "उपायहरू"),
+    LAL_KITAB_GENERAL_PRINCIPLES("General Principles of Lal Kitab", "लाल किताबका सामान्य सिद्धान्तहरू"),
+    LAL_KITAB_RIN_TITLE("Karmic Debts (Rin)", "कर्म ऋणहरू"),
+    LAL_KITAB_RIN_DESC("Karmic debts indicate areas where remedial measures are needed to balance past karma.", "कर्म ऋणहरूले विगतको कर्म सन्तुलन गर्न उपायहरू आवश्यक पर्ने क्षेत्रहरू संकेत गर्दछ।"),
+    LAL_KITAB_RIN_NONE_TITLE("No Significant Karmic Debts", "कुनै महत्त्वपूर्ण कर्म ऋण छैन"),
+    LAL_KITAB_RIN_NONE_DESC("Your chart does not indicate major karmic debts requiring immediate remedies.", "तपाईंको कुण्डलीले तत्काल उपाय आवश्यक पर्ने प्रमुख कर्म ऋणहरू संकेत गर्दैन।"),
+
+    // ============================================
+    // PANCH MAHAPURUSHA SCREEN MISSING KEYS
+    // ============================================
+    PANCHA_NO_YOGAS("No Yogas", "कुनै योग छैन"),
+
+    // ============================================
+    // SHADBALA SCREEN MISSING KEYS
+    // ============================================
+    REPORT_PLANET("Planet Report", "ग्रह रिपोर्ट"),
+
+    // ============================================
+    // DASHA SYSTEMS SCREEN MISSING KEYS
+    // ============================================
+    ERROR_CALCULATION("Calculation Error", "गणना त्रुटि"),
+
+    // ============================================
+    // YOGINI DASHA SCREEN MISSING KEYS
+    // ============================================
+    YOGINI_SEQUENCE("Yogini Sequence", "योगिनी क्रम");
 }
