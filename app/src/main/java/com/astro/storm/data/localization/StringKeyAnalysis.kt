@@ -1962,7 +1962,7 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     PRASHNA_REC_REVIEW_PAST("Review past decisions. Something may need to be reconsidered.", "विगतका निर्णयहरू समीक्षा गर्नुहोस्। केही कुरामा पुनर्विचार गर्नुपर्ने हुन सक्छ।"),
     PRASHNA_REC_ACT_PROMPTLY("Act promptly while the favorable applying aspect is in effect.", "अनुकूल पक्ष प्रभावकारी हुँदा तुरुन्तै काम गर्नुहोस्।"),
     PRASHNA_REC_SEEK_ASSISTANCE("Seek assistance from an intermediary or third party.", "मध्यस्थ वा तेस्रो पक्षबाट सहयोग खोज्नुहोस्।"),
-    PRASHNA_REC_PROPITIATE("Propitiate %1$s to strengthen %2$dth house matters.", "%2$d औं भावको विषयलाई बलियो बनाउन %1$s लाई प्रसन्न पार्नुहोस्।"),
+    PRASHNA_REC_PROPITIATE("Propitiate %1\$s to strengthen %2\$dth house matters.", "%2\$d औं भावको विषयलाई बलियो बनाउन %1\$s लाई प्रसन्न पार्नुहोस्।"),
     PRASHNA_REC_REASK_NEW_SIGN("Consider re-asking when Moon enters a new sign.", "चन्द्रमा नयाँ राशिमा प्रवेश गरेपछि पुनः सोध्ने विचार गर्नुहोस्।"),
 
     PRASHNA_SUMMARY_TITLE("Prashna Analysis Summary", "प्रश्न विश्लेषण सारांश"),
@@ -2130,6 +2130,7 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     KEYWORD_FAME("Fame", "नाम"),
     KEYWORD_GAINS("Gains", "लाभ"),
     KEYWORD_INCOME("Income", "आय"),
+    KEYWORD_FRIENDS("Friends", "मित्रहरू"),
     KEYWORD_ELDER_SIBLINGS("Elder Siblings", "ठूला भाइबहिनी"),
     KEYWORD_ASPIRATIONS("Aspirations", "आंकाक्षा"),
     KEYWORD_LOSSES("Losses", "हानि"),

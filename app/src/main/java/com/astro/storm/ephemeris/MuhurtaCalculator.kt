@@ -1326,7 +1326,8 @@ class MuhurtaCalculator(context: Context) {
         time: LocalTime,
         inauspiciousPeriods: InauspiciousPeriods,
         abhijitMuhurta: AbhijitMuhurta,
-        specialYogas: List<SpecialYoga>
+        specialYogas: List<SpecialYoga>,
+        language: Language = Language.ENGLISH
     ): Quadruple<Int, List<ActivityType>, List<ActivityType>, List<String>> {
         var score = 50
         val recommendations = mutableListOf<String>()
@@ -1498,7 +1499,8 @@ class MuhurtaCalculator(context: Context) {
 
     private fun evaluateForActivity(
         muhurta: MuhurtaDetails,
-        activity: ActivityType
+        activity: ActivityType,
+        language: Language = Language.ENGLISH
     ): Triple<Int, List<String>, List<String>> {
         var score = 50
         val reasons = mutableListOf<String>()

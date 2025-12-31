@@ -690,6 +690,7 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     // ============================================
     // PLANETS
     // ============================================
+    PLANET("Planet", "ग्रह"),
     PLANET_SUN("Sun", "सूर्य"),
     PLANET_MOON("Moon", "चन्द्र"),
     PLANET_MERCURY("Mercury", "बुध"),
