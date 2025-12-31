@@ -7,6 +7,7 @@ import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyDosha
 import java.time.LocalDateTime
 
 /**
@@ -483,8 +484,8 @@ object UpachayaTransitTracker {
 
         return upcomingTransits.sortedBy { it.targetHouse }
     }
-    private fun calculateHouseTransitStrength(transits: List<UpachayaTransit>): Int {
-        if (transits.isEmpty()) return 0
+    private fun calculateHouseTransitStrength(transits: List<UpachayaTransit>): HouseStrength {
+        if (transits.isEmpty()) return HouseStrength.INACTIVE
         var score = 0
         for (transit in transits) {
             score += when (transit.planet) {
@@ -493,7 +494,14 @@ object UpachayaTransitTracker {
                 else -> 10
             }
         }
-        return (score / transits.size).coerceAtMost(100)
+        val normalizedScore = (score / transits.size).coerceAtMost(100)
+        return when {
+            normalizedScore >= 80 -> HouseStrength.VERY_STRONG
+            normalizedScore >= 60 -> HouseStrength.STRONG
+            normalizedScore >= 40 -> HouseStrength.MODERATE
+            normalizedScore >= 20 -> HouseStrength.MILD
+            else -> HouseStrength.INACTIVE
+        }
     }
 }
 

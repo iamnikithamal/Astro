@@ -2068,7 +2068,7 @@ object RemediesCalculator {
 
                 val yogakarakaPlanets = analyses.filter { it.isYogakaraka }
                 if (yogakarakaPlanets.isNotEmpty()) {
-                    appendLine(StringResources.get(StringKeyRemedy.SUMMARY_YOGAKARAKA, language, yogakarakaPlanets.map { it.getLocalizedName(language) }.joinToString(), if (yogakarakaPlanets.size == 1) StringResources.get(StringKeyRemedy.SUMMARY_THIS_PLANET, language) else StringResources.get(StringKeyRemedy.SUMMARY_THESE_PLANETS, language)))
+                    appendLine(StringResources.get(StringKeyRemedy.SUMMARY_YOGAKARAKA, language, yogakarakaPlanets.map { it.planet.getLocalizedName(language) }.joinToString(), if (yogakarakaPlanets.size == 1) StringResources.get(StringKeyRemedy.SUMMARY_THIS_PLANET, language) else StringResources.get(StringKeyRemedy.SUMMARY_THESE_PLANETS, language)))
                     appendLine()
                 }
 

@@ -1222,13 +1222,13 @@ private fun PlanetBalaRow(bala: PanchaVargiyaBala) {
         )
 
         Surface(
-            color = getStrengthColor(bala.category).copy(alpha = 0.15f),
+            color = getStrengthColor(bala.category, currentLanguage()).copy(alpha = 0.15f),
             shape = RoundedCornerShape(4.dp)
         ) {
             Text(
                 bala.category.take(3),
                 style = MaterialTheme.typography.labelSmall,
-                color = getStrengthColor(bala.category),
+                color = getStrengthColor(bala.category, currentLanguage()),
                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             )
         }

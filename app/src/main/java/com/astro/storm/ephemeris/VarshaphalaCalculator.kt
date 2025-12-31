@@ -1176,7 +1176,7 @@ class VarshaphalaCalculator(context: Context) {
 
     private fun isSahamActive(lord: Planet, chart: SolarReturnChart, house: Int): Boolean {
         val lordPosition = chart.planetPositions[lord] ?: return false
-        val lordStrength = evaluatePlanetStrengthDescription(lord, chart)
+        val lordStrength = evaluatePlanetStrengthDescription(lord, chart, Language.ENGLISH)
 
         val isLordStrong = lordStrength in listOf("Exalted", "Strong", "Angular")
         val isInGoodHouse = house in listOf(1, 2, 4, 5, 7, 9, 10, 11)
@@ -2167,7 +2167,7 @@ class VarshaphalaCalculator(context: Context) {
         }
     }
 
-    fun getHouseMeaning(house: Int): String = getHouseSignificance(house)
+    fun getHouseMeaning(house: Int, language: Language = Language.ENGLISH): String = getHouseSignificance(house, language)
 
-    fun getHouseKeywordsExternal(house: Int): List<String> = getHouseKeywords(house)
+    fun getHouseKeywordsExternal(house: Int, language: Language = Language.ENGLISH): List<String> = getHouseKeywords(house, language)
 }
