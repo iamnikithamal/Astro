@@ -4,7 +4,7 @@ import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.*
-import kotlin.math.abs
+import com.astro.storm.ephemeris.VedicAstrologyUtils.PlanetaryRelationship
 
 /**
  * Guna Milan (Ashtakoota) Calculator
@@ -52,9 +52,7 @@ object GunaMilanCalculator {
         )
     }
 
-    // ============================================
-    // VARNA KOOTA (1 Point)
-    // ============================================
+    // region 1. Varna Koota (1 Point)
 
     fun calculateVarna(
         brideSign: ZodiacSign,
@@ -64,6 +62,7 @@ object GunaMilanCalculator {
         val brideVarna = Varna.fromZodiacSign(brideSign)
         val groomVarna = Varna.fromZodiacSign(groomSign)
 
+        // Groom's Varna should be equal or superior to Bride's for full points
         val points = if (groomVarna.value >= brideVarna.value) MatchmakingConstants.MAX_VARNA else 0.0
 
         val analysis = buildString {
@@ -95,9 +94,9 @@ object GunaMilanCalculator {
         )
     }
 
-    // ============================================
-    // VASHYA KOOTA (2 Points)
-    // ============================================
+    // endregion
+
+    // region 2. Vashya Koota (2 Points)
 
     fun calculateVashya(
         brideSign: ZodiacSign,
@@ -150,9 +149,9 @@ object GunaMilanCalculator {
         }
     }
 
-    // ============================================
-    // TARA KOOTA (3 Points)
-    // ============================================
+    // endregion
+
+    // region 3. Tara Koota (3 Points)
 
     fun calculateTara(
         brideNakshatra: Nakshatra,
@@ -213,9 +212,9 @@ object GunaMilanCalculator {
 
     private fun isAuspiciousTara(taraNumber: Int): Boolean = taraNumber in listOf(2, 4, 6, 8, 9)
 
-    // ============================================
-    // YONI KOOTA (4 Points)
-    // ============================================
+    // endregion
+
+    // region 4. Yoni Koota (4 Points)
 
     fun calculateYoni(
         brideNakshatra: Nakshatra,
@@ -264,9 +263,9 @@ object GunaMilanCalculator {
         return 2.0
     }
 
-    // ============================================
-    // GRAHA MAITRI KOOTA (5 Points)
-    // ============================================
+    // endregion
+
+    // region 5. Graha Maitri Koota (5 Points)
 
     fun calculateGrahaMaitri(
         brideSign: ZodiacSign,
@@ -281,7 +280,7 @@ object GunaMilanCalculator {
         val analysisKey = when {
             points >= 5.0 -> StringKeyMatch.GRAHA_MAITRI_EXCELLENT
             points >= 4.0 -> StringKeyMatch.GRAHA_MAITRI_VERY_GOOD
-            points >= 2.5 -> StringKeyMatch.GRAHA_MAITRI_AVERAGE
+            points >= 3.0 -> StringKeyMatch.GRAHA_MAITRI_AVERAGE
             points >= 1.0 -> StringKeyMatch.GRAHA_MAITRI_FRICTION
             else -> StringKeyMatch.GRAHA_MAITRI_INCOMPATIBLE
         }
@@ -295,32 +294,47 @@ object GunaMilanCalculator {
             brideValue = "${brideSign.getLocalizedName(language)} (${brideLord.getLocalizedName(language)})",
             groomValue = "${groomSign.getLocalizedName(language)} (${groomLord.getLocalizedName(language)})",
             analysis = StringResources.get(analysisKey, language),
-            isPositive = points >= 2.5
+            isPositive = points >= 3.0
         )
     }
 
     private fun calculateGrahaMaitriPoints(lord1: Planet, lord2: Planet): Double {
         if (lord1 == lord2) return 5.0
 
-        val relationship1 = PlanetaryFriendship.getRelationship(lord1, lord2)
-        val relationship2 = PlanetaryFriendship.getRelationship(lord2, lord1)
+        val relationship1 = VedicAstrologyUtils.getNaturalRelationship(lord1, lord2)
+        val relationship2 = VedicAstrologyUtils.getNaturalRelationship(lord2, lord1)
+
+        val isFriend1 = relationship1 == PlanetaryRelationship.FRIEND
+        val isFriend2 = relationship2 == PlanetaryRelationship.FRIEND
+        val isNeutral1 = relationship1 == PlanetaryRelationship.NEUTRAL
+        val isNeutral2 = relationship2 == PlanetaryRelationship.NEUTRAL
+        val isEnemy1 = relationship1 == PlanetaryRelationship.ENEMY
+        val isEnemy2 = relationship2 == PlanetaryRelationship.ENEMY
 
         return when {
-            relationship1 == "Friend" && relationship2 == "Friend" -> 5.0
-            (relationship1 == "Friend" && relationship2 == "Neutral") ||
-            (relationship1 == "Neutral" && relationship2 == "Friend") -> 4.0
-            relationship1 == "Neutral" && relationship2 == "Neutral" -> 2.5
-            (relationship1 == "Friend" && relationship2 == "Enemy") ||
-            (relationship1 == "Enemy" && relationship2 == "Friend") -> 1.0
-            (relationship1 == "Neutral" && relationship2 == "Enemy") ||
-            (relationship1 == "Enemy" && relationship2 == "Neutral") -> 0.5
+            // Both are friends
+            isFriend1 && isFriend2 -> 5.0
+            
+            // One Friend, One Neutral
+            (isFriend1 && isNeutral2) || (isNeutral1 && isFriend2) -> 4.0
+            
+            // Both Neutral
+            isNeutral1 && isNeutral2 -> 3.0
+            
+            // One Friend, One Enemy
+            (isFriend1 && isEnemy2) || (isEnemy1 && isFriend2) -> 1.0
+            
+            // One Neutral, One Enemy
+            (isNeutral1 && isEnemy2) || (isEnemy1 && isNeutral2) -> 0.5
+            
+            // Both Enemies
             else -> 0.0
         }
     }
 
-    // ============================================
-    // GANA KOOTA (6 Points)
-    // ============================================
+    // endregion
+
+    // region 6. Gana Koota (6 Points)
 
     fun calculateGana(
         brideNakshatra: Nakshatra,
@@ -353,19 +367,21 @@ object GunaMilanCalculator {
         )
     }
 
-    private fun calculateGanaPoints(brideGana: Gana, groomGana: Gana): Double = when {
-        brideGana == groomGana -> 6.0
-        brideGana == Gana.DEVA && groomGana == Gana.MANUSHYA -> 5.0
-        brideGana == Gana.MANUSHYA && groomGana == Gana.DEVA -> 6.0
-        brideGana == Gana.MANUSHYA && groomGana == Gana.RAKSHASA -> 1.0
-        brideGana == Gana.RAKSHASA && groomGana == Gana.MANUSHYA -> 3.0
-        brideGana == Gana.RAKSHASA && groomGana == Gana.RAKSHASA -> 6.0
-        else -> 0.0  // Deva-Rakshasa combination
+    private fun calculateGanaPoints(brideGana: Gana, groomGana: Gana): Double {
+        return when {
+            brideGana == groomGana -> 6.0
+            brideGana == Gana.DEVA && groomGana == Gana.MANUSHYA -> 5.0
+            brideGana == Gana.MANUSHYA && groomGana == Gana.DEVA -> 6.0
+            brideGana == Gana.MANUSHYA && groomGana == Gana.RAKSHASA -> 1.0
+            brideGana == Gana.RAKSHASA && groomGana == Gana.MANUSHYA -> 3.0  // Note: Some traditions say 0, others 3. BPHS permits this for Bhakoot reasons sometimes
+            brideGana == Gana.RAKSHASA && groomGana == Gana.RAKSHASA -> 6.0
+            else -> 0.0  // Deva-Rakshasa / Rakshasa-Deva is the main Gana Dosha
+        }
     }
 
-    // ============================================
-    // BHAKOOT KOOTA (7 Points)
-    // ============================================
+    // endregion
+
+    // region 7. Bhakoot Koota (7 Points)
 
     fun calculateBhakoot(
         brideSign: ZodiacSign,
@@ -410,104 +426,80 @@ object GunaMilanCalculator {
     ): Triple<Double, String, String> {
         val diff = ((groomNumber - brideNumber + 12) % 12)
 
-        val brideLord = brideSign.ruler
-        val groomLord = groomSign.ruler
-        val sameLord = brideLord == groomLord
+        // Count from Bride to Groom
+        val is2_12 = (diff == 1 || diff == 11) // 2nd or 12th
+        val is6_8 = (diff == 5 || diff == 7)   // 6th or 8th
+        val is5_9 = (diff == 4 || diff == 8)   // 5th or 9th
 
-        val is2_12 = (diff == 1 || diff == 11)
-        val is6_8 = (diff == 5 || diff == 7)
+        // Check for Doshas
+        if (is2_12 || is6_8 || is5_9) {
+            // Bhakoot Dosha exists, check for cancellation
+            val cancellation = checkBhakootDoshaCancellation(brideSign, groomSign, is6_8, language)
 
-        if (is2_12 || is6_8) {
-            val cancellation = checkBhakootDoshaCancellation(brideSign, groomSign, brideLord, groomLord, is6_8, language)
+            if (cancellation != null) {
+                return Triple(7.0, "Cancelled", cancellation)
+            }
 
-            return if (cancellation != null) {
-                Triple(7.0, "Cancelled", cancellation)
-            } else {
-                val description = if (is2_12) {
-                    StringResources.get(StringKeyMatch.BHAKOOT_2_12_DESC, language)
-                } else {
-                    StringResources.get(StringKeyMatch.BHAKOOT_6_8_DESC, language)
-                }
-                Triple(0.0, if (is2_12) "2-12" else "6-8", description)
+            // Dosha confirmed (0 points)
+            return when {
+                is2_12 -> Triple(0.0, "2-12", StringResources.get(StringKeyMatch.BHAKOOT_2_12_DESC, language))
+                is6_8 -> Triple(0.0, "6-8", StringResources.get(StringKeyMatch.BHAKOOT_6_8_DESC, language))
+                is5_9 -> Triple(0.0, "5-9", StringResources.get(StringKeyMatch.BHAKOOT_5_9_DESC, language))
+                else -> Triple(0.0, "Unknown", "")
             }
         }
 
-        // 5-9 pattern (Trine - generally beneficial)
-        if (diff == 4 || diff == 8) {
-            return Triple(7.0, "5-9", StringResources.get(StringKeyMatch.BHAKOOT_5_9_DESC, language))
-        }
-
+        // All other positions (1-1, 3-11, 4-10) are auspicious or neutral-good
         return Triple(7.0, "None", StringResources.get(StringKeyMatch.BHAKOOT_FAVORABLE, language))
     }
 
     private fun checkBhakootDoshaCancellation(
         brideSign: ZodiacSign,
         groomSign: ZodiacSign,
-        brideLord: Planet,
-        groomLord: Planet,
         isShadashtak: Boolean,
         language: Language
     ): String? {
-        // Same lord cancels dosha
+        val brideLord = brideSign.ruler
+        val groomLord = groomSign.ruler
+
+        // 1. Same lord cancels dosha (e.g. Aries-Scorpio is 6-8 but both ruled by Mars)
         if (brideLord == groomLord) {
             return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_SAME_LORD, language)
                 .replace("{lord}", brideLord.getLocalizedName(language))
         }
 
-        // Mutual friends cancel dosha
-        val rel1 = PlanetaryFriendship.getRelationship(brideLord, groomLord)
-        val rel2 = PlanetaryFriendship.getRelationship(groomLord, brideLord)
-        if (rel1 == "Friend" && rel2 == "Friend") {
+        // 2. Mutual friends cancel dosha
+        // Using VedicAstrologyUtils for consistent friendship logic
+        val rel1 = VedicAstrologyUtils.getNaturalRelationship(brideLord, groomLord)
+        val rel2 = VedicAstrologyUtils.getNaturalRelationship(groomLord, brideLord)
+        
+        if (rel1 == PlanetaryRelationship.FRIEND && rel2 == PlanetaryRelationship.FRIEND) {
             return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_MUTUAL_FRIENDS, language)
                 .replace("{lord1}", brideLord.getLocalizedName(language))
                 .replace("{lord2}", groomLord.getLocalizedName(language))
         }
 
-        // Exaltation cancellation
-        val brideLordExaltSign = getExaltationSign(brideLord)
-        val groomLordExaltSign = getExaltationSign(groomLord)
-        if (brideLordExaltSign == groomSign || groomLordExaltSign == brideSign) {
-            return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_EXALTATION, language)
-        }
+        // 3. Exaltation cancellation involved? (Simplification: If lords are friends/neutral, we take it as partial cancellation in strict systems, but here sticking to standard)
 
-        // Friendly disposition (partial)
-        if ((rel1 == "Friend" && rel2 == "Neutral") || (rel1 == "Neutral" && rel2 == "Friend")) {
-            return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_FRIENDLY, language)
-        }
-
-        // Same element cancellation
+        // 4. Same element cancellation (optional in some texts, but often used)
         val brideElement = getSignElement(brideSign, language)
         val groomElement = getSignElement(groomSign, language)
         if (brideElement == groomElement) {
             return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_ELEMENT, language).replace("{element}", brideElement)
         }
+        
+        // 5. Friendly disposition (Friend-Neutral) sometimes considered cancellation
+        if ((rel1 == PlanetaryRelationship.FRIEND && rel2 == PlanetaryRelationship.NEUTRAL) ||
+            (rel1 == PlanetaryRelationship.NEUTRAL && rel2 == PlanetaryRelationship.FRIEND)) {
+             return StringResources.get(StringKeyMatch.BHAKOOT_CANCEL_FRIENDLY, language)
+        }
 
         return null
     }
+    
+    // endregion
 
-    private fun getExaltationSign(planet: Planet): ZodiacSign? = when (planet) {
-        Planet.SUN -> ZodiacSign.ARIES
-        Planet.MOON -> ZodiacSign.TAURUS
-        Planet.MARS -> ZodiacSign.CAPRICORN
-        Planet.MERCURY -> ZodiacSign.VIRGO
-        Planet.JUPITER -> ZodiacSign.CANCER
-        Planet.VENUS -> ZodiacSign.PISCES
-        Planet.SATURN -> ZodiacSign.LIBRA
-        Planet.RAHU -> ZodiacSign.TAURUS
-        Planet.KETU -> ZodiacSign.SCORPIO
-        else -> null
-    }
-
-    private fun getSignElement(sign: ZodiacSign, language: Language): String = when (sign) {
-        ZodiacSign.ARIES, ZodiacSign.LEO, ZodiacSign.SAGITTARIUS -> StringResources.get(StringKeyMatch.ELEMENT_FIRE, language)
-        ZodiacSign.TAURUS, ZodiacSign.VIRGO, ZodiacSign.CAPRICORN -> StringResources.get(StringKeyMatch.ELEMENT_EARTH, language)
-        ZodiacSign.GEMINI, ZodiacSign.LIBRA, ZodiacSign.AQUARIUS -> StringResources.get(StringKeyMatch.ELEMENT_AIR, language)
-        ZodiacSign.CANCER, ZodiacSign.SCORPIO, ZodiacSign.PISCES -> StringResources.get(StringKeyMatch.ELEMENT_WATER, language)
-    }
-
-    // ============================================
-    // NADI KOOTA (8 Points)
-    // ============================================
+    // region 8. Nadi Koota (8 Points)
 
     fun calculateNadi(
         brideNakshatra: Nakshatra,
@@ -565,7 +557,7 @@ object GunaMilanCalculator {
         groomPada: Int,
         language: Language
     ): String? {
-        // Same Nakshatra with different Rashi - strongest cancellation
+        // Same Nakshatra with different Rashi - strongest cancellation (e.g. Krittika Aries vs Krittika Taurus)
         if (brideNakshatra == groomNakshatra && brideMoonSign != groomMoonSign) {
             return StringResources.get(StringKeyMatch.NADI_CANCEL_SAME_NAK_DIFF_RASHI, language)
                 .replace("{nakshatra}", brideNakshatra.getLocalizedName(language))
@@ -584,7 +576,7 @@ object GunaMilanCalculator {
                 .replace("{pada2}", groomPada.toString())
         }
 
-        // Special Nakshatra pairs that cancel
+        // Special Nakshatra pairs that cancel (e.g. Rohini-Magha)
         for (pair in Nadi.cancellingPairs) {
             if (pair.contains(brideNakshatra) && pair.contains(groomNakshatra)) {
                 return StringResources.get(StringKeyMatch.NADI_CANCEL_SPECIAL_PAIR, language)
@@ -596,10 +588,13 @@ object GunaMilanCalculator {
         // Moon sign lords are mutual friends
         val brideLord = brideMoonSign.ruler
         val groomLord = groomMoonSign.ruler
+        
+        // Ensure not same lord to avoid duplication with other rules, though same lord is fundamentally good
         if (brideLord != groomLord) {
-            val rel1 = PlanetaryFriendship.getRelationship(brideLord, groomLord)
-            val rel2 = PlanetaryFriendship.getRelationship(groomLord, brideLord)
-            if (rel1 == "Friend" && rel2 == "Friend") {
+            val rel1 = VedicAstrologyUtils.getNaturalRelationship(brideLord, groomLord)
+            val rel2 = VedicAstrologyUtils.getNaturalRelationship(groomLord, brideLord)
+            
+            if (rel1 == PlanetaryRelationship.FRIEND && rel2 == PlanetaryRelationship.FRIEND) {
                 return StringResources.get(StringKeyMatch.NADI_CANCEL_LORDS_FRIENDS, language)
                     .replace("{lord1}", brideLord.getLocalizedName(language))
                     .replace("{lord2}", groomLord.getLocalizedName(language))
@@ -614,66 +609,17 @@ object GunaMilanCalculator {
 
         return null
     }
-}
 
-/**
- * Planetary friendship relationships for Graha Maitri calculation
- */
-object PlanetaryFriendship {
-    private val friendships = mapOf(
-        Planet.SUN to Triple(
-            listOf(Planet.MOON, Planet.MARS, Planet.JUPITER),
-            listOf(Planet.MERCURY),
-            listOf(Planet.VENUS, Planet.SATURN)
-        ),
-        Planet.MOON to Triple(
-            listOf(Planet.SUN, Planet.MERCURY),
-            listOf(Planet.MARS, Planet.JUPITER, Planet.VENUS, Planet.SATURN),
-            listOf()
-        ),
-        Planet.MARS to Triple(
-            listOf(Planet.SUN, Planet.MOON, Planet.JUPITER),
-            listOf(Planet.VENUS, Planet.SATURN),
-            listOf(Planet.MERCURY)
-        ),
-        Planet.MERCURY to Triple(
-            listOf(Planet.SUN, Planet.VENUS),
-            listOf(Planet.MARS, Planet.JUPITER, Planet.SATURN),
-            listOf(Planet.MOON)
-        ),
-        Planet.JUPITER to Triple(
-            listOf(Planet.SUN, Planet.MOON, Planet.MARS),
-            listOf(Planet.SATURN),
-            listOf(Planet.MERCURY, Planet.VENUS)
-        ),
-        Planet.VENUS to Triple(
-            listOf(Planet.MERCURY, Planet.SATURN),
-            listOf(Planet.MARS, Planet.JUPITER),
-            listOf(Planet.SUN, Planet.MOON)
-        ),
-        Planet.SATURN to Triple(
-            listOf(Planet.MERCURY, Planet.VENUS),
-            listOf(Planet.JUPITER),
-            listOf(Planet.SUN, Planet.MOON, Planet.MARS)
-        ),
-        Planet.RAHU to Triple(
-            listOf(Planet.SATURN, Planet.VENUS, Planet.MERCURY),
-            listOf(Planet.JUPITER),
-            listOf(Planet.SUN, Planet.MOON, Planet.MARS)
-        ),
-        Planet.KETU to Triple(
-            listOf(Planet.MARS, Planet.JUPITER),
-            listOf(Planet.SATURN, Planet.VENUS, Planet.MERCURY),
-            listOf(Planet.SUN, Planet.MOON)
-        )
-    )
+    // endregion
 
-    fun getRelationship(planet1: Planet, planet2: Planet): String {
-        val (friends, neutrals, enemies) = friendships[planet1] ?: return "Neutral"
-        return when (planet2) {
-            in friends -> "Friend"
-            in enemies -> "Enemy"
-            else -> "Neutral"
-        }
+    // region Helpers
+
+    private fun getSignElement(sign: ZodiacSign, language: Language): String = when (sign) {
+        ZodiacSign.ARIES, ZodiacSign.LEO, ZodiacSign.SAGITTARIUS -> StringResources.get(StringKeyMatch.ELEMENT_FIRE, language)
+        ZodiacSign.TAURUS, ZodiacSign.VIRGO, ZodiacSign.CAPRICORN -> StringResources.get(StringKeyMatch.ELEMENT_EARTH, language)
+        ZodiacSign.GEMINI, ZodiacSign.LIBRA, ZodiacSign.AQUARIUS -> StringResources.get(StringKeyMatch.ELEMENT_AIR, language)
+        ZodiacSign.CANCER, ZodiacSign.SCORPIO, ZodiacSign.PISCES -> StringResources.get(StringKeyMatch.ELEMENT_WATER, language)
     }
+
+    // endregion
 }

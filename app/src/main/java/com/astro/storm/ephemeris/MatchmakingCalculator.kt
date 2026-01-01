@@ -4,6 +4,7 @@ import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.*
+import com.astro.storm.ephemeris.VedicAstrologyUtils.PlanetaryRelationship
 import kotlin.math.abs
 
 /**
@@ -314,8 +315,8 @@ object MatchmakingCalculator {
         val bride7thLord = ZodiacSign.entries[(brideAscendant.number + 5) % 12].ruler
         val groom7thLord = ZodiacSign.entries[(groomAscendant.number + 5) % 12].ruler
 
-        if (PlanetaryFriendship.getRelationship(bride7thLord, groom7thLord) == "Enemy" &&
-            PlanetaryFriendship.getRelationship(groom7thLord, bride7thLord) == "Enemy") {
+        if (VedicAstrologyUtils.getNaturalRelationship(bride7thLord, groom7thLord) == PlanetaryRelationship.ENEMY &&
+            VedicAstrologyUtils.getNaturalRelationship(groom7thLord, bride7thLord) == PlanetaryRelationship.ENEMY) {
             considerations.add(
                 StringResources.get(StringKeyMatch.SPECIAL_7TH_LORDS_ENEMY, language)
                     .replace("{lord1}", bride7thLord.getLocalizedName(language))
