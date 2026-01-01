@@ -5,7 +5,6 @@ import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.*
 import com.astro.storm.ephemeris.VedicAstrologyUtils.PlanetaryRelationship
-import kotlin.math.abs
 
 /**
  * Main Matchmaking Calculator - Orchestrates Vedic compatibility analysis
@@ -112,10 +111,6 @@ object MatchmakingCalculator {
             detailedAnalysis = detailedAnalysis
         )
     }
-
-    // ============================================
-    // ADDITIONAL FACTORS
-    // ============================================
 
     /**
      * Calculate additional compatibility factors beyond Ashtakoot
@@ -230,10 +225,6 @@ object MatchmakingCalculator {
         )
     }
 
-    // ============================================
-    // SPECIAL CONSIDERATIONS
-    // ============================================
-
     private fun calculateSpecialConsiderations(
         brideChart: VedicChart,
         groomChart: VedicChart,
@@ -330,10 +321,6 @@ object MatchmakingCalculator {
 
         return considerations
     }
-
-    // ============================================
-    // REMEDIES
-    // ============================================
 
     private fun calculateRemedies(
         gunaAnalyses: List<GunaAnalysis>,
@@ -434,10 +421,6 @@ object MatchmakingCalculator {
         return remedies
     }
 
-    // ============================================
-    // SUMMARY GENERATION
-    // ============================================
-
     private fun generateSummary(
         totalPoints: Double,
         rating: CompatibilityRating,
@@ -503,10 +486,6 @@ object MatchmakingCalculator {
             appendLine(rating.getLocalizedDescription(language))
         }
     }
-
-    // ============================================
-    // DETAILED ANALYSIS GENERATION
-    // ============================================
 
     private fun generateDetailedAnalysis(
         brideChart: VedicChart,
@@ -637,9 +616,7 @@ object MatchmakingCalculator {
         return lines
     }
 
-    // ============================================
-    // PUBLIC UTILITY METHODS
-    // ============================================
+    // Public Utilities
 
     /**
      * Get detailed description of a Guna for educational purposes

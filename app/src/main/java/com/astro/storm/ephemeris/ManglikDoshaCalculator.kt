@@ -8,6 +8,7 @@ import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
+import kotlin.math.abs
 
 object ManglikDoshaCalculator {
 
@@ -535,7 +536,7 @@ object ManglikDoshaCalculator {
         val compatibility = when {
             neitherManglik -> CompatibilityLevel.EXCELLENT
             bothManglik -> {
-                val intensityDiff = kotlin.math.abs(
+                val intensityDiff = abs(
                     chart1.remainingIntensityAfterCancellations -
                         chart2.remainingIntensityAfterCancellations
                 )
