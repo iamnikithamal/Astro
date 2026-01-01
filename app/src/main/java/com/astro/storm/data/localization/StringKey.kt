@@ -253,6 +253,7 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     BTN_BACK("Back", "पछाडि"),
     BTN_CLOSE("Close", "बन्द गर्नुहोस्"),
     BTN_REFRESH("Refresh", "रिफ्रेस"),
+    BTN_REGENERATE("Regenerate", "पुन: उत्पन्न"),
     BTN_CREATE_CHART("Create Chart", "कुण्डली बनाउनुहोस्"),
 
     // ============================================

@@ -121,6 +121,7 @@ import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.ai.agent.AgentResponse
@@ -1864,7 +1865,9 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
     // AI state management
     var aiState by remember { mutableStateOf<AiInsightState>(AiInsightState.Initial) }
     var streamingContent by remember { mutableStateOf("") }
+    var displayContent by remember { mutableStateOf("") }
     var streamingJob by remember { mutableStateOf<Job?>(null) }
+    var lastUpdateTime by remember { mutableStateOf(0L) }
 
     // Get AI dependencies
     val agent = remember(context) { StormyAgent.getInstance(context) }
@@ -1959,12 +1962,20 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {
                                                         streamingContent += response.text
-                                                        aiState = AiInsightState.Streaming(
-                                                            ContentCleaner.cleanForDisplay(streamingContent)
-                                                        )
+                                                        // Throttle UI updates to reduce recompositions
+                                                        val currentTime = System.currentTimeMillis()
+                                                        if (currentTime - lastUpdateTime > 100) { // Max 10 updates/second
+                                                            lastUpdateTime = currentTime
+                                                            // Use raw content during streaming (skip expensive cleaning)
+                                                            displayContent = streamingContent.trim()
+                                                            aiState = AiInsightState.Streaming(displayContent)
+                                                        }
                                                     }
                                                     is AgentResponse.Complete -> {
-                                                        val finalContent = ContentCleaner.cleanForDisplay(response.content)
+                                                        // Only apply full cleaning when content is complete
+                                                        val finalContent = withContext(Dispatchers.Default) {
+                                                            ContentCleaner.cleanForDisplay(response.content)
+                                                        }
                                                         aiState = AiInsightState.Success(finalContent)
                                                     }
                                                     is AgentResponse.Error -> {
@@ -2015,7 +2026,7 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "Stormy is analyzing...",
+                                stringResource(StringKeyDosha.STORMY_ANALYZING),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = AppTheme.TextMuted
                             )
@@ -2048,7 +2059,7 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "Generating...",
+                                            stringResource(StringKeyDosha.AI_GENERATING),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = AppTheme.TextMuted
                                         )
@@ -2098,7 +2109,7 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            "Regenerate",
+                                            stringResource(StringKey.BTN_REGENERATE),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = AppTheme.AccentPrimary
                                         )

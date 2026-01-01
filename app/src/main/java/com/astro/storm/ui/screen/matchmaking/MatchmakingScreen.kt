@@ -45,6 +45,7 @@ import com.astro.storm.data.repository.SavedChart
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.currentLanguage
@@ -909,20 +910,27 @@ private fun EnhancedGunaScoreBar(guna: GunaAnalysis) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f, fill = false)
+            ) {
                 Text(
                     guna.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = AppTheme.TextPrimary
+                    color = AppTheme.TextPrimary,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     "(${guna.description})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.TextMuted
+                    color = AppTheme.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
             Surface(
                 color = if (guna.isPositive) AppTheme.SuccessColor.copy(alpha = 0.1f) 
                        else AppTheme.WarningColor.copy(alpha = 0.1f),
@@ -1191,21 +1199,25 @@ private fun AnimatedGunaCard(
                             )
                         }
                         Spacer(modifier = Modifier.width(14.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 guna.name,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = AppTheme.TextPrimary
+                                color = AppTheme.TextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 guna.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = AppTheme.TextMuted
+                                color = AppTheme.TextMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         color = if (guna.isPositive) AppTheme.SuccessColor.copy(alpha = 0.12f)
                         else AppTheme.WarningColor.copy(alpha = 0.12f),
@@ -2521,7 +2533,9 @@ private fun MatchmakingAiInsightCard(
     // AI state management
     var aiState by remember { mutableStateOf<MatchmakingAiInsightState>(MatchmakingAiInsightState.Initial) }
     var streamingContent by remember { mutableStateOf("") }
+    var displayContent by remember { mutableStateOf("") }
     var streamingJob by remember { mutableStateOf<Job?>(null) }
+    var lastUpdateTime by remember { mutableStateOf(0L) }
 
     // Get AI dependencies
     val agent = remember(context) { StormyAgent.getInstance(context) }
@@ -2618,12 +2632,20 @@ private fun MatchmakingAiInsightCard(
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {
                                                         streamingContent += response.text
-                                                        aiState = MatchmakingAiInsightState.Streaming(
-                                                            ContentCleaner.cleanForDisplay(streamingContent)
-                                                        )
+                                                        // Throttle UI updates to reduce recompositions
+                                                        val currentTime = System.currentTimeMillis()
+                                                        if (currentTime - lastUpdateTime > 100) { // Max 10 updates/second
+                                                            lastUpdateTime = currentTime
+                                                            // Use raw content during streaming (skip expensive cleaning)
+                                                            displayContent = streamingContent.trim()
+                                                            aiState = MatchmakingAiInsightState.Streaming(displayContent)
+                                                        }
                                                     }
                                                     is AgentResponse.Complete -> {
-                                                        val finalContent = ContentCleaner.cleanForDisplay(response.content)
+                                                        // Only apply full cleaning when content is complete
+                                                        val finalContent = withContext(Dispatchers.Default) {
+                                                            ContentCleaner.cleanForDisplay(response.content)
+                                                        }
                                                         aiState = MatchmakingAiInsightState.Success(finalContent)
                                                     }
                                                     is AgentResponse.Error -> {
@@ -2674,7 +2696,7 @@ private fun MatchmakingAiInsightCard(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "Stormy is analyzing compatibility...",
+                                stringResource(StringKeyDosha.STORMY_ANALYZING_COMPATIBILITY),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = AppTheme.TextMuted
                             )
@@ -2707,7 +2729,7 @@ private fun MatchmakingAiInsightCard(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "Generating...",
+                                            stringResource(StringKeyDosha.AI_GENERATING),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = AppTheme.TextMuted
                                         )
@@ -2757,7 +2779,7 @@ private fun MatchmakingAiInsightCard(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            "Regenerate",
+                                            stringResource(StringKey.BTN_REGENERATE),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = AppTheme.AccentPrimary
                                         )

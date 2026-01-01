@@ -30,7 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
@@ -64,7 +63,6 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.ephemeris.PlanetaryShadbala
 import com.astro.storm.ephemeris.RetrogradeCombustionCalculator
-import com.astro.storm.ephemeris.ShadbalaAnalysis
 import com.astro.storm.ephemeris.ShadbalaCalculator
 import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import com.astro.storm.ui.screen.chartdetail.ChartDetailUtils
@@ -148,8 +146,7 @@ private data class PlanetCardState(
 fun PlanetsTabContent(
     chart: VedicChart,
     onPlanetClick: (PlanetPosition) -> Unit,
-    onNakshatraClick: (Nakshatra, Int) -> Unit = { _, _ -> },
-    onShadbalaClick: () -> Unit
+    onNakshatraClick: (Nakshatra, Int) -> Unit = { _, _ -> }
 ) {
     val planetConditions = remember(chart) {
         RetrogradeCombustionCalculator.analyzePlanetaryConditions(chart)
@@ -182,13 +179,6 @@ fun PlanetsTabContent(
     ) {
         item(key = "conditions_summary") {
             PlanetaryConditionsSummary(conditions = planetConditions)
-        }
-
-        item(key = "shadbala_overview") {
-            ShadbalaOverviewCard(
-                shadbala = shadbala,
-                onClick = onShadbalaClick
-            )
         }
 
         items(
@@ -310,108 +300,6 @@ private fun ConditionStatBadge(
         Text(
             text = label,
             fontSize = 12.sp,
-            color = ChartDetailColors.TextMuted
-        )
-    }
-}
-
-@Composable
-private fun ShadbalaOverviewCard(
-    shadbala: ShadbalaAnalysis,
-    onClick: () -> Unit
-) {
-    val formattedScore = remember(shadbala.overallStrengthScore) {
-        DecimalFormatters.oneDecimal.format(shadbala.overallStrengthScore)
-    }
-
-    Surface(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics {
-                role = Role.Button
-                contentDescription = "Shadbala Summary. Overall strength $formattedScore percent. Tap to view details."
-            },
-        shape = RoundedCornerShape(16.dp),
-        color = ChartDetailColors.CardBackground
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SectionHeader(
-                    icon = Icons.Outlined.TrendingUp,
-                    title = stringResource(StringKeyAnalysis.PLANETS_SHADBALA_SUMMARY),
-                    iconTint = ChartDetailColors.AccentGold
-                )
-                ViewDetailsIndicator()
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatColumn(
-                    value = "$formattedScore%",
-                    label = stringResource(StringKeyAnalysis.PLANETS_OVERALL),
-                    valueColor = ChartDetailColors.getStrengthColor(shadbala.overallStrengthScore)
-                )
-                StatColumn(
-                    value = shadbala.strongestPlanet.symbol,
-                    label = stringResource(StringKeyAnalysis.ASHTAK_STRONGEST),
-                    valueColor = ChartDetailColors.SuccessColor
-                )
-                StatColumn(
-                    value = shadbala.weakestPlanet.symbol,
-                    label = stringResource(StringKeyAnalysis.ASHTAK_WEAKEST),
-                    valueColor = ChartDetailColors.ErrorColor
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ViewDetailsIndicator(
-    text: String = "",
-    color: Color = ChartDetailColors.AccentGold
-) {
-    val displayText = text.ifEmpty { stringResource(StringKey.BTN_VIEW_DETAILS) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = displayText,
-            fontSize = 12.sp,
-            color = color
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(18.dp)
-        )
-    }
-}
-
-@Composable
-private fun StatColumn(
-    value: String,
-    label: String,
-    valueColor: Color
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = valueColor
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
             color = ChartDetailColors.TextMuted
         )
     }

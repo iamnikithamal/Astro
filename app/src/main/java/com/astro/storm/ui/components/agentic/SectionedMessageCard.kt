@@ -17,6 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.ui.components.ContentCleaner
 import com.astro.storm.ui.components.MarkdownText
 import com.astro.storm.ui.theme.AppTheme
@@ -220,7 +223,7 @@ private fun SectionedAgentHeader(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Stormy",
+                    text = stringResource(StringKeyDosha.STORMY_TITLE),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.TextPrimary
@@ -307,7 +310,7 @@ private fun ErrorBanner(message: String) {
 @Composable
 private fun ProcessingIndicator(aiStatus: AiStatus) {
     val colors = AppTheme.current
-    val statusText = getStatusText(aiStatus) ?: "Processing..."
+    val statusText = getStatusText(aiStatus) ?: stringResource(StringKeyDosha.STORMY_PROCESSING)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -330,15 +333,16 @@ private fun ProcessingIndicator(aiStatus: AiStatus) {
 /**
  * Get status text for current AI status
  */
+@Composable
 private fun getStatusText(aiStatus: AiStatus): String? {
     return when (aiStatus) {
         is AiStatus.Idle -> null
         is AiStatus.Complete -> null
-        is AiStatus.Thinking -> "Analyzing your question..."
-        is AiStatus.Reasoning -> "Reasoning through Vedic principles..."
-        is AiStatus.CallingTool -> "Using ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..."
-        is AiStatus.ExecutingTools -> "Gathering astrological data..."
-        is AiStatus.Typing -> "Composing response..."
+        is AiStatus.Thinking -> stringResource(StringKeyDosha.AI_ANALYZING_QUESTION)
+        is AiStatus.Reasoning -> stringResource(StringKeyDosha.STORMY_REASONING_VEDIC)
+        is AiStatus.CallingTool -> stringResource(StringKeyDosha.STORMY_USING_TOOL, ToolDisplayUtils.formatToolName(aiStatus.toolName))
+        is AiStatus.ExecutingTools -> stringResource(StringKeyDosha.STORMY_GATHERING_DATA)
+        is AiStatus.Typing -> stringResource(StringKeyDosha.STORMY_COMPOSING)
     }
 }
 
@@ -523,7 +527,7 @@ fun CompletedSectionedMessageCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Regenerate",
+                    text = stringResource(StringKey.BTN_REGENERATE),
                     style = MaterialTheme.typography.labelSmall
                 )
             }

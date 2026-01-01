@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.StringKey
@@ -215,7 +216,9 @@ private fun ChartAnalysisTopBar(
                 Text(
                     text = chartName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.TextMuted
+                    color = AppTheme.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -342,8 +345,6 @@ private fun ChartTabContentWrapper(
     onPlanetClick: (PlanetPosition) -> Unit,
     onHouseClick: (Int) -> Unit
 ) {
-    val context = LocalContext.current
-
     Box(
         modifier = Modifier
             .fillMaxSize()

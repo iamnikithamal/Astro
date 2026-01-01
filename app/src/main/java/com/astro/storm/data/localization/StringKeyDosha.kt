@@ -2339,8 +2339,62 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     STORMY_THINKING("Stormy is thinking...", "स्टर्मीले सोच्दैछ..."),
     STORMY_REASONING("Stormy is reasoning...", "स्टर्मीले तर्क गर्दैछ..."),
     STORMY_TYPING("Stormy is typing...", "स्टर्मीले टाइप गर्दैछ..."),
+    STORMY_ANALYZING("Stormy is analyzing...", "स्टर्मीले विश्लेषण गर्दैछ..."),
+    STORMY_ANALYZING_COMPATIBILITY("Stormy is analyzing compatibility...", "स्टर्मीले अनुकूलता विश्लेषण गर्दैछ..."),
     STORMY_CALLING_TOOL("Calling %s...", "%s कल गर्दैछ..."),
     STORMY_USING_TOOLS("Using tools: %s", "उपकरणहरू प्रयोग गर्दैछ: %s"),
+    STORMY_USING_TOOL("Using %s...", "%s प्रयोग गर्दैछ..."),
+    STORMY_REASONING_VEDIC("Reasoning through Vedic principles...", "वैदिक सिद्धान्तहरूमा तर्क गर्दैछ..."),
+    STORMY_GATHERING_DATA("Gathering astrological data...", "ज्योतिषीय डाटा संकलन गर्दैछ..."),
+    STORMY_COMPOSING("Composing response...", "प्रतिक्रिया रचना गर्दैछ..."),
+    STORMY_APPLYING_VEDIC("Applying Vedic principles...", "वैदिक सिद्धान्तहरू लागू गर्दैछ..."),
+    STORMY_PROCESSING("Processing...", "प्रशोधन गर्दैछ..."),
+    STORMY_NEEDS_INPUT("Stormy needs your input", "स्टर्मीलाई तपाईंको इनपुट चाहिन्छ"),
+
+    // Agentic Section UI Strings
+    SECTION_REASONING("Reasoning", "तर्क"),
+    SECTION_ASTROLOGICAL_TOOLS("Astrological Tools", "ज्योतिषीय उपकरणहरू"),
+    SECTION_TASK_STARTED("Started: %s", "सुरु भयो: %s"),
+    SECTION_TASK_COMPLETED("Completed: %s", "सम्पन्न भयो: %s"),
+    SECTION_REASONED_FOR("Reasoned for %s", "%s को लागि तर्क गरियो"),
+    SECTION_ANALYZING("Analyzing...", "विश्लेषण गर्दैछ..."),
+    SECTION_TAP_TO_VIEW("Tap to view", "हेर्न ट्याप गर्नुहोस्"),
+    SECTION_TAP_TO_VIEW_REASONING("Tap to view reasoning", "तर्क हेर्न ट्याप गर्नुहोस्"),
+    SECTION_VEDIC_ANALYSIS("Vedic analysis process", "वैदिक विश्लेषण प्रक्रिया"),
+    SECTION_COLLAPSE("Collapse", "संकुचित गर्नुहोस्"),
+    SECTION_EXPAND("Expand", "विस्तार गर्नुहोस्"),
+
+    // Tool Execution Status
+    TOOL_STATUS_PENDING("Pending", "पर्खिएको"),
+    TOOL_STATUS_RUNNING("Running...", "चलिरहेको..."),
+    TOOL_STATUS_COMPLETED_IN("Completed in %s", "%s मा सम्पन्न"),
+    TOOL_STATUS_FAILED("Failed", "असफल"),
+    TOOLS_USED_LABEL("Used: %s", "प्रयोग गरियो: %s"),
+    TOOLS_MORE_COUNT(" +%d more", " +%d थप"),
+
+    // Todo List
+    TODO_IN_PROGRESS("In Progress", "प्रगतिमा"),
+
+    // Ask User Placeholder
+    PLACEHOLDER_TYPE_RESPONSE("Type your response...", "तपाईंको प्रतिक्रिया टाइप गर्नुहोस्..."),
+    RESPONSE_SUBMITTED("Response submitted", "प्रतिक्रिया पेश गरियो"),
+
+    // Profile Operation Status
+    PROFILE_STATUS_PENDING("Pending", "पर्खिएको"),
+    PROFILE_STATUS_IN_PROGRESS("In Progress", "प्रगतिमा"),
+    PROFILE_STATUS_SUCCESS("Success", "सफल"),
+    PROFILE_STATUS_FAILED("Failed", "असफल"),
+
+    // Profile Operation Types
+    PROFILE_OP_CREATING("Creating Profile", "प्रोफाइल बनाउँदै"),
+    PROFILE_OP_UPDATING("Updating Profile", "प्रोफाइल अपडेट गर्दै"),
+    PROFILE_OP_DELETING("Deleting Profile", "प्रोफाइल हटाउँदै"),
+    PROFILE_OP_VIEWING("Viewing Profile", "प्रोफाइल हेर्दै"),
+    PROFILE_ID_LABEL("ID: %s", "आईडी: %s"),
+
+    // AI Generation Status
+    AI_GENERATING("Generating...", "उत्पन्न गर्दैछ..."),
+    AI_ANALYZING_QUESTION("Analyzing your question...", "तपाईंको प्रश्न विश्लेषण गर्दै..."),
 
     // Chat Suggestions
     CHAT_SUGGESTION_DASHA("What's my current dasha period?", "मेरो हालको दशा अवधि के हो?"),

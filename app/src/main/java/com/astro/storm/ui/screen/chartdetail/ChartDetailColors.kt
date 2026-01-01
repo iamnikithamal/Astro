@@ -1,85 +1,167 @@
 package com.astro.storm.ui.screen.chartdetail
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.astro.storm.data.model.Planet
+import com.astro.storm.ui.theme.LocalAppThemeColors
 
 /**
- * Centralized color palette for ChartDetail screens and components.
- * Provides consistent styling across all chart detail UI elements.
+ * Theme-aware color palette for ChartDetail screens and components.
+ *
+ * All properties automatically adapt to light/dark mode using LocalAppThemeColors,
+ * ensuring proper display in both themes.
  */
 object ChartDetailColors {
-    // Screen backgrounds
-    val ScreenBackground = Color(0xFF121212)
-    val SurfaceColor = Color(0xFF1E1E1E)
-    val CardBackground = Color(0xFF252525)
-    val CardBackgroundElevated = Color(0xFF2D2D2D)
-    val ChartBackground = Color(0xFF1A1512)
+    // Screen backgrounds - theme-aware
+    val ScreenBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ScreenBackground
 
-    // Accent colors
-    val AccentGold = Color(0xFFD4AF37)
-    val AccentTeal = Color(0xFF4DB6AC)
-    val AccentPurple = Color(0xFF9575CD)
-    val AccentRose = Color(0xFFE57373)
-    val AccentBlue = Color(0xFF64B5F6)
-    val AccentGreen = Color(0xFF81C784)
-    val AccentOrange = Color(0xFFFFB74D)
+    val SurfaceColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.SurfaceColor
 
-    // Text colors
-    val TextPrimary = Color(0xFFF5F5F5)
-    val TextSecondary = Color(0xFFB0B0B0)
-    val TextMuted = Color(0xFF757575)
+    val CardBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.CardBackground
 
-    // Divider and utility
-    val DividerColor = Color(0xFF333333)
+    val CardBackgroundElevated: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.CardBackgroundElevated
 
-    // Status colors
-    val SuccessColor = Color(0xFF81C784)
-    val WarningColor = Color(0xFFFFB74D)
-    val ErrorColor = Color(0xFFE57373)
+    val ChartBackground: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ChartBackground
 
-    // Planet-specific colors for consistent representation
-    val planetColors: Map<Planet, Color> = mapOf(
-        Planet.SUN to Color(0xFFD2691E),
-        Planet.MOON to Color(0xFFDC143C),
-        Planet.MARS to Color(0xFFDC143C),
-        Planet.MERCURY to Color(0xFF228B22),
-        Planet.JUPITER to Color(0xFFDAA520),
-        Planet.VENUS to Color(0xFF9370DB),
-        Planet.SATURN to Color(0xFF4169E1),
-        Planet.RAHU to Color(0xFF8B0000),
-        Planet.KETU to Color(0xFF8B0000),
-        Planet.URANUS to Color(0xFF20B2AA),
-        Planet.NEPTUNE to Color(0xFF4682B4),
-        Planet.PLUTO to Color(0xFF800080)
-    )
+    // Accent colors - theme-aware
+    val AccentGold: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentGold
+
+    val AccentTeal: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.AccentTeal
+
+    val AccentPurple: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaSpiritual
+
+    val AccentRose: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.LifeAreaLove
+
+    val AccentBlue: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.InfoColor
+
+    val AccentGreen: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.SuccessColor
+
+    val AccentOrange: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.WarningColor
+
+    // Text colors - theme-aware
+    val TextPrimary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextPrimary
+
+    val TextSecondary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextSecondary
+
+    val TextMuted: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.TextMuted
+
+    // Divider and utility - theme-aware
+    val DividerColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.DividerColor
+
+    // Status colors - theme-aware
+    val SuccessColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.SuccessColor
+
+    val WarningColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.WarningColor
+
+    val ErrorColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppThemeColors.current.ErrorColor
 
     /**
-     * Returns the appropriate color for a planet, with a fallback.
+     * Returns the appropriate color for a planet - theme-aware.
      */
-    fun getPlanetColor(planet: Planet): Color = planetColors[planet] ?: AccentGold
+    @Composable
+    @ReadOnlyComposable
+    fun getPlanetColor(planet: Planet): Color = when (planet) {
+        Planet.SUN -> LocalAppThemeColors.current.PlanetSun
+        Planet.MOON -> LocalAppThemeColors.current.PlanetMoon
+        Planet.MARS -> LocalAppThemeColors.current.PlanetMars
+        Planet.MERCURY -> LocalAppThemeColors.current.PlanetMercury
+        Planet.JUPITER -> LocalAppThemeColors.current.PlanetJupiter
+        Planet.VENUS -> LocalAppThemeColors.current.PlanetVenus
+        Planet.SATURN -> LocalAppThemeColors.current.PlanetSaturn
+        Planet.RAHU -> LocalAppThemeColors.current.PlanetRahu
+        Planet.KETU -> LocalAppThemeColors.current.PlanetKetu
+        Planet.URANUS -> LocalAppThemeColors.current.AccentTeal
+        Planet.NEPTUNE -> LocalAppThemeColors.current.InfoColor
+        Planet.PLUTO -> LocalAppThemeColors.current.LifeAreaSpiritual
+    }
 
     /**
-     * Returns color based on strength percentage.
+     * Returns color based on strength percentage - theme-aware.
      */
+    @Composable
+    @ReadOnlyComposable
     fun getStrengthColor(percentage: Double): Color = when {
-        percentage >= 100 -> SuccessColor
-        percentage >= 85 -> AccentOrange
-        else -> ErrorColor
+        percentage >= 100 -> LocalAppThemeColors.current.SuccessColor
+        percentage >= 85 -> LocalAppThemeColors.current.WarningColor
+        else -> LocalAppThemeColors.current.ErrorColor
     }
 
     /**
-     * Returns color based on bindu score.
+     * Returns color based on bindu score - theme-aware.
      */
+    @Composable
+    @ReadOnlyComposable
     fun getBinduColor(bindus: Int): Color = when {
-        bindus >= 5 -> SuccessColor
-        bindus >= 4 -> AccentTeal
-        bindus <= 2 -> ErrorColor
-        else -> TextPrimary
+        bindus >= 5 -> LocalAppThemeColors.current.SuccessColor
+        bindus >= 4 -> LocalAppThemeColors.current.AccentTeal
+        bindus <= 2 -> LocalAppThemeColors.current.ErrorColor
+        else -> LocalAppThemeColors.current.TextPrimary
     }
 
     /**
-     * Returns color for SAV transit favorability.
+     * Returns color for SAV transit favorability - theme-aware.
      */
+    @Composable
+    @ReadOnlyComposable
     fun getSavFavorableColor(isFavorable: Boolean): Color =
-        if (isFavorable) SuccessColor else WarningColor
+        if (isFavorable) LocalAppThemeColors.current.SuccessColor
+        else LocalAppThemeColors.current.WarningColor
 }

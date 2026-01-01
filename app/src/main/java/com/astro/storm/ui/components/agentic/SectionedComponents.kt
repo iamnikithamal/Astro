@@ -120,7 +120,10 @@ fun TaskBoundarySection(
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = if (section.isStart) "Started: ${section.taskName}" else "Completed: ${section.taskName}",
+                        text = if (section.isStart)
+                            stringResource(StringKeyDosha.SECTION_TASK_STARTED, section.taskName)
+                        else
+                            stringResource(StringKeyDosha.SECTION_TASK_COMPLETED, section.taskName),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = if (section.isStart) colors.AccentPrimary else colors.SuccessColor
@@ -224,7 +227,7 @@ fun ReasoningSection(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Reasoning",
+                                text = stringResource(StringKeyDosha.SECTION_REASONING),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colors.AccentPrimary
@@ -237,11 +240,11 @@ fun ReasoningSection(
                         // Duration or status
                         Text(
                             text = if (section.isComplete && section.durationMs > 0)
-                                "Reasoned for ${section.durationDisplay}"
+                                stringResource(StringKeyDosha.SECTION_REASONED_FOR, section.durationDisplay)
                             else if (isActive)
-                                "Analyzing..."
+                                stringResource(StringKeyDosha.SECTION_ANALYZING)
                             else
-                                "Tap to view",
+                                stringResource(StringKeyDosha.SECTION_TAP_TO_VIEW),
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.TextMuted
                         )
@@ -250,7 +253,10 @@ fun ReasoningSection(
 
                 Icon(
                     imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (section.isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (section.isExpanded)
+                        stringResource(StringKeyDosha.SECTION_COLLAPSE)
+                    else
+                        stringResource(StringKeyDosha.SECTION_EXPAND),
                     tint = colors.AccentPrimary,
                     modifier = Modifier.size(22.dp)
                 )
@@ -464,10 +470,10 @@ private fun IndividualToolCard(
                         // Status text
                         Text(
                             text = when (tool.status) {
-                                ToolExecutionStatus.PENDING -> "Pending"
-                                ToolExecutionStatus.EXECUTING -> "Running..."
-                                ToolExecutionStatus.COMPLETED -> "Completed in ${tool.durationDisplay}"
-                                ToolExecutionStatus.FAILED -> "Failed"
+                                ToolExecutionStatus.PENDING -> stringResource(StringKeyDosha.TOOL_STATUS_PENDING)
+                                ToolExecutionStatus.EXECUTING -> stringResource(StringKeyDosha.TOOL_STATUS_RUNNING)
+                                ToolExecutionStatus.COMPLETED -> stringResource(StringKeyDosha.TOOL_STATUS_COMPLETED_IN, tool.durationDisplay)
+                                ToolExecutionStatus.FAILED -> stringResource(StringKeyDosha.TOOL_STATUS_FAILED)
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = statusColor
@@ -479,7 +485,10 @@ private fun IndividualToolCard(
                 if (tool.result != null || tool.error != null) {
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        contentDescription = if (isExpanded)
+                            stringResource(StringKeyDosha.SECTION_COLLAPSE)
+                        else
+                            stringResource(StringKeyDosha.SECTION_EXPAND),
                         tint = colors.TextMuted,
                         modifier = Modifier.size(22.dp)
                     )
@@ -603,7 +612,7 @@ fun ToolGroupSectionGrouped(
 
                     Column {
                         Text(
-                            text = "Astrological Tools",
+                            text = stringResource(StringKeyDosha.SECTION_ASTROLOGICAL_TOOLS),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = colors.TextPrimary
@@ -618,7 +627,10 @@ fun ToolGroupSectionGrouped(
 
                 Icon(
                     imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (section.isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (section.isExpanded)
+                        stringResource(StringKeyDosha.SECTION_COLLAPSE)
+                    else
+                        stringResource(StringKeyDosha.SECTION_EXPAND),
                     tint = colors.TextMuted,
                     modifier = Modifier.size(22.dp)
                 )
@@ -892,7 +904,7 @@ fun AskUserSection(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Stormy needs your input",
+                        text = stringResource(StringKeyDosha.STORMY_NEEDS_INPUT),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.AccentGold
@@ -950,7 +962,7 @@ fun AskUserSection(
                             Box {
                                 if (customInput.isEmpty()) {
                                     Text(
-                                        text = "Type your response...",
+                                        text = stringResource(StringKeyDosha.PLACEHOLDER_TYPE_RESPONSE),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = colors.TextMuted
                                     )
@@ -1000,7 +1012,7 @@ fun AskUserSection(
                         Text(
                             text = section.customResponse
                                 ?: section.options.find { it.id == section.selectedOptionId }?.label
-                                ?: "Response submitted",
+                                ?: stringResource(StringKeyDosha.RESPONSE_SUBMITTED),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.TextPrimary
                         )
@@ -1172,7 +1184,10 @@ fun TodoListSection(
 
                     Icon(
                         imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (section.isExpanded) "Collapse" else "Expand",
+                        contentDescription = if (section.isExpanded)
+                            stringResource(StringKeyDosha.SECTION_COLLAPSE)
+                        else
+                            stringResource(StringKeyDosha.SECTION_EXPAND),
                         tint = colors.TextMuted,
                         modifier = Modifier.size(22.dp)
                     )
@@ -1278,7 +1293,7 @@ private fun TodoItemRow(item: TodoItem) {
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = "In Progress",
+                    text = stringResource(StringKeyDosha.TODO_IN_PROGRESS),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.AccentTeal,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -1304,34 +1319,25 @@ fun ProfileOperationSection(
 ) {
     val colors = AppTheme.current
 
-    val (icon, statusColor, statusText) = when (section.status) {
-        ProfileOperationStatus.PENDING -> Triple(
-            Icons.Outlined.Schedule,
-            colors.TextMuted,
-            "Pending"
-        )
-        ProfileOperationStatus.IN_PROGRESS -> Triple(
-            Icons.Outlined.Sync,
-            colors.AccentTeal,
-            "In Progress"
-        )
-        ProfileOperationStatus.SUCCESS -> Triple(
-            Icons.Filled.CheckCircle,
-            colors.SuccessColor,
-            "Success"
-        )
-        ProfileOperationStatus.FAILED -> Triple(
-            Icons.Outlined.ErrorOutline,
-            colors.ErrorColor,
-            "Failed"
-        )
+    val (icon, statusColor) = when (section.status) {
+        ProfileOperationStatus.PENDING -> Icons.Outlined.Schedule to colors.TextMuted
+        ProfileOperationStatus.IN_PROGRESS -> Icons.Outlined.Sync to colors.AccentTeal
+        ProfileOperationStatus.SUCCESS -> Icons.Filled.CheckCircle to colors.SuccessColor
+        ProfileOperationStatus.FAILED -> Icons.Outlined.ErrorOutline to colors.ErrorColor
+    }
+
+    val statusText = when (section.status) {
+        ProfileOperationStatus.PENDING -> stringResource(StringKeyDosha.PROFILE_STATUS_PENDING)
+        ProfileOperationStatus.IN_PROGRESS -> stringResource(StringKeyDosha.PROFILE_STATUS_IN_PROGRESS)
+        ProfileOperationStatus.SUCCESS -> stringResource(StringKeyDosha.PROFILE_STATUS_SUCCESS)
+        ProfileOperationStatus.FAILED -> stringResource(StringKeyDosha.PROFILE_STATUS_FAILED)
     }
 
     val operationText = when (section.operation) {
-        ProfileOperationType.CREATE -> "Creating Profile"
-        ProfileOperationType.UPDATE -> "Updating Profile"
-        ProfileOperationType.DELETE -> "Deleting Profile"
-        ProfileOperationType.VIEW -> "Viewing Profile"
+        ProfileOperationType.CREATE -> stringResource(StringKeyDosha.PROFILE_OP_CREATING)
+        ProfileOperationType.UPDATE -> stringResource(StringKeyDosha.PROFILE_OP_UPDATING)
+        ProfileOperationType.DELETE -> stringResource(StringKeyDosha.PROFILE_OP_DELETING)
+        ProfileOperationType.VIEW -> stringResource(StringKeyDosha.PROFILE_OP_VIEWING)
     }
 
     Surface(
@@ -1412,7 +1418,7 @@ fun ProfileOperationSection(
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        text = "ID: ${section.profileId}",
+                        text = stringResource(StringKeyDosha.PROFILE_ID_LABEL, section.profileId),
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.TextSubtle,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

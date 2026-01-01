@@ -437,20 +437,27 @@ fun GunaScoreBar(guna: GunaAnalysis) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f, fill = false)
+            ) {
                 Text(
                     guna.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = AppTheme.TextPrimary
+                    color = AppTheme.TextPrimary,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     "(${guna.description})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.TextMuted
+                    color = AppTheme.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
             Surface(
                 color = if (guna.isPositive) AppTheme.SuccessColor.copy(alpha = 0.1f)
                 else AppTheme.WarningColor.copy(alpha = 0.1f),

@@ -1010,13 +1010,15 @@ private fun GenderChip(
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)
         ) {
             Text(
                 text = text,
                 color = if (isSelected) colors.ButtonText else colors.TextPrimary,
                 fontSize = 12.sp,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

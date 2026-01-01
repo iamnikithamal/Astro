@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Nakshatra
@@ -30,7 +30,6 @@ import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ui.components.NakshatraDetailDialog
 import com.astro.storm.ui.components.dialogs.PlanetDetailDialog
-import com.astro.storm.ui.components.ShadbalaDialog
 import com.astro.storm.ui.screen.chartdetail.tabs.PlanetsTabContent
 import com.astro.storm.ui.theme.AppTheme
 
@@ -41,9 +40,10 @@ import com.astro.storm.ui.theme.AppTheme
  * - Detailed planetary positions and states
  * - Retrograde, combust, and planetary war indicators
  * - Dignity status (exaltation, debilitation, own sign)
- * - Shadbala (six-fold strength) analysis
  * - Nakshatra and pada information
  * - Interactive planet cards with detailed dialog views
+ *
+ * Note: Shadbala analysis is available in the dedicated ShadbalaScreen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +63,6 @@ fun PlanetsScreen(
     // Dialog states
     var selectedPlanetPosition by remember { mutableStateOf<PlanetPosition?>(null) }
     var selectedNakshatra by remember { mutableStateOf<Pair<Nakshatra, Int>?>(null) }
-    var showShadbalaDialog by remember { mutableStateOf(false) }
 
     // Render dialogs
     selectedPlanetPosition?.let { position ->
@@ -82,20 +81,12 @@ fun PlanetsScreen(
         )
     }
 
-    if (showShadbalaDialog) {
-        ShadbalaDialog(
-            chart = chart,
-            onDismiss = { showShadbalaDialog = false }
-        )
-    }
-
     Scaffold(
         containerColor = AppTheme.ScreenBackground,
         topBar = {
             PlanetsTopBar(
                 chartName = chart.birthData.name,
-                onBack = onBack,
-                onShowShadbala = { showShadbalaDialog = true }
+                onBack = onBack
             )
         }
     ) { paddingValues ->
@@ -110,8 +101,7 @@ fun PlanetsScreen(
                 onPlanetClick = { selectedPlanetPosition = it },
                 onNakshatraClick = { nakshatra, pada ->
                     selectedNakshatra = nakshatra to pada
-                },
-                onShadbalaClick = { showShadbalaDialog = true }
+                }
             )
         }
     }
@@ -121,8 +111,7 @@ fun PlanetsScreen(
 @Composable
 private fun PlanetsTopBar(
     chartName: String,
-    onBack: () -> Unit,
-    onShowShadbala: () -> Unit
+    onBack: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -136,7 +125,9 @@ private fun PlanetsTopBar(
                 Text(
                     text = chartName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.TextMuted
+                    color = AppTheme.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -145,15 +136,6 @@ private fun PlanetsTopBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(StringKey.BTN_BACK),
-                    tint = AppTheme.TextPrimary
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onShowShadbala) {
-                Icon(
-                    imageVector = Icons.Outlined.Analytics,
-                    contentDescription = stringResource(StringKey.FEATURE_SHADBALA),
                     tint = AppTheme.TextPrimary
                 )
             }

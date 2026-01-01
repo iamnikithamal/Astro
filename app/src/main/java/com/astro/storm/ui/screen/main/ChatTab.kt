@@ -1055,11 +1055,11 @@ private fun AiStatusIndicator(aiStatus: AiStatus) {
     // Determine status text and icon based on current AI status
     val (statusText, statusIcon) = when (aiStatus) {
         is AiStatus.Idle -> return // Don't show anything for idle
-        is AiStatus.Thinking -> "Stormy is thinking..." to Icons.Outlined.Psychology
-        is AiStatus.Reasoning -> "Stormy is reasoning..." to Icons.Outlined.Lightbulb
-        is AiStatus.CallingTool -> "Calling ${ToolDisplayUtils.formatToolName(aiStatus.toolName)}..." to Icons.Outlined.Build
-        is AiStatus.ExecutingTools -> "Using tools: ${aiStatus.tools.joinToString(", ") { ToolDisplayUtils.formatToolName(it) }}" to Icons.Outlined.Build
-        is AiStatus.Typing -> "Stormy is typing..." to Icons.Outlined.Edit
+        is AiStatus.Thinking -> stringResource(StringKeyDosha.STORMY_THINKING) to Icons.Outlined.Psychology
+        is AiStatus.Reasoning -> stringResource(StringKeyDosha.STORMY_REASONING) to Icons.Outlined.Lightbulb
+        is AiStatus.CallingTool -> stringResource(StringKeyDosha.STORMY_CALLING_TOOL, ToolDisplayUtils.formatToolName(aiStatus.toolName)) to Icons.Outlined.Build
+        is AiStatus.ExecutingTools -> stringResource(StringKeyDosha.STORMY_USING_TOOLS, aiStatus.tools.joinToString(", ") { ToolDisplayUtils.formatToolName(it) }) to Icons.Outlined.Build
+        is AiStatus.Typing -> stringResource(StringKeyDosha.STORMY_TYPING) to Icons.Outlined.Edit
         is AiStatus.Complete -> return // Don't show anything for complete
     }
 

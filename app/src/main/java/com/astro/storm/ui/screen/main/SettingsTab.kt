@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.BikramSambatConverter
@@ -278,7 +279,9 @@ private fun CurrentProfileCard(
                         text = chart.birthData.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = AppTheme.TextPrimary
+                        color = AppTheme.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
 
@@ -292,12 +295,16 @@ private fun CurrentProfileCard(
                     Text(
                         text = dateDisplay,
                         style = MaterialTheme.typography.bodySmall,
-                        color = AppTheme.TextMuted
+                        color = AppTheme.TextMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = chart.birthData.location,
                         style = MaterialTheme.typography.bodySmall,
-                        color = AppTheme.TextMuted
+                        color = AppTheme.TextMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -446,12 +453,16 @@ private fun SettingsItem(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = AppTheme.TextPrimary
+                    color = AppTheme.TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = AppTheme.TextMuted
+                    color = AppTheme.TextMuted,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
