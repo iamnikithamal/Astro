@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyMatch
@@ -70,10 +71,11 @@ import com.astro.storm.ui.screen.chartdetail.ChartDetailUtils
 @Composable
 fun TransitsTabContent(chart: VedicChart) {
     val context = LocalContext.current
-    val transitAnalysis = remember(chart) {
+    val language = LocalLanguage.current
+    val transitAnalysis = remember(chart, language) {
         val analyzer = TransitAnalyzer(context)
         try {
-            analyzer.analyzeTransits(chart)
+            analyzer.analyzeTransits(chart, language = language)
         } finally {
             analyzer.close()
         }
@@ -482,7 +484,7 @@ private fun GocharaResultRow(result: TransitAnalyzer.GocharaResult) {
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = result.effect.displayName,
+                text = stringResource(result.effect.key),
                 fontSize = 10.sp,
                 color = effectColor
             )
@@ -585,7 +587,7 @@ private fun TransitAspectRow(aspect: TransitAnalyzer.TransitAspect) {
                 )
             }
             Text(
-                text = " ${aspect.aspectType} ",
+                text = " ${stringResource(aspect.aspectKey)} ",
                 fontSize = 11.sp,
                 color = ChartDetailColors.TextSecondary
             )

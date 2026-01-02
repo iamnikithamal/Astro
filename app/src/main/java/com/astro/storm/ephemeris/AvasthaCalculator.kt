@@ -30,7 +30,7 @@ object AvasthaCalculator {
     /**
      * Main analysis entry point
      */
-    fun analyzeAvasthas(chart: VedicChart): AvasthaAnalysis {
+    fun analyzeAvasthas(chart: VedicChart, language: com.astro.storm.data.localization.Language): AvasthaAnalysis {
         val planetaryAvasthas = mutableListOf<PlanetaryAvastha>()
 
         // Analyze each planet (excluding Rahu/Ketu for some avasthas)
@@ -41,21 +41,21 @@ object AvasthaCalculator {
 
         for (planet in planetsToAnalyze) {
             val position = chart.planetPositions.find { it.planet == planet } ?: continue
-            val avastha = analyzePlanetAvastha(planet, position, chart)
+            val avastha = analyzePlanetAvastha(planet, position, chart, language)
             planetaryAvasthas.add(avastha)
         }
 
         // Optionally analyze nodes
         chart.planetPositions.find { it.planet == Planet.RAHU }?.let { rahuPos ->
-            planetaryAvasthas.add(analyzeNodeAvastha(Planet.RAHU, rahuPos, chart))
+            planetaryAvasthas.add(analyzeNodeAvastha(Planet.RAHU, rahuPos, chart, language))
         }
         chart.planetPositions.find { it.planet == Planet.KETU }?.let { ketuPos ->
-            planetaryAvasthas.add(analyzeNodeAvastha(Planet.KETU, ketuPos, chart))
+            planetaryAvasthas.add(analyzeNodeAvastha(Planet.KETU, ketuPos, chart, language))
         }
 
         val overallStrength = calculateOverallStrength(planetaryAvasthas)
-        val interpretation = generateOverallInterpretation(planetaryAvasthas)
-        val recommendations = generateRecommendations(planetaryAvasthas)
+        val interpretation = generateOverallInterpretation(planetaryAvasthas, language)
+        val recommendations = generateRecommendations(planetaryAvasthas, language)
 
         return AvasthaAnalysis(
             planetaryAvasthas = planetaryAvasthas,
@@ -73,7 +73,8 @@ object AvasthaCalculator {
     private fun analyzePlanetAvastha(
         planet: Planet,
         position: PlanetPosition,
-        chart: VedicChart
+        chart: VedicChart,
+        language: com.astro.storm.data.localization.Language
     ): PlanetaryAvastha {
         val sign = ZodiacSign.fromLongitude(position.longitude)
         val degree = position.longitude % 30
@@ -90,7 +91,7 @@ object AvasthaCalculator {
         )
 
         val interpretation = generatePlanetInterpretation(
-            planet, baladiAvastha, jagradadiAvastha, deeptadiAvastha, lajjitadiAvastha, effectiveStrength
+            planet, baladiAvastha, jagradadiAvastha, deeptadiAvastha, lajjitadiAvastha, effectiveStrength, language
         )
 
         return PlanetaryAvastha(
@@ -113,7 +114,8 @@ object AvasthaCalculator {
     private fun analyzeNodeAvastha(
         planet: Planet,
         position: PlanetPosition,
-        chart: VedicChart
+        chart: VedicChart,
+        language: com.astro.storm.data.localization.Language
     ): PlanetaryAvastha {
         val sign = ZodiacSign.fromLongitude(position.longitude)
         val degree = position.longitude % 30
@@ -129,6 +131,13 @@ object AvasthaCalculator {
             DeeptadiAvastha.BHITA -> 20
         }
 
+        val interpretation = StringResources.get(
+            StringKeyAnalysis.AVASTHA_NODE_POS,
+            language,
+            sign.getLocalizedName(language),
+            deeptadiAvastha.getLocalizedDescription(language)
+        )
+
         return PlanetaryAvastha(
             planet = planet,
             position = position,
@@ -139,7 +148,7 @@ object AvasthaCalculator {
             deeptadiAvastha = deeptadiAvastha,
             lajjitadiAvastha = LajjitadiAvastha.GARVITA, // Default for nodes
             effectiveStrength = effectiveStrength,
-            interpretation = "Node position in ${sign.displayName}. ${deeptadiAvastha.description}"
+            interpretation = interpretation
         )
     }
 
@@ -439,30 +448,53 @@ object AvasthaCalculator {
         jagradadi: JagradadiAvastha,
         deeptadi: DeeptadiAvastha,
         lajjitadi: LajjitadiAvastha,
-        strength: Int
+        strength: Int,
+        language: com.astro.storm.data.localization.Language
     ): String {
         return buildString {
-            append("${planet.displayName} Analysis:\n\n")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_PLANET_ANALYSIS, language, planet.getLocalizedName(language)))
+            append(":\n\n")
 
-            append("• Age State (Baladi): ${baladi.displayName}\n")
-            append("  ${baladi.description}\n\n")
+            append("• ")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_AGE_STATE, language))
+            append(": ")
+            append(baladi.getLocalizedName(language))
+            append("\n  ")
+            append(baladi.getLocalizedDescription(language))
+            append("\n\n")
 
-            append("• Alertness (Jagradadi): ${jagradadi.displayName}\n")
-            append("  ${jagradadi.description}\n\n")
+            append("• ")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_ALERTNESS, language))
+            append(": ")
+            append(jagradadi.getLocalizedName(language))
+            append("\n  ")
+            append(jagradadi.getLocalizedDescription(language))
+            append("\n\n")
 
-            append("• Dignity (Deeptadi): ${deeptadi.displayName}\n")
-            append("  ${deeptadi.description}\n\n")
+            append("• ")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_DIGNITY, language))
+            append(": ")
+            append(deeptadi.getLocalizedName(language))
+            append("\n  ")
+            append(deeptadi.getLocalizedDescription(language))
+            append("\n\n")
 
-            append("• Emotional (Lajjitadi): ${lajjitadi.displayName}\n")
-            append("  ${lajjitadi.description}\n\n")
+            append("• ")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_EMOTIONAL, language))
+            append(": ")
+            append(lajjitadi.getLocalizedName(language))
+            append("\n  ")
+            append(lajjitadi.getLocalizedDescription(language))
+            append("\n\n")
 
-            append("Overall Strength: $strength%\n")
+            append(StringResources.get(StringKeyAnalysis.AVASTHA_OVERALL_STRENGTH_LABEL, language, strength))
+            append("\n")
             append(when {
-                strength >= 80 -> "This planet is very powerful and will deliver excellent results."
-                strength >= 60 -> "This planet is strong and will give good results."
-                strength >= 40 -> "This planet has moderate strength with mixed results."
-                strength >= 20 -> "This planet is weak and may struggle to give full results."
-                else -> "This planet is very weak and needs remedial measures."
+                strength >= 80 -> StringResources.get(StringKeyAnalysis.AVASTHA_VERY_POWERFUL, language)
+                strength >= 60 -> StringResources.get(StringKeyAnalysis.AVASTHA_STRONG_RESULTS, language)
+                strength >= 40 -> StringResources.get(StringKeyAnalysis.AVASTHA_MODERATE_RESULTS, language)
+                strength >= 20 -> StringResources.get(StringKeyAnalysis.AVASTHA_WEAK_RESULTS, language)
+                else -> StringResources.get(StringKeyAnalysis.AVASTHA_VERY_WEAK_RESULTS, language)
             })
         }
     }
@@ -478,21 +510,26 @@ object AvasthaCalculator {
     /**
      * Generate overall interpretation
      */
-    private fun generateOverallInterpretation(avasthas: List<PlanetaryAvastha>): String {
+    private fun generateOverallInterpretation(avasthas: List<PlanetaryAvastha>, language: com.astro.storm.data.localization.Language): String {
         val strong = avasthas.filter { it.effectiveStrength >= 60 }
         val weak = avasthas.filter { it.effectiveStrength < 40 }
 
         return buildString {
             if (strong.isNotEmpty()) {
-                append("Strong Planets: ${strong.joinToString(", ") { it.planet.displayName }}\n")
-                append("These planets are well-placed and will give favorable results.\n\n")
+                append(StringResources.get(StringKeyAnalysis.AVASTHA_STRONG_PLANETS, language, strong.joinToString(", ") { it.planet.getLocalizedName(language) }))
+                append("\n")
+                append(StringResources.get(StringKeyAnalysis.AVASTHA_STRONG_PLANETS_NOTE, language))
+                append("\n\n")
             }
             if (weak.isNotEmpty()) {
-                append("Weak Planets: ${weak.joinToString(", ") { it.planet.displayName }}\n")
-                append("These planets may need remedial measures to strengthen their significations.\n\n")
+                append(StringResources.get(StringKeyAnalysis.AVASTHA_WEAK_PLANETS, language, weak.joinToString(", ") { it.planet.getLocalizedName(language) }))
+                append("\n")
+                append(StringResources.get(StringKeyAnalysis.AVASTHA_WEAK_PLANETS_NOTE, language))
+                append("\n\n")
             }
             if (strong.isEmpty() && weak.isEmpty()) {
-                append("Most planets are in moderate states, giving mixed results based on their periods.\n")
+                append(StringResources.get(StringKeyAnalysis.AVASTHA_MODERATE_PLANETS_NOTE, language))
+                append("\n")
             }
         }
     }
@@ -500,15 +537,15 @@ object AvasthaCalculator {
     /**
      * Generate recommendations based on planetary states
      */
-    private fun generateRecommendations(avasthas: List<PlanetaryAvastha>): List<AvasthaRecommendation> {
+    private fun generateRecommendations(avasthas: List<PlanetaryAvastha>, language: com.astro.storm.data.localization.Language): List<AvasthaRecommendation> {
         val recommendations = mutableListOf<AvasthaRecommendation>()
 
         for (avastha in avasthas.sortedBy { it.effectiveStrength }.take(3)) {
             if (avastha.effectiveStrength < 50) {
                 recommendations.add(AvasthaRecommendation(
                     planet = avastha.planet,
-                    issue = "Low strength (${avastha.effectiveStrength}%)",
-                    remedy = "Strengthen ${avastha.planet.displayName} through gemstones, mantras, or charitable acts",
+                    issue = StringResources.get(StringKeyAnalysis.AVASTHA_REC_LOW_STRENGTH, language, avastha.effectiveStrength),
+                    remedy = StringResources.get(StringKeyAnalysis.AVASTHA_REC_STRENGTHEN, language, avastha.planet.getLocalizedName(language)),
                     priority = if (avastha.effectiveStrength < 30) RemedyPriority.HIGH else RemedyPriority.MEDIUM
                 ))
             }
@@ -698,129 +735,64 @@ object AvasthaCalculator {
     // ============================================
 
     enum class BaladiAvastha(
-        val displayName: String,
-        val description: String,
+        val nameKey: com.astro.storm.data.localization.StringKeyAnalysis,
+        val descKey: com.astro.storm.data.localization.StringKeyAnalysis,
         val resultPercentage: Int
     ) {
-        BALA(
-            "Bala (Infant)",
-            "Planet is in infant state - like a child, it gives results slowly and with help from others. Results manifest in the later part of life.",
-            20
-        ),
-        KUMARA(
-            "Kumara (Adolescent)",
-            "Planet is in adolescent state - eager and active but not fully mature. Results come with some effort and learning.",
-            50
-        ),
-        YUVA(
-            "Yuva (Young Adult)",
-            "Planet is in prime youthful state - most powerful and capable of giving full results. Best time for manifestation.",
-            100
-        ),
-        VRIDDHA(
-            "Vriddha (Old)",
-            "Planet is in aged state - wisdom but declining vitality. Results come through experience and patience.",
-            30
-        ),
-        MRITA(
-            "Mrita (Dead)",
-            "Planet is in dead state - minimal ability to give results. May need strong remedial measures.",
-            10
-        )
+        BALA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_BALA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_BALA_DESC, 20),
+        KUMARA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KUMARA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KUMARA_DESC, 50),
+        YUVA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_YUVA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_YUVA_DESC, 100),
+        VRIDDHA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_VRIDDHA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_VRIDDHA_DESC, 30),
+        MRITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MRITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MRITA_DESC, 10);
+
+        fun getLocalizedName(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(nameKey, language)
+        fun getLocalizedDescription(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(descKey, language)
     }
 
     enum class JagradadiAvastha(
-        val displayName: String,
-        val description: String,
+        val nameKey: com.astro.storm.data.localization.StringKeyAnalysis,
+        val descKey: com.astro.storm.data.localization.StringKeyAnalysis,
         val resultPercentage: Int
     ) {
-        JAGRAT(
-            "Jagrat (Awake)",
-            "Planet is fully awake and alert - gives complete and timely results. Functions at full capacity.",
-            100
-        ),
-        SWAPNA(
-            "Swapna (Dreaming)",
-            "Planet is in dreaming state - gives partial results, often delayed or through indirect means.",
-            50
-        ),
-        SUSHUPTI(
-            "Sushupti (Deep Sleep)",
-            "Planet is in deep sleep - struggles to manifest results. May give minimal or no results without remedies.",
-            25
-        )
+        JAGRAT(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_JAGRAT_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_JAGRAT_DESC, 100),
+        SWAPNA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SWAPNA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SWAPNA_DESC, 50),
+        SUSHUPTI(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SUSHUPTI_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SUSHUPTI_DESC, 25);
+
+        fun getLocalizedName(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(nameKey, language)
+        fun getLocalizedDescription(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(descKey, language)
     }
 
     enum class DeeptadiAvastha(
-        val displayName: String,
-        val description: String
+        val nameKey: com.astro.storm.data.localization.StringKeyAnalysis,
+        val descKey: com.astro.storm.data.localization.StringKeyAnalysis
     ) {
-        DEEPTA(
-            "Deepta (Blazing)",
-            "Exalted planet - shines brilliantly and gives exceptional results in all areas it signifies."
-        ),
-        SWASTHA(
-            "Swastha (Healthy)",
-            "Planet in own sign - comfortable and gives strong, natural results with ease."
-        ),
-        MUDITA(
-            "Mudita (Delighted)",
-            "Planet in great friend's sign - happy and supported, gives good results with cooperation."
-        ),
-        SHANTA(
-            "Shanta (Peaceful)",
-            "Planet in friendly sign - calm and stable, gives consistent positive results."
-        ),
-        DINA(
-            "Dina (Ordinary)",
-            "Planet in neutral sign - gives average results, neither specially good nor bad."
-        ),
-        VIKALA(
-            "Vikala (Afflicted)",
-            "Combust planet - weakened by Sun's rays, struggles to give full results. Hidden or overshadowed."
-        ),
-        KHALA(
-            "Khala (Debilitated)",
-            "Planet in debilitation - significantly weakened, gives poor or opposite results."
-        ),
-        KOPA(
-            "Kopa (Angry)",
-            "Planet in enemy sign - frustrated and obstructed, gives results with difficulty."
-        ),
-        BHITA(
-            "Bhita (Frightened)",
-            "Planet in great enemy's sign - very uncomfortable, gives minimal or adverse results."
-        )
+        DEEPTA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_DEEPTA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_DEEPTA_DESC),
+        SWASTHA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SWASTHA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SWASTHA_DESC),
+        MUDITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MUDITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MUDITA_DESC),
+        SHANTA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SHANTA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_SHANTA_DESC),
+        DINA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_DINA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_DINA_DESC),
+        VIKALA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_VIKALA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_VIKALA_DESC),
+        KHALA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KHALA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KHALA_DESC),
+        KOPA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KOPA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KOPA_DESC),
+        BHITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_BHITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_BHITA_DESC);
+
+        fun getLocalizedName(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(nameKey, language)
+        fun getLocalizedDescription(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(descKey, language)
     }
 
     enum class LajjitadiAvastha(
-        val displayName: String,
-        val description: String
+        val nameKey: com.astro.storm.data.localization.StringKeyAnalysis,
+        val descKey: com.astro.storm.data.localization.StringKeyAnalysis
     ) {
-        LAJJITA(
-            "Lajjita (Ashamed)",
-            "Planet feels ashamed due to conjunction with Sun/Saturn in 5th house. Children and creativity matters may suffer."
-        ),
-        GARVITA(
-            "Garvita (Proud)",
-            "Planet in exaltation or moolatrikona - proud and confident, gives excellent results with dignity."
-        ),
-        KSHUDITA(
-            "Kshudita (Hungry)",
-            "Planet in enemy sign with enemy aspect - constantly craving, never satisfied. Results feel incomplete."
-        ),
-        TRUSHITA(
-            "Trushita (Thirsty)",
-            "Planet in watery sign with enemy aspect - emotionally parched, seeking fulfillment. Emotional needs unmet."
-        ),
-        MUDITA(
-            "Mudita (Delighted)",
-            "Planet with friendly influences - joyful and supported, gives pleasant and fulfilling results."
-        ),
-        KSHOBHITA(
-            "Kshobhita (Agitated)",
-            "Planet conjunct Sun and aspected by malefic - disturbed and unsettled, gives erratic results."
-        )
+        LAJJITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_LAJJITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_LAJJITA_DESC),
+        GARVITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_GARVITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_GARVITA_DESC),
+        KSHUDITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KSHUDITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KSHUDITA_DESC),
+        TRUSHITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_TRUSHITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_TRUSHITA_DESC),
+        MUDITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MUDITA_LAJ_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_MUDITA_LAJ_DESC),
+        KSHOBHITA(com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KSHOBHITA_NAME, com.astro.storm.data.localization.StringKeyAnalysis.AVASTHA_KSHOBHITA_DESC);
+
+        fun getLocalizedName(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(nameKey, language)
+        fun getLocalizedDescription(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(descKey, language)
     }
 
     enum class PlanetaryRelationship {
@@ -831,9 +803,11 @@ object AvasthaCalculator {
         GREAT_ENEMY
     }
 
-    enum class RemedyPriority(val displayName: String) {
-        HIGH("High Priority"),
-        MEDIUM("Medium Priority"),
-        LOW("Low Priority")
+    enum class RemedyPriority(val displayNameKey: com.astro.storm.data.localization.StringKeyAnalysis) {
+        HIGH(com.astro.storm.data.localization.StringKeyAnalysis.PRIORITY_HIGH),
+        MEDIUM(com.astro.storm.data.localization.StringKeyAnalysis.PRIORITY_MEDIUM),
+        LOW(com.astro.storm.data.localization.StringKeyAnalysis.PRIORITY_LOW);
+
+        fun getLocalizedName(language: com.astro.storm.data.localization.Language): String = com.astro.storm.data.localization.StringResources.get(displayNameKey, language)
     }
 }

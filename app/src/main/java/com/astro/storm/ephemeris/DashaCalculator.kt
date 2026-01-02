@@ -11,6 +11,7 @@ import com.astro.storm.ephemeris.DashaUtils.coerceIn
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 private val MATH_CONTEXT = DashaUtils.MATH_CONTEXT
@@ -20,6 +21,7 @@ private val TOTAL_CYCLE_YEARS_BD = BigDecimal("120")
 
 private fun yearsToRoundedDays(years: Double): Long = DashaUtils.yearsToRoundedDays(years)
 private fun yearsToRoundedDays(years: BigDecimal): Long = DashaUtils.yearsToRoundedDays(years)
+private fun yearsToSeconds(years: BigDecimal): Long = DashaUtils.yearsToSeconds(years)
 
 object DashaCalculator {
 
@@ -47,7 +49,7 @@ object DashaCalculator {
         Planet.MERCURY
     )
 
-    private const val MAX_MAHADASHAS = 12
+    private const val MAX_MAHADASHAS = 18 // Allow for more than 120 years (Vimshottari is based on 120 but people live longer sometimes)
 
     fun getDashaYears(planet: Planet): Double {
         return DASHA_YEARS[planet]?.toDouble() ?: 0.0
@@ -63,36 +65,40 @@ object DashaCalculator {
 
     data class Mahadasha(
         val planet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
         val durationYears: Double,
         val antardashas: List<Antardasha>
     ) {
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
+        fun isActiveOnDate(date: LocalDate): Boolean {
+            return !date.isBefore(startDate.toLocalDate()) && !date.isAfter(endDate.toLocalDate())
+        }
+
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
-        fun getActiveAntardasha(): Antardasha? = getAntardashaOn(LocalDate.now())
+        fun getActiveAntardasha(): Antardasha? = getAntardashaOn(LocalDateTime.now())
 
-        fun getAntardashaOn(date: LocalDate): Antardasha? {
+        fun getAntardashaOn(date: LocalDateTime): Antardasha? {
             return antardashas.find { it.isActiveOn(date) }
         }
 
-        fun getElapsedYears(asOf: LocalDate = LocalDate.now()): Double {
+        fun getElapsedYears(asOf: LocalDateTime = LocalDateTime.now()): Double {
             if (asOf.isBefore(startDate)) return 0.0
             if (asOf.isAfter(endDate)) return durationYears
-            val elapsedDays = ChronoUnit.DAYS.between(startDate, asOf)
-            return elapsedDays / 365.25
+            val elapsedSeconds = ChronoUnit.SECONDS.between(startDate, asOf)
+            return elapsedSeconds / (DashaUtils.DAYS_PER_YEAR.toDouble() * 24 * 3600)
         }
 
-        fun getRemainingYears(asOf: LocalDate = LocalDate.now()): Double {
+        fun getRemainingYears(asOf: LocalDateTime = LocalDateTime.now()): Double {
             return (durationYears - getElapsedYears(asOf)).coerceAtLeast(0.0)
         }
 
-        fun getProgressPercent(asOf: LocalDate = LocalDate.now()): Double {
+        fun getProgressPercent(asOf: LocalDateTime = LocalDateTime.now()): Double {
             if (durationYears <= 0) return 0.0
             return ((getElapsedYears(asOf) / durationYears) * 100).coerceIn(0.0, 100.0)
         }
@@ -101,40 +107,40 @@ object DashaCalculator {
     data class Antardasha(
         val planet: Planet,
         val mahadashaPlanet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
-        val durationDays: Long,
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
+        val durationSeconds: Long,
         val pratyantardashas: List<Pratyantardasha> = emptyList()
     ) {
         val durationYears: Double
-            get() = durationDays / 365.25
+            get() = durationSeconds / (DashaUtils.DAYS_PER_YEAR.toDouble() * 24 * 3600)
 
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
-        fun getActivePratyantardasha(): Pratyantardasha? = getPratyantardashaOn(LocalDate.now())
+        fun getActivePratyantardasha(): Pratyantardasha? = getPratyantardashaOn(LocalDateTime.now())
 
-        fun getPratyantardashaOn(date: LocalDate): Pratyantardasha? {
+        fun getPratyantardashaOn(date: LocalDateTime): Pratyantardasha? {
             return pratyantardashas.find { it.isActiveOn(date) }
         }
 
-        fun getElapsedDays(asOf: LocalDate = LocalDate.now()): Long {
+        fun getElapsedSeconds(asOf: LocalDateTime = LocalDateTime.now()): Long {
             if (asOf.isBefore(startDate)) return 0
-            if (asOf.isAfter(endDate)) return durationDays
-            return ChronoUnit.DAYS.between(startDate, asOf)
+            if (asOf.isAfter(endDate)) return durationSeconds
+            return ChronoUnit.SECONDS.between(startDate, asOf)
         }
 
-        fun getRemainingDays(asOf: LocalDate = LocalDate.now()): Long {
-            return (durationDays - getElapsedDays(asOf)).coerceAtLeast(0)
+        fun getRemainingSeconds(asOf: LocalDateTime = LocalDateTime.now()): Long {
+            return (durationSeconds - getElapsedSeconds(asOf)).coerceAtLeast(0)
         }
 
-        fun getProgressPercent(asOf: LocalDate = LocalDate.now()): Double {
-            if (durationDays <= 0) return 0.0
-            return ((getElapsedDays(asOf).toDouble() / durationDays) * 100).coerceIn(0.0, 100.0)
+        fun getProgressPercent(asOf: LocalDateTime = LocalDateTime.now()): Double {
+            if (durationSeconds <= 0L) return 0.0
+            return ((getElapsedSeconds(asOf).toDouble() / durationSeconds) * 100).coerceIn(0.0, 100.0)
         }
     }
 
@@ -142,24 +148,21 @@ object DashaCalculator {
         val planet: Planet,
         val antardashaPlanet: Planet,
         val mahadashaPlanet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
-        val durationDays: Long,
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
+        val durationSeconds: Long,
         val sookshmadashas: List<Sookshmadasha> = emptyList()
     ) {
-        val durationYears: Double
-            get() = durationDays / 365.25
-
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
-        fun getActiveSookshmadasha(): Sookshmadasha? = getSookshmadashaOn(LocalDate.now())
+        fun getActiveSookshmadasha(): Sookshmadasha? = getSookshmadashaOn(LocalDateTime.now())
 
-        fun getSookshmadashaOn(date: LocalDate): Sookshmadasha? {
+        fun getSookshmadashaOn(date: LocalDateTime): Sookshmadasha? {
             return sookshmadashas.find { it.isActiveOn(date) }
         }
     }
@@ -169,24 +172,21 @@ object DashaCalculator {
         val pratyantardashaPlanet: Planet,
         val antardashaPlanet: Planet,
         val mahadashaPlanet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
-        val durationDays: Long,
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
+        val durationSeconds: Long,
         val pranadashas: List<Pranadasha> = emptyList()
     ) {
-        val durationHours: Double
-            get() = durationDays * 24.0
-
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
-        fun getActivePranadasha(): Pranadasha? = getPranadashaOn(LocalDate.now())
+        fun getActivePranadasha(): Pranadasha? = getPranadashaOn(LocalDateTime.now())
 
-        fun getPranadashaOn(date: LocalDate): Pranadasha? {
+        fun getPranadashaOn(date: LocalDateTime): Pranadasha? {
             return pranadashas.find { it.isActiveOn(date) }
         }
     }
@@ -197,33 +197,28 @@ object DashaCalculator {
         val pratyantardashaPlanet: Planet,
         val antardashaPlanet: Planet,
         val mahadashaPlanet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
-        val durationMinutes: Long,
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
+        val durationSeconds: Long,
         val dehadashas: List<Dehadasha> = emptyList()
     ) {
-        val durationHours: Double
-            get() = durationMinutes / 60.0
-
-        val durationDays: Double
-            get() = durationMinutes / (60.0 * 24.0)
-
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
-        fun getActiveDehadasha(): Dehadasha? = getDehadashaOn(LocalDate.now())
+        fun getActiveDehadasha(): Dehadasha? = getDehadashaOn(LocalDateTime.now())
 
-        fun getDehadashaOn(date: LocalDate): Dehadasha? {
+        fun getDehadashaOn(date: LocalDateTime): Dehadasha? {
             return dehadashas.find { it.isActiveOn(date) }
         }
 
         fun getDurationString(): String {
-            val hours = durationMinutes / 60
-            val mins = durationMinutes % 60
+            val totalMins = durationSeconds / 60
+            val hours = totalMins / 60
+            val mins = totalMins % 60
             return when {
                 hours >= 24 -> {
                     val days = hours / 24
@@ -236,8 +231,9 @@ object DashaCalculator {
         }
 
         fun getLocalizedDurationString(language: Language): String {
-            val hours = durationMinutes / 60
-            val mins = durationMinutes % 60
+            val totalMins = durationSeconds / 60
+            val hours = totalMins / 60
+            val mins = totalMins % 60
             val daysShort = StringResources.get(StringKey.DAYS_SHORT, language)
             val hoursShort = StringResources.get(StringKey.HOURS_SHORT, language)
             val minutesShort = StringResources.get(StringKey.MINUTES_SHORT, language)
@@ -260,29 +256,28 @@ object DashaCalculator {
         val pratyantardashaPlanet: Planet,
         val antardashaPlanet: Planet,
         val mahadashaPlanet: Planet,
-        val startDate: LocalDate,
-        val endDate: LocalDate,
-        val durationMinutes: Long
+        val startDate: LocalDateTime,
+        val endDate: LocalDateTime,
+        val durationSeconds: Long
     ) {
-        val durationHours: Double
-            get() = durationMinutes / 60.0
-
-        fun isActiveOn(date: LocalDate): Boolean {
+        fun isActiveOn(date: LocalDateTime): Boolean {
             return !date.isBefore(startDate) && !date.isAfter(endDate)
         }
 
         val isActive: Boolean
-            get() = isActiveOn(LocalDate.now())
+            get() = isActiveOn(LocalDateTime.now())
 
         fun getDurationString(): String {
-            val hours = durationMinutes / 60
-            val mins = durationMinutes % 60
+            val totalMins = durationSeconds / 60
+            val hours = totalMins / 60
+            val mins = totalMins % 60
             return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
         }
 
         fun getLocalizedDurationString(language: Language): String {
-            val hours = durationMinutes / 60
-            val mins = durationMinutes % 60
+            val totalMins = durationSeconds / 60
+            val hours = totalMins / 60
+            val mins = totalMins % 60
             val hoursShort = StringResources.get(StringKey.HOURS_SHORT, language)
             val minutesShort = StringResources.get(StringKey.MINUTES_SHORT, language)
             return if (hours > 0) "${hours}$hoursShort ${mins}$minutesShort" else "${mins}$minutesShort"
@@ -292,12 +287,12 @@ object DashaCalculator {
     data class DashaSandhi(
         val fromPlanet: Planet,
         val toPlanet: Planet,
-        val transitionDate: LocalDate,
+        val transitionDate: LocalDateTime,
         val level: DashaLevel,
-        val sandhiStartDate: LocalDate,
-        val sandhiEndDate: LocalDate
+        val sandhiStartDate: LocalDateTime,
+        val sandhiEndDate: LocalDateTime
     ) {
-        fun isWithinSandhi(date: LocalDate): Boolean {
+        fun isWithinSandhi(date: LocalDateTime): Boolean {
             return !date.isBefore(sandhiStartDate) && !date.isAfter(sandhiEndDate)
         }
     }
@@ -321,7 +316,7 @@ object DashaCalculator {
     }
 
     data class DashaTimeline(
-        val birthDate: LocalDate,
+        val birthDate: LocalDateTime,
         val birthNakshatra: Nakshatra,
         val birthNakshatraPada: Int,
         val birthNakshatraLord: Planet,
@@ -453,7 +448,7 @@ object DashaCalculator {
             }
         }
 
-        fun getDashaAtDate(date: LocalDate): DashaPeriodInfo {
+        fun getDashaAtDate(date: LocalDateTime): DashaPeriodInfo {
             val mahadasha = mahadashas.find { it.isActiveOn(date) }
             val antardasha = mahadasha?.getAntardashaOn(date)
             val pratyantardasha = antardasha?.getPratyantardashaOn(date)
@@ -473,15 +468,15 @@ object DashaCalculator {
         }
 
         fun getNextMahadasha(): Mahadasha? {
-            val today = LocalDate.now()
-            return mahadashas.find { it.startDate.isAfter(today) }
+            val now = LocalDateTime.now()
+            return mahadashas.find { it.startDate.isAfter(now) }
         }
 
         fun getUpcomingSandhisWithin(days: Int): List<DashaSandhi> {
-            val today = LocalDate.now()
-            val futureDate = today.plusDays(days.toLong())
+            val now = LocalDateTime.now()
+            val futureDate = now.plusDays(days.toLong())
             return upcomingSandhis.filter { sandhi ->
-                !sandhi.transitionDate.isBefore(today) && !sandhi.transitionDate.isAfter(futureDate)
+                !sandhi.transitionDate.isBefore(now) && !sandhi.transitionDate.isAfter(futureDate)
             }
         }
 
@@ -498,7 +493,7 @@ object DashaCalculator {
     }
 
     data class DashaPeriodInfo(
-        val date: LocalDate,
+        val date: LocalDateTime,
         val mahadasha: Mahadasha?,
         val antardasha: Antardasha?,
         val pratyantardasha: Pratyantardasha?,
@@ -523,7 +518,7 @@ object DashaCalculator {
     }
 
     fun calculateDashaTimeline(chart: VedicChart): DashaTimeline {
-        val birthDate = chart.birthData.dateTime.toLocalDate()
+        val birthDateTime = chart.birthData.dateTime
         val moonPosition = chart.planetPositions.find { it.planet == Planet.MOON }
             ?: throw IllegalArgumentException("Moon position not found in chart.")
 
@@ -549,17 +544,17 @@ object DashaCalculator {
         val balanceOfFirstDashaBd = firstDashaYearsBd.subtract(elapsedInFirstDashaBd, MATH_CONTEXT)
         val balanceOfFirstDasha = balanceOfFirstDashaBd.toDouble().coerceAtLeast(0.0)
 
-        val today = LocalDate.now()
+        val now = LocalDateTime.now()
 
         val mahadashas = calculateAllMahadashasOptimized(
-            birthDate = birthDate,
+            birthDate = birthDateTime,
             startingDashaLord = nakshatraLord,
             balanceOfFirstDashaBd = balanceOfFirstDashaBd,
-            targetDate = today
+            targetDate = now
         )
 
-        val currentMahadasha = mahadashas.find { it.isActiveOn(today) }
-        val currentAntardasha = currentMahadasha?.getAntardashaOn(today)
+        val currentMahadasha = mahadashas.find { it.isActiveOn(now) }
+        val currentAntardasha = currentMahadasha?.getAntardashaOn(now)
 
         var currentPratyantardasha: Pratyantardasha? = null
         var currentSookshmadasha: Sookshmadasha? = null
@@ -568,28 +563,28 @@ object DashaCalculator {
 
         if (currentAntardasha != null) {
             val pratyantardashas = calculatePratyantardashasForAntardasha(currentAntardasha)
-            currentPratyantardasha = pratyantardashas.find { it.isActiveOn(today) }
+            currentPratyantardasha = pratyantardashas.find { it.isActiveOn(now) }
 
             if (currentPratyantardasha != null) {
                 val sookshmadashas = calculateSookshmadashasForPratyantardasha(currentPratyantardasha)
-                currentSookshmadasha = sookshmadashas.find { it.isActiveOn(today) }
+                currentSookshmadasha = sookshmadashas.find { it.isActiveOn(now) }
 
                 if (currentSookshmadasha != null) {
                     val pranadashas = calculatePranadashasForSookshmadasha(currentSookshmadasha)
-                    currentPranadasha = pranadashas.find { it.isActiveOn(today) }
+                    currentPranadasha = pranadashas.find { it.isActiveOn(now) }
 
                     if (currentPranadasha != null) {
                         val dehadashas = calculateDehadashasForPranadasha(currentPranadasha)
-                        currentDehadasha = dehadashas.find { it.isActiveOn(today) }
+                        currentDehadasha = dehadashas.find { it.isActiveOn(now) }
                     }
                 }
             }
         }
 
-        val upcomingSandhis = calculateUpcomingSandhis(mahadashas, today, lookAheadDays = 365)
+        val upcomingSandhis = calculateUpcomingSandhis(mahadashas, now, lookAheadDays = 365)
 
         return DashaTimeline(
-            birthDate = birthDate,
+            birthDate = birthDateTime,
             birthNakshatra = birthNakshatra,
             birthNakshatraPada = pada,
             birthNakshatraLord = nakshatraLord,
@@ -607,10 +602,10 @@ object DashaCalculator {
     }
 
     private fun calculateAllMahadashasOptimized(
-        birthDate: LocalDate,
+        birthDate: LocalDateTime,
         startingDashaLord: Planet,
         balanceOfFirstDashaBd: BigDecimal,
-        targetDate: LocalDate
+        targetDate: LocalDateTime
     ): List<Mahadasha> {
         val mahadashas = mutableListOf<Mahadasha>()
         var currentStartDate = birthDate
@@ -624,8 +619,8 @@ object DashaCalculator {
             "Balance of first dasha must be non-negative, got: $balanceOfFirstDashaBd"
         }
 
-        val firstDashaDays = yearsToRoundedDays(balanceOfFirstDashaBd)
-        val firstDashaEndDate = currentStartDate.plusDays(firstDashaDays)
+        val firstDashaSeconds = yearsToSeconds(balanceOfFirstDashaBd)
+        val firstDashaEndDate = currentStartDate.plusSeconds(firstDashaSeconds)
         val isFirstActive = !targetDate.isBefore(currentStartDate) && !targetDate.isAfter(firstDashaEndDate)
 
         val firstAntardashas = calculateAntardashasOptimized(
@@ -652,8 +647,8 @@ object DashaCalculator {
             val planetIndex = (startIndex + 1 + cycle) % DASHA_SEQUENCE.size
             val planet = DASHA_SEQUENCE[planetIndex]
             val dashaYearsBd = DASHA_YEARS[planet] ?: BigDecimal.ZERO
-            val dashaDays = yearsToRoundedDays(dashaYearsBd)
-            val endDate = currentStartDate.plusDays(dashaDays)
+            val dashaSeconds = yearsToSeconds(dashaYearsBd)
+            val endDate = currentStartDate.plusSeconds(dashaSeconds)
             val isActive = !targetDate.isBefore(currentStartDate) && !targetDate.isAfter(endDate)
 
             val antardashas = calculateAntardashasOptimized(
@@ -682,11 +677,11 @@ object DashaCalculator {
 
     private fun calculateAntardashasOptimized(
         mahadashaPlanet: Planet,
-        mahadashaStart: LocalDate,
-        mahadashaEnd: LocalDate,
+        mahadashaStart: LocalDateTime,
+        mahadashaEnd: LocalDateTime,
         mahadashaDurationYearsBd: BigDecimal,
         isCurrentMahadasha: Boolean,
-        targetDate: LocalDate
+        targetDate: LocalDateTime
     ): List<Antardasha> {
         val antardashas = mutableListOf<Antardasha>()
         var currentStart = mahadashaStart
@@ -702,8 +697,8 @@ object DashaCalculator {
                 .divide(TOTAL_CYCLE_YEARS_BD, MATH_CONTEXT)
                 .multiply(mahadashaDurationYearsBd, MATH_CONTEXT)
 
-            val antarDays = yearsToRoundedDays(proportionalDurationBd)
-            val antarEnd = currentStart.plusDays(antarDays)
+            val antarSeconds = yearsToSeconds(proportionalDurationBd)
+            val antarEnd = currentStart.plusSeconds(antarSeconds)
 
             val pratyantardashas = if (isCurrentMahadasha && 
                 !targetDate.isBefore(currentStart) && !targetDate.isAfter(antarEnd)) {
@@ -724,7 +719,7 @@ object DashaCalculator {
                     mahadashaPlanet = mahadashaPlanet,
                     startDate = currentStart,
                     endDate = antarEnd,
-                    durationDays = antarDays,
+                    durationSeconds = antarSeconds,
                     pratyantardashas = pratyantardashas
                 )
             )
@@ -752,8 +747,8 @@ object DashaCalculator {
     private fun calculatePratyantardashasInternal(
         mahadashaPlanet: Planet,
         antardashaPlanet: Planet,
-        antarStart: LocalDate,
-        antarEnd: LocalDate,
+        antarStart: LocalDateTime,
+        antarEnd: LocalDateTime,
         antarDurationYearsBd: BigDecimal
     ): List<Pratyantardasha> {
         val pratyantardashas = mutableListOf<Pratyantardasha>()
@@ -770,8 +765,8 @@ object DashaCalculator {
                 .divide(TOTAL_CYCLE_YEARS_BD, MATH_CONTEXT)
                 .multiply(antarDurationYearsBd, MATH_CONTEXT)
 
-            val pratyantarDays = yearsToRoundedDays(proportionalDurationBd)
-            val pratyantarEnd = currentStart.plusDays(pratyantarDays)
+            val pratyantarSeconds = yearsToSeconds(proportionalDurationBd)
+            val pratyantarEnd = currentStart.plusSeconds(pratyantarSeconds)
 
             pratyantardashas.add(
                 Pratyantardasha(
@@ -780,7 +775,7 @@ object DashaCalculator {
                     mahadashaPlanet = mahadashaPlanet,
                     startDate = currentStart,
                     endDate = pratyantarEnd,
-                    durationDays = pratyantarDays,
+                    durationSeconds = pratyantarSeconds,
                     sookshmadashas = emptyList()
                 )
             )
@@ -795,7 +790,7 @@ object DashaCalculator {
             return pratyantardasha.sookshmadashas
         }
 
-        val pratyantarDurationYearsBd = BigDecimal(pratyantardasha.durationYears.toString())
+        val pratyantarDurationYearsBd = BigDecimal((pratyantardasha.durationSeconds.toDouble() / (DashaUtils.DAYS_PER_YEAR.toDouble() * 24 * 3600)).toString())
         return calculateSookshmadashasInternal(
             mahadashaPlanet = pratyantardasha.mahadashaPlanet,
             antardashaPlanet = pratyantardasha.antardashaPlanet,
@@ -810,8 +805,8 @@ object DashaCalculator {
         mahadashaPlanet: Planet,
         antardashaPlanet: Planet,
         pratyantardashaPlanet: Planet,
-        pratyantarStart: LocalDate,
-        pratyantarEnd: LocalDate,
+        pratyantarStart: LocalDateTime,
+        pratyantarEnd: LocalDateTime,
         pratyantarDurationYearsBd: BigDecimal
     ): List<Sookshmadasha> {
         val sookshmadashas = mutableListOf<Sookshmadasha>()
@@ -828,8 +823,8 @@ object DashaCalculator {
                 .divide(TOTAL_CYCLE_YEARS_BD, MATH_CONTEXT)
                 .multiply(pratyantarDurationYearsBd, MATH_CONTEXT)
 
-            val sookshmaDays = yearsToRoundedDays(proportionalDurationBd).coerceAtLeast(1L)
-            val sookshmaEnd = currentStart.plusDays(sookshmaDays)
+            val sookshmaSeconds = yearsToSeconds(proportionalDurationBd)
+            val sookshmaEnd = currentStart.plusSeconds(sookshmaSeconds)
 
             sookshmadashas.add(
                 Sookshmadasha(
@@ -839,7 +834,7 @@ object DashaCalculator {
                     mahadashaPlanet = mahadashaPlanet,
                     startDate = currentStart,
                     endDate = sookshmaEnd,
-                    durationDays = sookshmaDays,
+                    durationSeconds = sookshmaSeconds,
                     pranadashas = emptyList()
                 )
             )
@@ -854,7 +849,6 @@ object DashaCalculator {
             return sookshmadasha.pranadashas
         }
 
-        val sookshmaDurationMinutes = sookshmadasha.durationDays * 24 * 60
         return calculatePranadashasInternal(
             mahadashaPlanet = sookshmadasha.mahadashaPlanet,
             antardashaPlanet = sookshmadasha.antardashaPlanet,
@@ -862,7 +856,7 @@ object DashaCalculator {
             sookshmadashaPlanet = sookshmadasha.planet,
             sookshmaStart = sookshmadasha.startDate,
             sookshmaEnd = sookshmadasha.endDate,
-            sookshmaDurationMinutes = sookshmaDurationMinutes
+            sookshmaDurationSeconds = sookshmadasha.durationSeconds
         )
     }
 
@@ -871,9 +865,9 @@ object DashaCalculator {
         antardashaPlanet: Planet,
         pratyantardashaPlanet: Planet,
         sookshmadashaPlanet: Planet,
-        sookshmaStart: LocalDate,
-        sookshmaEnd: LocalDate,
-        sookshmaDurationMinutes: Long
+        sookshmaStart: LocalDateTime,
+        sookshmaEnd: LocalDateTime,
+        sookshmaDurationSeconds: Long
     ): List<Pranadasha> {
         val pranadashas = mutableListOf<Pranadasha>()
         var currentStart = sookshmaStart
@@ -885,14 +879,13 @@ object DashaCalculator {
             val pranaPlanet = DASHA_SEQUENCE[planetIndex]
 
             val pranaYearsBd = DASHA_YEARS[pranaPlanet] ?: BigDecimal.ZERO
-            val proportionalMinutes = pranaYearsBd
+            val proportionalSeconds = pranaYearsBd
                 .divide(TOTAL_CYCLE_YEARS_BD, MATH_CONTEXT)
-                .multiply(BigDecimal(sookshmaDurationMinutes), MATH_CONTEXT)
+                .multiply(BigDecimal(sookshmaDurationSeconds), MATH_CONTEXT)
                 .toLong()
                 .coerceAtLeast(1L)
 
-            val pranaDays = (proportionalMinutes / (24 * 60)).coerceAtLeast(1L)
-            val pranaEnd = currentStart.plusDays(pranaDays)
+            val pranaEnd = currentStart.plusSeconds(proportionalSeconds)
 
             pranadashas.add(
                 Pranadasha(
@@ -903,7 +896,7 @@ object DashaCalculator {
                     mahadashaPlanet = mahadashaPlanet,
                     startDate = currentStart,
                     endDate = pranaEnd,
-                    durationMinutes = proportionalMinutes,
+                    durationSeconds = proportionalSeconds,
                     dehadashas = emptyList()
                 )
             )
@@ -926,7 +919,7 @@ object DashaCalculator {
             pranadashaPlanet = pranadasha.planet,
             pranaStart = pranadasha.startDate,
             pranaEnd = pranadasha.endDate,
-            pranaDurationMinutes = pranadasha.durationMinutes
+            pranaDurationSeconds = pranadasha.durationSeconds
         )
     }
 
@@ -936,9 +929,9 @@ object DashaCalculator {
         pratyantardashaPlanet: Planet,
         sookshmadashaPlanet: Planet,
         pranadashaPlanet: Planet,
-        pranaStart: LocalDate,
-        pranaEnd: LocalDate,
-        pranaDurationMinutes: Long
+        pranaStart: LocalDateTime,
+        pranaEnd: LocalDateTime,
+        pranaDurationSeconds: Long
     ): List<Dehadasha> {
         val dehadashas = mutableListOf<Dehadasha>()
         var currentStart = pranaStart
@@ -950,14 +943,13 @@ object DashaCalculator {
             val dehaPlanet = DASHA_SEQUENCE[planetIndex]
 
             val dehaYearsBd = DASHA_YEARS[dehaPlanet] ?: BigDecimal.ZERO
-            val proportionalMinutes = dehaYearsBd
+            val proportionalSeconds = dehaYearsBd
                 .divide(TOTAL_CYCLE_YEARS_BD, MATH_CONTEXT)
-                .multiply(BigDecimal(pranaDurationMinutes), MATH_CONTEXT)
+                .multiply(BigDecimal(pranaDurationSeconds), MATH_CONTEXT)
                 .toLong()
                 .coerceAtLeast(1L)
 
-            val dehaDays = (proportionalMinutes / (24 * 60)).coerceAtLeast(1L)
-            val dehaEnd = currentStart.plusDays(dehaDays)
+            val dehaEnd = currentStart.plusSeconds(proportionalSeconds)
 
             dehadashas.add(
                 Dehadasha(
@@ -969,7 +961,7 @@ object DashaCalculator {
                     mahadashaPlanet = mahadashaPlanet,
                     startDate = currentStart,
                     endDate = dehaEnd,
-                    durationMinutes = proportionalMinutes
+                    durationSeconds = proportionalSeconds
                 )
             )
             currentStart = dehaEnd
@@ -984,100 +976,55 @@ object DashaCalculator {
      * Sandhi (junction/transition) is the period around dasha changes when the effects
      * of both the ending and beginning dashas are felt. This is a critical period in
      * Vedic astrology as it often brings significant life changes.
-     *
-     * Per classical texts:
-     * - The ending dasha loses strength and the incoming dasha gains strength
-     * - Events related to both dasha lords may manifest
-     * - Remedies are especially important during Sandhi periods
-     *
-     * This function calculates Sandhis for:
-     * - Mahadasha transitions (major 5-20 year periods)
-     * - Antardasha transitions (sub-periods of 1-3 years)
-     * - Pratyantardasha transitions (when within active Antardasha)
-     *
-     * @param mahadashas List of calculated Mahadashas
-     * @param fromDate Start date to search from
-     * @param lookAheadDays Number of days to look ahead
-     * @return List of upcoming Sandhis sorted by transition date
      */
     private fun calculateUpcomingSandhis(
         mahadashas: List<Mahadasha>,
-        fromDate: LocalDate,
+        fromDateTime: LocalDateTime,
         lookAheadDays: Int
     ): List<DashaSandhi> {
         val sandhis = mutableListOf<DashaSandhi>()
-        val endDate = fromDate.plusDays(lookAheadDays.toLong())
+        val endDateTime = fromDateTime.plusDays(lookAheadDays.toLong())
 
         for (i in 0 until mahadashas.size - 1) {
             val currentMd = mahadashas[i]
             val nextMd = mahadashas[i + 1]
 
             // Mahadasha Sandhi
-            if (currentMd.endDate.isAfter(fromDate) && currentMd.endDate.isBefore(endDate)) {
-                val sandhiDays = calculateSandhiDuration(DashaLevel.MAHADASHA, currentMd.durationYears)
+            if (currentMd.endDate.isAfter(fromDateTime) && currentMd.endDate.isBefore(endDateTime)) {
+                val sandhiSeconds = calculateSandhiDurationSeconds(DashaLevel.MAHADASHA, currentMd.durationYears)
                 sandhis.add(
                     DashaSandhi(
                         fromPlanet = currentMd.planet,
                         toPlanet = nextMd.planet,
                         transitionDate = currentMd.endDate,
                         level = DashaLevel.MAHADASHA,
-                        sandhiStartDate = currentMd.endDate.minusDays(sandhiDays / 2),
-                        sandhiEndDate = currentMd.endDate.plusDays(sandhiDays / 2)
+                        sandhiStartDate = currentMd.endDate.minusSeconds(sandhiSeconds / 2),
+                        sandhiEndDate = currentMd.endDate.plusSeconds(sandhiSeconds / 2)
                     )
                 )
             }
 
             // Antardasha and Pratyantardasha Sandhis
-            if (currentMd.isActiveOn(fromDate) ||
-                (currentMd.startDate.isAfter(fromDate) && currentMd.startDate.isBefore(endDate))) {
+            if (currentMd.isActiveOn(fromDateTime) ||
+                (currentMd.startDate.isAfter(fromDateTime) && currentMd.startDate.isBefore(endDateTime))) {
 
                 for (j in 0 until currentMd.antardashas.size - 1) {
                     val currentAd = currentMd.antardashas[j]
                     val nextAd = currentMd.antardashas[j + 1]
 
                     // Antardasha Sandhi
-                    if (currentAd.endDate.isAfter(fromDate) && currentAd.endDate.isBefore(endDate)) {
-                        val sandhiDays = calculateSandhiDuration(DashaLevel.ANTARDASHA, currentAd.durationYears)
+                    if (currentAd.endDate.isAfter(fromDateTime) && currentAd.endDate.isBefore(endDateTime)) {
+                        val sandhiSeconds = calculateSandhiDurationSeconds(DashaLevel.ANTARDASHA, currentAd.durationYears)
                         sandhis.add(
                             DashaSandhi(
                                 fromPlanet = currentAd.planet,
                                 toPlanet = nextAd.planet,
                                 transitionDate = currentAd.endDate,
                                 level = DashaLevel.ANTARDASHA,
-                                sandhiStartDate = currentAd.endDate.minusDays(sandhiDays / 2),
-                                sandhiEndDate = currentAd.endDate.plusDays(sandhiDays / 2)
+                                sandhiStartDate = currentAd.endDate.minusSeconds(sandhiSeconds / 2),
+                                sandhiEndDate = currentAd.endDate.plusSeconds(sandhiSeconds / 2)
                             )
                         )
-                    }
-
-                    // Pratyantardasha Sandhis (only for active or upcoming Antardashas within range)
-                    if (currentAd.isActiveOn(fromDate) ||
-                        (currentAd.startDate.isAfter(fromDate) && currentAd.startDate.isBefore(endDate))) {
-
-                        val pratyantardashas = if (currentAd.pratyantardashas.isNotEmpty()) {
-                            currentAd.pratyantardashas
-                        } else {
-                            calculatePratyantardashasForAntardasha(currentAd)
-                        }
-
-                        for (k in 0 until pratyantardashas.size - 1) {
-                            val currentPd = pratyantardashas[k]
-                            val nextPd = pratyantardashas[k + 1]
-
-                            if (currentPd.endDate.isAfter(fromDate) && currentPd.endDate.isBefore(endDate)) {
-                                val sandhiDays = calculateSandhiDuration(DashaLevel.PRATYANTARDASHA, currentPd.durationYears)
-                                sandhis.add(
-                                    DashaSandhi(
-                                        fromPlanet = currentPd.planet,
-                                        toPlanet = nextPd.planet,
-                                        transitionDate = currentPd.endDate,
-                                        level = DashaLevel.PRATYANTARDASHA,
-                                        sandhiStartDate = currentPd.endDate.minusDays(sandhiDays / 2),
-                                        sandhiEndDate = currentPd.endDate.plusDays(sandhiDays / 2)
-                                    )
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -1086,7 +1033,7 @@ object DashaCalculator {
         return sandhis.sortedBy { it.transitionDate }
     }
 
-    private fun calculateSandhiDuration(level: DashaLevel, periodDurationYears: Double): Long {
+    private fun calculateSandhiDurationSeconds(level: DashaLevel, periodDurationYears: Double): Long {
         val sandhiPercentage = when (level) {
             DashaLevel.MAHADASHA -> 0.05
             DashaLevel.ANTARDASHA -> 0.10
@@ -1096,11 +1043,11 @@ object DashaCalculator {
             DashaLevel.DEHADASHA -> 0.20
         }
 
-        val sandhiYears = periodDurationYears * sandhiPercentage
-        return yearsToRoundedDays(sandhiYears).coerceIn(1L, 30L)
+        val sandhiYearsBd = BigDecimal(periodDurationYears.toString()).multiply(BigDecimal(sandhiPercentage.toString()), MATH_CONTEXT)
+        return yearsToSeconds(sandhiYearsBd).coerceIn(3600L, 30L * 24 * 3600) // Min 1 hour, Max 30 days
     }
 
-    fun getDashaAtDate(timeline: DashaTimeline, date: LocalDate): DashaPeriodInfo {
+    fun getDashaAtDate(timeline: DashaTimeline, date: LocalDateTime): DashaPeriodInfo {
         return timeline.getDashaAtDate(date)
     }
 
@@ -1150,7 +1097,7 @@ object DashaCalculator {
                 timeline.currentAntardasha?.let { ad ->
                     appendLine("\nAntardasha: ${ad.planet.displayName}")
                     appendLine("  Progress: ${String.format("%.1f", ad.getProgressPercent())}%")
-                    appendLine("  Remaining: ${ad.getRemainingDays()} days")
+                    appendLine("  Remaining: ${ad.getRemainingSeconds() / (24 * 3600)} days")
 
                     timeline.currentPratyantardasha?.let { pd ->
                         appendLine("\nPratyantardasha: ${pd.planet.displayName}")
@@ -1159,7 +1106,7 @@ object DashaCalculator {
                         timeline.currentSookshmadasha?.let { sd ->
                             appendLine("\nSookshmadasha: ${sd.planet.displayName}")
                             appendLine("  Period: ${sd.startDate} to ${sd.endDate}")
-                            appendLine("  Duration: ${sd.durationDays} days")
+                            appendLine("  Duration: ${sd.durationSeconds / (24 * 3600)} days")
 
                             timeline.currentPranadasha?.let { prd ->
                                 appendLine("\nPranadasha: ${prd.planet.displayName}")
@@ -1197,7 +1144,7 @@ object DashaCalculator {
                 timeline.currentAntardasha?.let { ad ->
                     appendLine("\n${DashaLevel.ANTARDASHA.getLocalizedName(language)}: ${ad.planet.getLocalizedName(language)}")
                     appendLine("  $progressLabel: ${String.format("%.1f", ad.getProgressPercent())}%")
-                    appendLine("  $remainingLabel: ${ad.getRemainingDays()} $daysLabel")
+                    appendLine("  $remainingLabel: ${ad.getRemainingSeconds() / (24 * 3600)} $daysLabel")
 
                     timeline.currentPratyantardasha?.let { pd ->
                         appendLine("\n${DashaLevel.PRATYANTARDASHA.getLocalizedName(language)}: ${pd.planet.getLocalizedName(language)}")
@@ -1206,7 +1153,7 @@ object DashaCalculator {
                         timeline.currentSookshmadasha?.let { sd ->
                             appendLine("\n${DashaLevel.SOOKSHMADASHA.getLocalizedName(language)}: ${sd.planet.getLocalizedName(language)}")
                             appendLine("  $periodLabel: ${sd.startDate} $toLabel ${sd.endDate}")
-                            appendLine("  $durationLabel: ${sd.durationDays} $daysLabel")
+                            appendLine("  $durationLabel: ${sd.durationSeconds / (24 * 3600)} $daysLabel")
 
                             timeline.currentPranadasha?.let { prd ->
                                 appendLine("\n${DashaLevel.PRANADASHA.getLocalizedName(language)}: ${prd.planet.getLocalizedName(language)}")

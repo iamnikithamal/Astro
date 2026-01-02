@@ -115,7 +115,7 @@ fun AvasthaScreen(
     )
 
     // Calculate analysis
-    LaunchedEffect(chart) {
+    LaunchedEffect(chart, language) {
         if (chart == null) {
             isCalculating = false
             return@LaunchedEffect
@@ -124,7 +124,7 @@ fun AvasthaScreen(
         delay(300)
         try {
             analysis = withContext(Dispatchers.Default) {
-                AvasthaCalculator.analyzeAvasthas(chart)
+                AvasthaCalculator.analyzeAvasthas(chart, language)
             }
         } catch (e: Exception) {
             // Handle error

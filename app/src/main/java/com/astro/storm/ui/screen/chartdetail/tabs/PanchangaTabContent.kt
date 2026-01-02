@@ -69,6 +69,7 @@ import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.ephemeris.Karana
+import com.astro.storm.data.localization.StringKeyPanchanga
 import com.astro.storm.ephemeris.PanchangaCalculator
 import com.astro.storm.ephemeris.PanchangaData
 import com.astro.storm.ephemeris.Vara
@@ -1038,16 +1039,167 @@ private fun getGanaColor(gana: String): Color {
     }
 }
 
-private data class TithiData(
-    val deity: String,
-    val nature: String,
-    val quality: Quality,
-    val description: String,
-    val activities: List<String>,
-    val avoid: List<String>
-)
+import com.astro.storm.data.localization.StringKeyPanchanga
 
-private fun getTithiData(tithiNumber: Int): TithiData {
+// ... imports ...
+
+@Composable
+private fun getTithiDesc(tithiNumber: Int): String {
+    val key = when (tithiNumber) {
+        1, 16 -> StringKeyPanchanga.TITHI_DESC_1
+        2, 17 -> StringKeyPanchanga.TITHI_DESC_2
+        3, 18 -> StringKeyPanchanga.TITHI_DESC_3
+        4, 19 -> StringKeyPanchanga.TITHI_DESC_4
+        5, 20 -> StringKeyPanchanga.TITHI_DESC_5
+        6, 21 -> StringKeyPanchanga.TITHI_DESC_6
+        7, 22 -> StringKeyPanchanga.TITHI_DESC_7
+        8, 23 -> StringKeyPanchanga.TITHI_DESC_8
+        9, 24 -> StringKeyPanchanga.TITHI_DESC_9
+        10, 25 -> StringKeyPanchanga.TITHI_DESC_10
+        11, 26 -> StringKeyPanchanga.TITHI_DESC_11
+        12, 27 -> StringKeyPanchanga.TITHI_DESC_12
+        13, 28 -> StringKeyPanchanga.TITHI_DESC_13
+        14, 29 -> StringKeyPanchanga.TITHI_DESC_14
+        15 -> StringKeyPanchanga.TITHI_DESC_15
+        30 -> StringKeyPanchanga.TITHI_DESC_30
+        else -> StringKeyPanchanga.TITHI_DESC_MIXED
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getNakshatraDesc(nakshatra: Nakshatra): String {
+    val key = when (nakshatra) {
+        Nakshatra.ASHWINI -> StringKeyPanchanga.NAK_DESC_ASHWINI
+        Nakshatra.BHARANI -> StringKeyPanchanga.NAK_DESC_BHARANI
+        Nakshatra.KRITTIKA -> StringKeyPanchanga.NAK_DESC_KRITTIKA
+        Nakshatra.ROHINI -> StringKeyPanchanga.NAK_DESC_ROHINI
+        Nakshatra.MRIGASHIRA -> StringKeyPanchanga.NAK_DESC_MRIGASHIRA
+        Nakshatra.ARDRA -> StringKeyPanchanga.NAK_DESC_ARDRA
+        Nakshatra.PUNARVASU -> StringKeyPanchanga.NAK_DESC_PUNARVASU
+        Nakshatra.PUSHYA -> StringKeyPanchanga.NAK_DESC_PUSHYA
+        Nakshatra.ASHLESHA -> StringKeyPanchanga.NAK_DESC_ASHLESHA
+        Nakshatra.MAGHA -> StringKeyPanchanga.NAK_DESC_MAGHA
+        Nakshatra.PURVA_PHALGUNI -> StringKeyPanchanga.NAK_DESC_PURVA_PHALGUNI
+        Nakshatra.UTTARA_PHALGUNI -> StringKeyPanchanga.NAK_DESC_UTTARA_PHALGUNI
+        Nakshatra.HASTA -> StringKeyPanchanga.NAK_DESC_HASTA
+        Nakshatra.CHITRA -> StringKeyPanchanga.NAK_DESC_CHITRA
+        Nakshatra.SWATI -> StringKeyPanchanga.NAK_DESC_SWATI
+        Nakshatra.VISHAKHA -> StringKeyPanchanga.NAK_DESC_VISHAKHA
+        Nakshatra.ANURADHA -> StringKeyPanchanga.NAK_DESC_ANURADHA
+        Nakshatra.JYESHTHA -> StringKeyPanchanga.NAK_DESC_JYESHTHA
+        Nakshatra.MULA -> StringKeyPanchanga.NAK_DESC_MULA
+        Nakshatra.PURVA_ASHADHA -> StringKeyPanchanga.NAK_DESC_PURVA_ASHADHA
+        Nakshatra.UTTARA_ASHADHA -> StringKeyPanchanga.NAK_DESC_UTTARA_ASHADHA
+        Nakshatra.SHRAVANA -> StringKeyPanchanga.NAK_DESC_SHRAVANA
+        Nakshatra.DHANISHTHA -> StringKeyPanchanga.NAK_DESC_DHANISHTHA
+        Nakshatra.SHATABHISHA -> StringKeyPanchanga.NAK_DESC_SHATABHISHA
+        Nakshatra.PURVA_BHADRAPADA -> StringKeyPanchanga.NAK_DESC_PURVA_BHADRAPADA
+        Nakshatra.UTTARA_BHADRAPADA -> StringKeyPanchanga.NAK_DESC_UTTARA_BHADRAPADA
+        Nakshatra.REVATI -> StringKeyPanchanga.NAK_DESC_REVATI
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getYogaDesc(yoga: Yoga): String {
+    val key = when (yoga) {
+        Yoga.VISHKUMBHA -> StringKeyPanchanga.YOGA_DESC_VISHKUMBHA
+        Yoga.PRITI -> StringKeyPanchanga.YOGA_DESC_PRITI
+        Yoga.AYUSHMAN -> StringKeyPanchanga.YOGA_DESC_AYUSHMAN
+        Yoga.SAUBHAGYA -> StringKeyPanchanga.YOGA_DESC_SAUBHAGYA
+        Yoga.SHOBHANA -> StringKeyPanchanga.YOGA_DESC_SHOBHANA
+        Yoga.ATIGANDA -> StringKeyPanchanga.YOGA_DESC_ATIGANDA
+        Yoga.SUKARMA -> StringKeyPanchanga.YOGA_DESC_SUKARMA
+        Yoga.DHRITI -> StringKeyPanchanga.YOGA_DESC_DHRITI
+        Yoga.SHULA -> StringKeyPanchanga.YOGA_DESC_SHULA
+        Yoga.GANDA -> StringKeyPanchanga.YOGA_DESC_GANDA
+        Yoga.VRIDDHI -> StringKeyPanchanga.YOGA_DESC_VRIDDHI
+        Yoga.DHRUVA -> StringKeyPanchanga.YOGA_DESC_DHRUVA
+        Yoga.VYAGHATA -> StringKeyPanchanga.YOGA_DESC_VYAGHATA
+        Yoga.HARSHANA -> StringKeyPanchanga.YOGA_DESC_HARSHANA
+        Yoga.VAJRA -> StringKeyPanchanga.YOGA_DESC_VAJRA
+        Yoga.SIDDHI -> StringKeyPanchanga.YOGA_DESC_SIDDHI
+        Yoga.VYATIPATA -> StringKeyPanchanga.YOGA_DESC_VYATIPATA
+        Yoga.VARIYAN -> StringKeyPanchanga.YOGA_DESC_VARIYAN
+        Yoga.PARIGHA -> StringKeyPanchanga.YOGA_DESC_PARIGHA
+        Yoga.SHIVA -> StringKeyPanchanga.YOGA_DESC_SHIVA
+        Yoga.SIDDHA -> StringKeyPanchanga.YOGA_DESC_SIDDHA
+        Yoga.SADHYA -> StringKeyPanchanga.YOGA_DESC_SADHYA
+        Yoga.SHUBHA -> StringKeyPanchanga.YOGA_DESC_SHUBHA
+        Yoga.SHUKLA -> StringKeyPanchanga.YOGA_DESC_SHUKLA
+        Yoga.BRAHMA -> StringKeyPanchanga.YOGA_DESC_BRAHMA
+        Yoga.INDRA -> StringKeyPanchanga.YOGA_DESC_INDRA
+        Yoga.VAIDHRITI -> StringKeyPanchanga.YOGA_DESC_VAIDHRITI
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getKaranaDesc(karana: Karana): String {
+    val key = when (karana) {
+        Karana.BAVA -> StringKeyPanchanga.KARANA_DESC_BAVA
+        Karana.BALAVA -> StringKeyPanchanga.KARANA_DESC_BALAVA
+        Karana.KAULAVA -> StringKeyPanchanga.KARANA_DESC_KAULAVA
+        Karana.TAITILA -> StringKeyPanchanga.KARANA_DESC_TAITILA
+        Karana.GARA -> StringKeyPanchanga.KARANA_DESC_GARA
+        Karana.VANIJA -> StringKeyPanchanga.KARANA_DESC_VANIJA
+        Karana.VISHTI -> StringKeyPanchanga.KARANA_DESC_VISHTI
+        Karana.SHAKUNI -> StringKeyPanchanga.KARANA_DESC_SHAKUNI
+        Karana.CHATUSHPADA -> StringKeyPanchanga.KARANA_DESC_CHATUSHPADA
+        Karana.NAGA -> StringKeyPanchanga.KARANA_DESC_NAGA
+        Karana.KIMSTUGHNA -> StringKeyPanchanga.KARANA_DESC_KIMSTUGHNA
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getVaraDesc(vara: Vara): String {
+    val key = when (vara) {
+        Vara.SUNDAY -> StringKeyPanchanga.VARA_DESC_SUNDAY
+        Vara.MONDAY -> StringKeyPanchanga.VARA_DESC_MONDAY
+        Vara.TUESDAY -> StringKeyPanchanga.VARA_DESC_TUESDAY
+        Vara.WEDNESDAY -> StringKeyPanchanga.VARA_DESC_WEDNESDAY
+        Vara.THURSDAY -> StringKeyPanchanga.VARA_DESC_THURSDAY
+        Vara.FRIDAY -> StringKeyPanchanga.VARA_DESC_FRIDAY
+        Vara.SATURDAY -> StringKeyPanchanga.VARA_DESC_SATURDAY
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getVaraFav(vara: Vara): String {
+    val key = when (vara) {
+        Vara.SUNDAY -> StringKeyPanchanga.VARA_FAV_SUNDAY
+        Vara.MONDAY -> StringKeyPanchanga.VARA_FAV_MONDAY
+        Vara.TUESDAY -> StringKeyPanchanga.VARA_FAV_TUESDAY
+        Vara.WEDNESDAY -> StringKeyPanchanga.VARA_FAV_WEDNESDAY
+        Vara.THURSDAY -> StringKeyPanchanga.VARA_FAV_THURSDAY
+        Vara.FRIDAY -> StringKeyPanchanga.VARA_FAV_FRIDAY
+        Vara.SATURDAY -> StringKeyPanchanga.VARA_FAV_SATURDAY
+    }
+    return stringResource(key)
+}
+
+@Composable
+private fun getVaraUnfav(vara: Vara): String {
+    val key = when (vara) {
+        Vara.SUNDAY -> StringKeyPanchanga.VARA_UNFAV_SUNDAY
+        Vara.MONDAY -> StringKeyPanchanga.VARA_UNFAV_MONDAY
+        Vara.TUESDAY -> StringKeyPanchanga.VARA_UNFAV_TUESDAY
+        Vara.WEDNESDAY -> StringKeyPanchanga.VARA_UNFAV_WEDNESDAY
+        Vara.THURSDAY -> StringKeyPanchanga.VARA_UNFAV_THURSDAY
+        Vara.FRIDAY -> StringKeyPanchanga.VARA_UNFAV_FRIDAY
+        Vara.SATURDAY -> StringKeyPanchanga.VARA_UNFAV_SATURDAY
+    }
+    return stringResource(key)
+}
+
+// ... Replace hardcoded data lookups in Composable functions with these helpers ...
+// Example for TithiCard:
+// val description = getTithiDesc(panchanga.tithi.tithi.number)
+// ... and remove the old hardcoded functions getTithiData etc. or refactor them to only return data not in strings.
+
     return when (tithiNumber) {
         1, 16 -> TithiData(
             deity = "Agni (Fire God)",

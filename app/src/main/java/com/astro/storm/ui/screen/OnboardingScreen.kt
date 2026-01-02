@@ -242,7 +242,7 @@ private fun WelcomePage(
 
         // Brief tagline only - no lengthy description
         Text(
-            text = "Precision Vedic Astrology",
+            text = stringResource(StringKey.ONBOARDING_TAGLINE),
             fontSize = if (isSmallScreen) 14.sp else 16.sp,
             color = colors.AccentGold,
             fontWeight = FontWeight.Medium,
@@ -265,10 +265,10 @@ private fun CompactFeatureGrid(
     isSmallScreen: Boolean
 ) {
     val features = listOf(
-        Icons.Outlined.AutoGraph to "Birth Charts",
-        Icons.Outlined.Timeline to "Dashas",
-        Icons.Outlined.Sync to "Transits",
-        Icons.Outlined.Stars to "Yogas"
+        Icons.Outlined.AutoGraph to stringResource(StringKey.ONBOARDING_FEATURE_CHARTS),
+        Icons.Outlined.Timeline to stringResource(StringKey.ONBOARDING_FEATURE_DASHAS),
+        Icons.Outlined.Sync to stringResource(StringKey.ONBOARDING_FEATURE_TRANSITS),
+        Icons.Outlined.Stars to stringResource(StringKey.FEATURE_YOGAS)
     )
 
     Row(
@@ -324,7 +324,7 @@ private fun FeaturesPage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "What AstroStorm Offers",
+            text = stringResource(StringKey.ONBOARDING_FEATURES_OVERVIEW_TITLE),
             fontSize = if (isSmallScreen) 20.sp else 24.sp,
             fontWeight = FontWeight.Bold,
             color = colors.TextPrimary,
@@ -336,8 +336,8 @@ private fun FeaturesPage(
         // Feature categories
         FeatureCategory(
             icon = Icons.Outlined.GridView,
-            title = "Complete Chart Analysis",
-            items = listOf("Rashi & Divisional Charts", "Shadbala & Ashtakavarga", "All 16 Vargas"),
+            title = stringResource(StringKey.ONBOARDING_FEATURE_CAT_CHART),
+            items = stringResource(StringKey.ONBOARDING_FEATURE_CAT_CHART_ITEMS).split(" • "),
             colors = colors,
             isSmallScreen = isSmallScreen
         )
@@ -346,8 +346,8 @@ private fun FeaturesPage(
 
         FeatureCategory(
             icon = Icons.Outlined.Timeline,
-            title = "Dasha Systems",
-            items = listOf("Vimshottari & Yogini", "Ashtottari & Chara", "Kalachakra Dasha"),
+            title = stringResource(StringKey.ONBOARDING_FEATURE_CAT_DASHA),
+            items = stringResource(StringKey.ONBOARDING_FEATURE_CAT_DASHA_ITEMS).split(" • "),
             colors = colors,
             isSmallScreen = isSmallScreen
         )
@@ -356,8 +356,8 @@ private fun FeaturesPage(
 
         FeatureCategory(
             icon = Icons.Outlined.AutoAwesome,
-            title = "Predictions & Yogas",
-            items = listOf("200+ Yoga Calculations", "Transit Analysis", "Matchmaking (Kundali Milan)"),
+            title = stringResource(StringKey.ONBOARDING_FEATURE_CAT_PREDICTION),
+            items = stringResource(StringKey.ONBOARDING_FEATURE_CAT_PREDICTION_ITEMS).split(" • "),
             colors = colors,
             isSmallScreen = isSmallScreen
         )
@@ -366,8 +366,8 @@ private fun FeaturesPage(
 
         FeatureCategory(
             icon = Icons.Outlined.Spa,
-            title = "Remedies & Muhurta",
-            items = listOf("Vedic & Lal Kitab Remedies", "Auspicious Timing", "Panchanga"),
+            title = stringResource(StringKey.ONBOARDING_FEATURE_CAT_REMEDY),
+            items = stringResource(StringKey.ONBOARDING_FEATURE_CAT_REMEDY_ITEMS).split(" • "),
             colors = colors,
             isSmallScreen = isSmallScreen
         )
@@ -771,7 +771,7 @@ private fun ReadyPage(
         Spacer(modifier = Modifier.height(if (isSmallScreen) 8.dp else 12.dp))
 
         Text(
-            text = "Create Your First Chart",
+            text = stringResource(StringKey.ONBOARDING_CREATE_FIRST_CHART),
             fontSize = if (isSmallScreen) 14.sp else 16.sp,
             color = colors.AccentGold,
             fontWeight = FontWeight.Medium,
@@ -802,7 +802,7 @@ private fun ReadyPage(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "You'll need:",
+                        text = stringResource(StringKey.ONBOARDING_QUICK_START_TITLE),
                         fontSize = if (isSmallScreen) 13.sp else 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = colors.TextPrimary
@@ -812,9 +812,9 @@ private fun ReadyPage(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    QuickStartItem("Birth date & time", colors, isSmallScreen)
-                    QuickStartItem("Birth location (city)", colors, isSmallScreen)
-                    QuickStartItem("That's all!", colors, isSmallScreen)
+                    QuickStartItem(stringResource(StringKey.ONBOARDING_QUICK_START_1), colors, isSmallScreen)
+                    QuickStartItem(stringResource(StringKey.ONBOARDING_QUICK_START_2), colors, isSmallScreen)
+                    QuickStartItem(stringResource(StringKey.ONBOARDING_QUICK_START_3), colors, isSmallScreen)
                 }
             }
         }
@@ -907,7 +907,7 @@ private fun NavigationButtons(
             ) {
                 Text(
                     text = if (isLastPage) {
-                        "Create Chart"
+                        stringResource(StringKey.BTN_CREATE_CHART)
                     } else {
                         stringResource(StringKey.ONBOARDING_BTN_NEXT)
                     },

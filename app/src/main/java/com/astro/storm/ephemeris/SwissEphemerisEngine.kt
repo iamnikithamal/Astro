@@ -444,21 +444,25 @@ class SwissEphemerisEngine internal constructor(
     }
 
     private fun determineHouse(longitude: Double, houseCusps: List<Double>): Int {
+        val normalizedLong = normalizeDegree(longitude)
+        
         for (houseNum in 1..12) {
             val cuspStart = houseCusps[houseNum - 1]
             val cuspEnd = if (houseNum == 12) houseCusps[0] else houseCusps[houseNum]
 
-            val normalizedLongitude = normalizeDegree(longitude - cuspStart)
+            val relativeLong = normalizeDegree(normalizedLong - cuspStart)
             val houseWidth = normalizeDegree(cuspEnd - cuspStart)
 
-            val effectiveWidth = if (houseWidth < 0.001) DEGREES_PER_SIGN else houseWidth
+            // Precision threshold for boundary detection (approx 1 arc second)
+            val epsilon = 1.0 / 3600.0
 
-            if (normalizedLongitude < effectiveWidth) {
+            if (relativeLong < (houseWidth - epsilon)) {
                 return houseNum
             }
         }
 
-        return findClosestHouse(longitude, houseCusps)
+        // Fallback for edge cases exactly on the 12th house cusp boundary
+        return findClosestHouse(normalizedLong, houseCusps)
     }
 
     private fun findClosestHouse(longitude: Double, houseCusps: List<Double>): Int {
@@ -467,6 +471,7 @@ class SwissEphemerisEngine internal constructor(
 
         for (houseNum in 1..12) {
             val cusp = houseCusps[houseNum - 1]
+            // Calculate distance to both start and center of house for better precision
             val distance = angularDistance(longitude, cusp)
             if (distance < minDistance) {
                 minDistance = distance
@@ -474,7 +479,7 @@ class SwissEphemerisEngine internal constructor(
             }
         }
 
-        Log.w(TAG, "House determination fallback used for longitude $longitude")
+        Log.d(TAG, "House determination: Planet at $longitude matched to house $closestHouse (dist $minDistance)")
         return closestHouse
     }
 

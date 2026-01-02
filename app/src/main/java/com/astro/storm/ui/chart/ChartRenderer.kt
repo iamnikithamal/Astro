@@ -363,7 +363,8 @@ class ChartRenderer(
         drawScope: DrawScope,
         chart: VedicChart,
         size: Float,
-        chartTitle: String = "Lagna"
+        chartTitle: String = "Lagna",
+        language: Language = Language.ENGLISH
     ) {
         with(drawScope) {
             val frame = drawNorthIndianFrame(size)
@@ -378,7 +379,8 @@ class ChartRenderer(
                 ascendantSign = ascendantSign,
                 planetPositions = chart.planetPositions,
                 size = size,
-                sunPosition = chart.planetPositions.find { it.planet == Planet.SUN }
+                sunPosition = chart.planetPositions.find { it.planet == Planet.SUN },
+                language = language
             )
         }
     }
@@ -389,7 +391,8 @@ class ChartRenderer(
         ascendantLongitude: Double,
         size: Float,
         chartTitle: String,
-        originalChart: VedicChart? = null
+        originalChart: VedicChart? = null,
+        language: Language = Language.ENGLISH
     ) {
         with(drawScope) {
             val frame = drawNorthIndianFrame(size)
@@ -404,7 +407,8 @@ class ChartRenderer(
                 ascendantSign = ascendantSign,
                 planetPositions = planetPositions,
                 size = size,
-                sunPosition = originalChart?.planetPositions?.find { it.planet == Planet.SUN }
+                sunPosition = originalChart?.planetPositions?.find { it.planet == Planet.SUN },
+                language = language
             )
         }
     }
@@ -422,7 +426,8 @@ class ChartRenderer(
         ascendantSign: ZodiacSign,
         planetPositions: List<PlanetPosition>,
         size: Float,
-        sunPosition: PlanetPosition? = null
+        sunPosition: PlanetPosition? = null,
+        language: Language
     ) {
         val planetsByHouse = planetPositions.groupBy { it.house }
 
@@ -435,7 +440,7 @@ class ChartRenderer(
             val numberText = signNumberForHouse(houseNum, ascendantSign).toString()
 
             val planets = planetsByHouse[houseNum] ?: emptyList()
-            val displayItems = buildDisplayItems(houseNum, planets, sunPosition)
+            val displayItems = buildDisplayItems(houseNum, planets, sunPosition, language)
 
             val numberPosition = calculateOptimalNumberPosition(
                 houseNum = houseNum,
@@ -486,14 +491,15 @@ class ChartRenderer(
     private fun buildDisplayItems(
         houseNum: Int,
         planets: List<PlanetPosition>,
-        sunPosition: PlanetPosition?
+        sunPosition: PlanetPosition?,
+        language: Language = Language.ENGLISH
     ): List<HouseDisplayItem> {
         val items = mutableListOf<HouseDisplayItem>()
 
         if (houseNum == 1) {
             items.add(
                 HouseDisplayItem(
-                    text = "Asc",
+                    text = StringResources.get(StringKeyAnalysis.CHART_ASC_ABBR, language),
                     color = LAGNA_COLOR,
                     isBold = true,
                     isLagna = true
@@ -1068,7 +1074,7 @@ class ChartRenderer(
     }
 
     fun drawSouthIndianChart(drawScope: DrawScope, chart: VedicChart, size: Float, language: Language = Language.ENGLISH) {
-        drawNorthIndianChart(drawScope, chart, size, StringResources.get(StringKeyAnalysis.CHART_LAGNA, language))
+        drawNorthIndianChart(drawScope, chart, size, StringResources.get(StringKeyAnalysis.CHART_LAGNA, language), language)
     }
 
     fun DrawScope.drawChartLegend(
@@ -1188,13 +1194,14 @@ class ChartRenderer(
         chart: VedicChart,
         size: Float,
         chartTitle: String = "Lagna",
-        showLegend: Boolean = true
+        showLegend: Boolean = true,
+        language: Language = Language.ENGLISH
     ) {
         with(drawScope) {
             val legendHeight = if (showLegend) size * 0.085f else 0f
             val chartSize = size - legendHeight
 
-            drawNorthIndianChart(this, chart, chartSize, chartTitle)
+            drawNorthIndianChart(this, chart, chartSize, chartTitle, language)
 
             if (showLegend) {
                 val padding = chartSize * CHART_PADDING_RATIO
@@ -1211,7 +1218,8 @@ class ChartRenderer(
                     chartBottom = chartSize,
                     chartLeft = padding,
                     chartWidth = chartWidth,
-                    textSize = textSize
+                    textSize = textSize,
+                    language = language
                 )
             }
         }

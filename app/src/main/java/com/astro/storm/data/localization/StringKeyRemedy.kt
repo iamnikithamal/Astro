@@ -304,6 +304,7 @@ enum class StringKeyRemedy(override val en: String, override val ne: String) : S
     LIFE_AREA_WEALTH("Wealth & Finance", "धन र वित्त"),
     LIFE_AREA_EDUCATION("Education & Communication", "शिक्षा र सञ्चार"),
     LIFE_AREA_SPIRITUAL("Spiritual Growth", "आध्यात्मिक वृद्धि"),
+    LIFE_AREA_FAMILY("Family & Home", "परिवार र घर"),
     LIFE_AREA_PROPERTY("Property & Fixed Assets", "सम्पत्ति र अचल सम्पत्ति"),
     LIFE_AREA_FOREIGN("Foreign & Travel", "विदेश र यात्रा"),
 

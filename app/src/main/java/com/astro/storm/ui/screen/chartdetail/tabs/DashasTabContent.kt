@@ -69,60 +69,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.astro.storm.data.localization.BikramSambatConverter
-import com.astro.storm.data.localization.DateFormat
-import com.astro.storm.data.localization.DateSystem
-import com.astro.storm.data.localization.Language
-import com.astro.storm.data.localization.LocalDateSystem
-import com.astro.storm.data.localization.LocalLanguage
-import com.astro.storm.data.localization.StringKey
-import com.astro.storm.data.localization.StringKeyMatch
-import com.astro.storm.data.localization.formatDate
-import com.astro.storm.data.localization.formatDateRange
-import com.astro.storm.data.localization.formatDurationYearsMonths
-import com.astro.storm.data.localization.formatLocalized
-import com.astro.storm.data.localization.formatRemainingDuration
-import com.astro.storm.data.localization.getLocalizedName
-import com.astro.storm.data.localization.stringResource
-import com.astro.storm.data.model.Planet
-import com.astro.storm.ephemeris.DashaCalculator
-import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.collectLatest
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
+import com.astro.storm.data.localization.StringKeyDashaInterpretations
 
-@Immutable
-private data class VimshottariPeriod(
-    val planet: Planet,
-    val years: Int
-)
-
-private val VIMSHOTTARI_SEQUENCE: List<VimshottariPeriod> = listOf(
-    VimshottariPeriod(Planet.KETU, 7),
-    VimshottariPeriod(Planet.VENUS, 20),
-    VimshottariPeriod(Planet.SUN, 6),
-    VimshottariPeriod(Planet.MOON, 10),
-    VimshottariPeriod(Planet.MARS, 7),
-    VimshottariPeriod(Planet.RAHU, 18),
-    VimshottariPeriod(Planet.JUPITER, 16),
-    VimshottariPeriod(Planet.SATURN, 19),
-    VimshottariPeriod(Planet.MERCURY, 17)
-)
-
-private enum class DashaLevel {
-    MAHADASHA, ANTARDASHA, PRATYANTARDASHA, SOOKSHMADASHA, PRANADASHA, DEHADASHA
-}
-
-@Stable
-private data class DashaSizes(
-    val circleSize: Dp,
-    val mainFontSize: TextUnit,
-    val subFontSize: TextUnit,
-    val symbolSize: TextUnit,
-    val progressHeight: Dp
-)
+// ... existing imports ...
 
 private fun getDashaSizes(level: DashaLevel): DashaSizes = when (level) {
     DashaLevel.MAHADASHA -> DashaSizes(44.dp, 16.sp, 12.sp, 17.sp, 6.dp)
@@ -138,163 +87,14 @@ fun DashasTabContent(
     timeline: DashaCalculator.DashaTimeline,
     scrollToTodayEvent: SharedFlow<Unit>? = null
 ) {
-    val listState = rememberLazyListState()
-
-    var expandedMahadashaKeys by rememberSaveable { mutableStateOf(setOf<String>()) }
-    var isDashaInfoExpanded by rememberSaveable { mutableStateOf(false) }
-    var isSandhiSectionExpanded by rememberSaveable { mutableStateOf(true) }
-
-    val upcomingSandhis = remember(timeline) {
-        timeline.getUpcomingSandhisWithin(90)
-    }
-
-    val currentMahadashaIndex = remember(timeline) {
-        timeline.mahadashas.indexOfFirst { it == timeline.currentMahadasha }
-    }
-
-    LaunchedEffect(scrollToTodayEvent) {
-        scrollToTodayEvent?.collectLatest {
-            if (currentMahadashaIndex >= 0) {
-                val headerItemsCount = if (upcomingSandhis.isNotEmpty()) 3 else 2
-                listState.animateScrollToItem(headerItemsCount + currentMahadashaIndex)
-            }
-        }
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = listState,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item(key = "current_period_header") {
-            CurrentPeriodCard(timeline = timeline)
-        }
-
-        if (upcomingSandhis.isNotEmpty()) {
-            item(key = "sandhi_alerts_section") {
-                SandhiAlertsCard(
-                    sandhis = upcomingSandhis,
-                    isExpanded = isSandhiSectionExpanded,
-                    onToggleExpand = { isSandhiSectionExpanded = it }
-                )
-            }
-        }
-
-        item(key = "timeline_overview") {
-            DashaTimelineCard(timeline = timeline)
-        }
-
-        itemsIndexed(
-            items = timeline.mahadashas,
-            key = { index, mahadasha ->
-                "mahadasha_${mahadasha.planet.symbol}_${mahadasha.startDate.toEpochDay()}_$index"
-            }
-        ) { index, mahadasha ->
-            val mahadashaKey = "${mahadasha.planet.symbol}_${mahadasha.startDate.toEpochDay()}"
-            val isCurrentMahadasha = mahadasha == timeline.currentMahadasha
-            val isExpanded = mahadashaKey in expandedMahadashaKeys
-
-            MahadashaCard(
-                mahadasha = mahadasha,
-                currentAntardasha = if (isCurrentMahadasha) timeline.currentAntardasha else null,
-                isCurrentMahadasha = isCurrentMahadasha,
-                isExpanded = isExpanded,
-                onToggleExpand = { expanded ->
-                    expandedMahadashaKeys = if (expanded) {
-                        expandedMahadashaKeys + mahadashaKey
-                    } else {
-                        expandedMahadashaKeys - mahadashaKey
-                    }
-                }
-            )
-        }
-
-        item(key = "dasha_info_footer") {
-            DashaInfoCard(
-                isExpanded = isDashaInfoExpanded,
-                onToggleExpand = { isDashaInfoExpanded = it }
-            )
-        }
-
-        item(key = "bottom_spacer") {
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-    }
+    // ... existing code ...
 }
 
 @Composable
 private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
-    val currentMahadasha = timeline.currentMahadasha
-    val currentAntardasha = timeline.currentAntardasha
-    val currentPratyantardasha = timeline.currentPratyantardasha
-    val currentSookshmadasha = timeline.currentSookshmadasha
-    val currentPranadasha = timeline.currentPranadasha
-    val currentDehadasha = timeline.currentDehadasha
-
+    // ... existing code ...
     val language = LocalLanguage.current
-    val dateSystem = LocalDateSystem.current
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = ChartDetailColors.AccentGold.copy(alpha = 0.1f),
-                spotColor = ChartDetailColors.AccentGold.copy(alpha = 0.1f)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        color = ChartDetailColors.CardBackground
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    ChartDetailColors.AccentGold.copy(alpha = 0.2f),
-                                    ChartDetailColors.AccentGold.copy(alpha = 0.1f)
-                                )
-                            ),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Schedule,
-                        contentDescription = null,
-                        tint = ChartDetailColors.AccentGold,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column {
-                    Text(
-                        text = stringResource(StringKeyMatch.DASHA_CURRENT_DASHA_PERIOD),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ChartDetailColors.TextPrimary,
-                        letterSpacing = (-0.3).sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = getLocalizedShortDescription(timeline, language),
-                        fontSize = 12.sp,
-                        color = ChartDetailColors.TextMuted,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            BirthNakshatraInfo(timeline = timeline)
-
-            Spacer(modifier = Modifier.height(20.dp))
+    // ... existing code ...
 
             if (currentMahadasha != null) {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -304,7 +104,7 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         startDate = currentMahadasha.startDate,
                         endDate = currentMahadasha.endDate,
                         progress = currentMahadasha.getProgressPercent().toFloat() / 100f,
-                        remainingText = formatRemainingYears(currentMahadasha.getRemainingYears()),
+                        remainingText = formatRemainingYearsLocalized(currentMahadasha.getRemainingYears(), language),
                         level = DashaLevel.MAHADASHA
                     )
 
@@ -315,7 +115,7 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                             startDate = ad.startDate,
                             endDate = ad.endDate,
                             progress = ad.getProgressPercent().toFloat() / 100f,
-                            remainingText = formatRemainingDays(ad.getRemainingDays()),
+                            remainingText = formatRemainingDaysLocalized(ad.getRemainingDays(), language),
                             level = DashaLevel.ANTARDASHA
                         )
                     }
@@ -327,7 +127,7 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                             startDate = pd.startDate,
                             endDate = pd.endDate,
                             progress = calculateProgress(pd.startDate, pd.endDate),
-                            remainingText = formatRemainingTime(LocalDate.now(), pd.endDate),
+                            remainingText = formatRemainingTimeLocalized(LocalDate.now(), pd.endDate, language),
                             level = DashaLevel.PRATYANTARDASHA
                         )
                     }
@@ -351,7 +151,7 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                             startDate = prd.startDate,
                             endDate = prd.endDate,
                             progress = calculateProgress(prd.startDate, prd.endDate),
-                            remainingText = formatPranadashaDuration(prd.durationMinutes),
+                            remainingText = formatPranadashaDurationLocalized(prd.durationMinutes, language),
                             level = DashaLevel.PRANADASHA
                         )
                     }
@@ -363,26 +163,115 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                             startDate = dd.startDate,
                             endDate = dd.endDate,
                             progress = calculateProgress(dd.startDate, dd.endDate),
-                            remainingText = formatDehadashaDuration(dd.durationMinutes),
+                            remainingText = formatDehadashaDurationLocalized(dd.durationMinutes, language),
                             level = DashaLevel.DEHADASHA
                         )
                     }
                 }
-
-                HorizontalDivider(
-                    color = ChartDetailColors.DividerColor,
-                    modifier = Modifier.padding(vertical = 18.dp)
-                )
-
-                CurrentPeriodSummary(
-                    mahadasha = currentMahadasha,
-                    antardasha = currentAntardasha
-                )
-            } else {
-                EmptyDashaState()
+                // ... existing code ...
             }
+            // ... existing code ...
+}
+
+// ... existing code ...
+
+@Composable
+private fun SandhiAlertRow(
+    sandhi: DashaCalculator.DashaSandhi,
+    modifier: Modifier = Modifier
+) {
+    // ... existing code ...
+    val language = LocalLanguage.current
+    val levelLabel = stringResource(getDashaLevelName(sandhi.level))
+
+    Surface(
+    // ... existing code ...
+}
+
+// ... existing code ...
+
+@Composable
+private fun CurrentPeriodSummary(
+    mahadasha: DashaCalculator.Mahadasha,
+    antardasha: DashaCalculator.Antardasha?
+) {
+    val interpretation = if (antardasha != null && antardasha.planet != mahadasha.planet) {
+        val mahaKey = getMahadashaInterpKey(mahadasha.planet)
+        val antarKey = getAntardashaInterpKey(antardasha.planet)
+        stringResource(mahaKey) + "\n\n" + stringResource(antarKey)
+    } else {
+        stringResource(getMahadashaInterpKey(mahadasha.planet))
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = ChartDetailColors.CardBackgroundElevated
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Star,
+                    contentDescription = null,
+                    tint = ChartDetailColors.AccentGold,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(StringKeyMatch.DASHA_PERIOD_INSIGHTS),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ChartDetailColors.AccentGold
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = interpretation,
+                fontSize = 13.sp,
+                color = ChartDetailColors.TextPrimary,
+                lineHeight = 20.sp
+            )
         }
     }
+}
+
+// ... existing code ...
+
+private fun getDashaLevelName(level: DashaCalculator.DashaLevel): StringKey {
+    return when (level) {
+        DashaCalculator.DashaLevel.MAHADASHA -> StringKey.DASHA_MAHADASHA
+        DashaCalculator.DashaLevel.ANTARDASHA -> StringKey.DASHA_ANTARDASHA
+        DashaCalculator.DashaLevel.PRATYANTARDASHA -> StringKey.DASHA_PRATYANTARDASHA
+        DashaCalculator.DashaLevel.SOOKSHMADASHA -> StringKey.DASHA_SOOKSHMADASHA
+        DashaCalculator.DashaLevel.PRANADASHA -> StringKey.DASHA_PRANADASHA
+        DashaCalculator.DashaLevel.DEHADASHA -> StringKey.DASHA_DEHADASHA
+    }
+}
+
+private fun getMahadashaInterpKey(planet: Planet): StringKeyDashaInterpretations = when (planet) {
+    Planet.SUN -> StringKeyDashaInterpretations.MAHADASHA_SUN_INTERP
+    Planet.MOON -> StringKeyDashaInterpretations.MAHADASHA_MOON_INTERP
+    Planet.MARS -> StringKeyDashaInterpretations.MAHADASHA_MARS_INTERP
+    Planet.MERCURY -> StringKeyDashaInterpretations.MAHADASHA_MERCURY_INTERP
+    Planet.JUPITER -> StringKeyDashaInterpretations.MAHADASHA_JUPITER_INTERP
+    Planet.VENUS -> StringKeyDashaInterpretations.MAHADASHA_VENUS_INTERP
+    Planet.SATURN -> StringKeyDashaInterpretations.MAHADASHA_SATURN_INTERP
+    Planet.RAHU -> StringKeyDashaInterpretations.MAHADASHA_RAHU_INTERP
+    Planet.KETU -> StringKeyDashaInterpretations.MAHADASHA_KETU_INTERP
+    else -> StringKeyDashaInterpretations.MAHADASHA_DEFAULT_INTERP
+}
+
+private fun getAntardashaInterpKey(planet: Planet): StringKeyDashaInterpretations = when (planet) {
+    Planet.SUN -> StringKeyDashaInterpretations.ANTARDASHA_SUN_INTERP
+    Planet.MOON -> StringKeyDashaInterpretations.ANTARDASHA_MOON_INTERP
+    Planet.MARS -> StringKeyDashaInterpretations.ANTARDASHA_MARS_INTERP
+    Planet.MERCURY -> StringKeyDashaInterpretations.ANTARDASHA_MERCURY_INTERP
+    Planet.JUPITER -> StringKeyDashaInterpretations.ANTARDASHA_JUPITER_INTERP
+    Planet.VENUS -> StringKeyDashaInterpretations.ANTARDASHA_VENUS_INTERP
+    Planet.SATURN -> StringKeyDashaInterpretations.ANTARDASHA_SATURN_INTERP
+    Planet.RAHU -> StringKeyDashaInterpretations.ANTARDASHA_RAHU_INTERP
+    Planet.KETU -> StringKeyDashaInterpretations.ANTARDASHA_KETU_INTERP
+    else -> StringKeyDashaInterpretations.ANTARDASHA_DEFAULT_INTERP
 }
 
 @Composable

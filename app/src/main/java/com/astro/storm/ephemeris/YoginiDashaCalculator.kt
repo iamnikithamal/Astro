@@ -826,15 +826,15 @@ object YoginiDashaCalculator {
         return buildString {
             appendLine("${StringResources.get(StringKeyDosha.YOGINI_DASHA_TITLE, language)}: ${maha.yogini.getLocalizedName(language)}")
             appendLine("${StringResources.get(StringKey.PLANET, language)}: ${maha.yogini.planet.getLocalizedName(language)}")
-            appendLine("Duration: ${maha.durationYears} years") // TODO: Localize 'years' if strictly needed, or leave universal
-            appendLine("Progress: ${String.format("%.1f", maha.getProgressPercent())}%")
-            appendLine("Remaining: ${formatDays(maha.getRemainingDays())}")
+            appendLine("${StringResources.get(StringKey.DASHA_DURATION, language)}: ${maha.durationYears} ${StringResources.get(StringKey.YEARS, language)}")
+            appendLine("${StringResources.get(StringKey.DASHA_PROGRESS, language)}: ${String.format("%.1f", maha.getProgressPercent())}%")
+            appendLine("${StringResources.get(StringKey.DASHA_REMAINING, language)}: ${formatDays(maha.getRemainingDays())}")
 
             if (antar != null) {
                 appendLine()
                 appendLine("${StringResources.get(StringKey.DASHA_ANTARDASHA, language)}: ${antar.yogini.getLocalizedName(language)}")
-                appendLine("Progress: ${String.format("%.1f", antar.getProgressPercent())}%")
-                append("Remaining: ${formatDays(antar.getRemainingDays())}")
+                appendLine("${StringResources.get(StringKey.DASHA_PROGRESS, language)}: ${String.format("%.1f", antar.getProgressPercent())}%")
+                append("${StringResources.get(StringKey.DASHA_REMAINING, language)}: ${formatDays(antar.getRemainingDays())}")
             }
         }
     }

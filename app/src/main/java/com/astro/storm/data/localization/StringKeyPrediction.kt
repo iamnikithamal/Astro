@@ -217,5 +217,120 @@ enum class StringKeyPrediction(override val en: String, override val ne: String)
     // UI Labels
     PRED_LABEL_KEY_FACTORS("Key Factors", "मुख्य कारकहरू"),
     PRED_LABEL_ADVICE("Advice", "सल्लाह"),
-    PRED_REMEDY_FOR_PERIOD("For your current %s period:", "तपाईंको वर्तमान %s अवधिको लागि:")
+    PRED_REMEDY_FOR_PERIOD("For your current %s period:", "तपाईंको वर्तमान %s अवधिको लागि:"),
+
+    // ============================================
+    // HOUSE DETAILS (For ChartDialogs)
+    // ============================================
+    HOUSE_DETAIL_NAME_1("Lagna Bhava (Ascendant)", "लग्न भाव (उदय)"),
+    HOUSE_DETAIL_TYPE_1("Kendra (Angular) & Trikona (Trine)", "केन्द्र (कोणीय) र त्रिकोण"),
+    HOUSE_DETAIL_SIG_1("Physical body, Personality, Self-identity, Head and brain, General health, Beginning of life, Appearance", "भौतिक शरीर, व्यक्तित्व, आत्म-पहिचान, टाउको र मस्तिष्क, सामान्य स्वास्थ्य, जीवनको सुरुवात, रूप"),
+    HOUSE_DETAIL_INTERP_1("The First House is the most important house, representing you as a whole. It shows your physical constitution, personality traits, and how you present yourself to the world. A strong 1st house gives good health, confidence, and success in self-started ventures.", "पहिलो भाव सबैभन्दा महत्त्वपूर्ण भाव हो, जसले समग्र रूपमा तपाईंको प्रतिनिधित्व गर्दछ। यसले तपाईंको शारीरिक संरचना, व्यक्तित्वका लक्षणहरू, र तपाईंले संसारमा आफूलाई कसरी प्रस्तुत गर्नुहुन्छ भन्ने देखाउँछ। बलियो पहिलो भावले राम्रो स्वास्थ्य, आत्मविश्वास र स्व-सुरु गरिएका उद्यमहरूमा सफलता दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_2("Dhana Bhava (Wealth)", "धन भाव (सम्पत्ति)"),
+    HOUSE_DETAIL_TYPE_2("Maraka (Death-inflicting) & Panapara", "मारक (मृत्युकारक) र पणफर"),
+    HOUSE_DETAIL_SIG_2("Wealth & Possessions, Family, Speech, Right eye, Face, Food intake, Early childhood", "धन र सम्पत्ति, परिवार, वाणी, दाहिने आँखा, अनुहार, भोजन, प्रारम्भिक बाल्यकाल"),
+    HOUSE_DETAIL_INTERP_2("The Second House governs accumulated wealth, family values, and speech. It shows how you earn and save money, your relationship with family, and your communication style. A strong 2nd house indicates financial stability and sweet speech.", "दोस्रो भावले सञ्चित धन, पारिवारिक मूल्य मान्यता र वाणीलाई नियन्त्रण गर्दछ। यसले तपाईंले कसरी पैसा कमाउनुहुन्छ र बचत गर्नुहुन्छ, परिवारसँगको तपाईंको सम्बन्ध, र तपाईंको सञ्चार शैली देखाउँछ। बलियो दोस्रो भावले आर्थिक स्थिरता र मधुर वाणी संकेत गर्दछ।"),
+
+    HOUSE_DETAIL_NAME_3("Sahaja Bhava (Siblings)", "सहज भाव (भाइबहिनी)"),
+    HOUSE_DETAIL_TYPE_3("Upachaya (Growth) & Apoklima", "उपचय (वृद्धि) र आपोक्लिम"),
+    HOUSE_DETAIL_SIG_3("Siblings, Courage, Short journeys, Communication, Arms and shoulders, Neighbors, Hobbies", "भाइबहिनी, साहस, छोटो यात्रा, सञ्चार, हात र काँध, छिमेकी, शौक"),
+    HOUSE_DETAIL_INTERP_3("The Third House represents courage, initiative, and self-effort. It governs siblings (especially younger), short travels, and all forms of communication. A strong 3rd house gives courage, good relationships with siblings, and success through personal effort.", "तेस्रो भावले साहस, पहल र आत्म-प्रयासको प्रतिनिधित्व गर्दछ। यसले भाइबहिनी (विशेष गरी साना), छोटो यात्रा, र सञ्चारका सबै रूपहरूलाई नियन्त्रण गर्दछ। बलियो तेस्रो भावले साहस, भाइबहिनीसँग राम्रो सम्बन्ध, र व्यक्तिगत प्रयास मार्फत सफलता दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_4("Sukha Bhava (Happiness)", "सुख भाव (खुसी)"),
+    HOUSE_DETAIL_TYPE_4("Kendra (Angular)", "केन्द्र (कोणीय)"),
+    HOUSE_DETAIL_SIG_4("Mother, Home & Property, Vehicles, Education, Chest & Heart, Inner peace, Emotional foundation", "आमा, घर र सम्पत्ति, सवारी साधन, शिक्षा, छाती र हृदय, आन्तरिक शान्ति, भावनात्मक आधार"),
+    HOUSE_DETAIL_INTERP_4("The Fourth House is the foundation of your life. It represents your mother, home environment, and emotional security. It also governs formal education and landed property. A strong 4th house gives domestic happiness, property ownership, and mental peace.", "चौथो भाव तपाईंको जीवनको आधार हो। यसले तपाईंको आमा, घरको वातावरण, र भावनात्मक सुरक्षाको प्रतिनिधित्व गर्दछ। यसले औपचारिक शिक्षा र जग्गा जमिनलाई पनि नियन्त्रण गर्दछ। बलियो चौथो भावले पारिवारिक खुसी, सम्पत्ति स्वामित्व, र मानसिक शान्ति दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_5("Putra Bhava (Children)", "पुत्र भाव (सन्तान)"),
+    HOUSE_DETAIL_TYPE_5("Trikona (Trine) & Panapara", "त्रिकोण र पणफर"),
+    HOUSE_DETAIL_SIG_5("Children, Intelligence, Creativity, Romance, Past life merit, Speculation, Higher education", "सन्तान, बुद्धि, सिर्जनशीलता, रोमान्स, पूर्वजन्मको पुण्य, अनुमान, उच्च शिक्षा"),
+    HOUSE_DETAIL_INTERP_5("The Fifth House is the house of creativity and Purva Punya (past life merits). It governs children, intelligence, romance, and speculative gains. A strong 5th house gives intelligent children, creative talents, and success in speculation.", "पाँचौं भाव सिर्जनशीलता र पूर्व पुण्य (पूर्वजन्मको गुणहरू) को भाव हो। यसले सन्तान, बुद्धि, रोमान्स, र अनुमानित लाभहरूलाई नियन्त्रण गर्दछ। बलियो पाँचौं भावले बुद्धिमान सन्तान, सिर्जनात्मक प्रतिभा, र अनुमानमा सफलता दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_6("Ripu Bhava (Enemies)", "रिपु भाव (शत्रु)"),
+    HOUSE_DETAIL_TYPE_6("Dusthana (Malefic) & Upachaya", "दुःस्थान (पापी) र उपचय"),
+    HOUSE_DETAIL_SIG_6("Enemies, Diseases, Debts, Service, Competition, Daily work, Maternal uncle", "शत्रु, रोग, ऋण, सेवा, प्रतिस्पर्धा, दैनिक काम, मामा"),
+    HOUSE_DETAIL_INTERP_6("The Sixth House governs obstacles, health issues, and service. While considered malefic, it also shows the ability to overcome challenges. A well-placed 6th house gives victory over enemies, good health practices, and success in competitive fields.", "छैटौं भावले अवरोध, स्वास्थ्य समस्या, र सेवालाई नियन्त्रण गर्दछ। यसलाई पापी मानिए पनि, यसले चुनौतीहरू पार गर्ने क्षमता पनि देखाउँछ। राम्रोसँग स्थित छैटौं भावले शत्रुहरूमाथि विजय, राम्रो स्वास्थ्य अभ्यास, र प्रतिस्पर्धी क्षेत्रहरूमा सफलता दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_7("Kalatra Bhava (Spouse)", "कलत्र भाव (जीवनसाथी)"),
+    HOUSE_DETAIL_TYPE_7("Kendra (Angular) & Maraka", "केन्द्र (कोणीय) र मारक"),
+    HOUSE_DETAIL_SIG_7("Marriage, Spouse, Business partnerships, Foreign travel, Public dealing, Lower abdomen, Sexual organs", "विवाह, जीवनसाथी, व्यापार साझेदारी, विदेश यात्रा, सार्वजनिक व्यवहार, तल्लो पेट, यौन अंग"),
+    HOUSE_DETAIL_INTERP_7("The Seventh House is the house of partnerships and marriage. It shows your spouse's nature and quality of marriage. It also governs business partnerships and public dealings. A strong 7th house gives a good spouse and success in partnerships.", "सातौं भाव साझेदारी र विवाहको भाव हो। यसले तपाईंको जीवनसाथीको स्वभाव र विवाहको गुणस्तर देखाउँछ। यसले व्यापार साझेदारी र सार्वजनिक व्यवहारलाई पनि नियन्त्रण गर्दछ। बलियो सातौं भावले राम्रो जीवनसाथी र साझेदारीमा सफलता दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_8("Ayur Bhava (Longevity)", "आयु भाव (दीर्घायु)"),
+    HOUSE_DETAIL_TYPE_8("Dusthana (Malefic) & Panapara", "दुःस्थान (पापी) र पणफर"),
+    HOUSE_DETAIL_SIG_8("Longevity, Transformation, Occult, Inheritance, Hidden matters, Chronic diseases, In-laws' wealth", "दीर्घायु, रूपान्तरण, तन्त्रमन्त्र, पैतृक सम्पत्ति, लुकेका कुरा, दीर्घकालीन रोग, ससुरालीको धन"),
+    HOUSE_DETAIL_INTERP_8("The Eighth House governs transformation, death, and rebirth (metaphorical). It shows hidden matters, inheritance, and occult interests. While considered difficult, a well-placed 8th house gives longevity, research abilities, and unexpected gains.", "आठौं भावले रूपान्तरण, मृत्यु, र पुनर्जन्म (लाक्षणिक) लाई नियन्त्रण गर्दछ। यसले लुकेका कुरा, पैतृक सम्पत्ति, र तान्त्रिक रुचिहरू देखाउँछ। यसलाई कठिन मानिए पनि, राम्रोसँग स्थित आठौं भावले दीर्घायु, अनुसन्धान क्षमता, र अप्रत्याशित लाभ दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_9("Dharma Bhava (Fortune)", "धर्म भाव (भाग्य)"),
+    HOUSE_DETAIL_TYPE_9("Trikona (Trine) & Apoklima", "त्रिकोण र आपोक्लिम"),
+    HOUSE_DETAIL_SIG_9("Fortune & Luck, Father, Higher learning, Long journeys, Religion & Philosophy, Guru/Teacher, Righteousness", "भाग्य र किस्मत, पिता, उच्च शिक्षा, लामो यात्रा, धर्म र दर्शन, गुरु/शिक्षक, धार्मिकता"),
+    HOUSE_DETAIL_INTERP_9("The Ninth House is the most auspicious house of fortune and dharma. It represents your father, teachers, and higher wisdom. A strong 9th house gives good fortune, philosophical inclinations, and blessings from elders and teachers.", "नवौं भाव भाग्य र धर्मको सबैभन्दा शुभ भाव हो। यसले तपाईंको पिता, शिक्षकहरू, र उच्च ज्ञानको प्रतिनिधित्व गर्दछ। बलियो नवौं भावले राम्रो भाग्य, दार्शनिक झुकाव, र ठूलाहरू तथा शिक्षकहरूबाट आशीर्वाद दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_10("Karma Bhava (Career)", "कर्म भाव (करियर)"),
+    HOUSE_DETAIL_TYPE_10("Kendra (Angular) & Upachaya", "केन्द्र (कोणीय) र उपचय"),
+    HOUSE_DETAIL_SIG_10("Career, Profession, Status & Fame, Authority, Government, Father, Knees", "करियर, पेशा, पद र प्रतिष्ठा, अधिकार, सरकार, पिता, घुँडा"),
+    HOUSE_DETAIL_INTERP_10("The Tenth House is the house of career and public image. It shows your profession, status in society, and relationship with authority. A strong 10th house gives career success, fame, and high position in society.", "दशौं भाव करियर र सार्वजनिक छविको भाव हो। यसले तपाईंको पेशा, समाजमा स्थिति, र अधिकारसँगको सम्बन्ध देखाउँछ। बलियो दशौं भावले करियर सफलता, प्रसिद्धि, र समाजमा उच्च पद दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_11("Labha Bhava (Gains)", "लाभ भाव (नाफा)"),
+    HOUSE_DETAIL_TYPE_11("Upachaya (Growth) & Panapara", "उपचय (वृद्धि) र पणफर"),
+    HOUSE_DETAIL_SIG_11("Income & Gains, Elder siblings, Friends, Hopes & Wishes, Social network, Left ear, Ankles", "आय र नाफा, ठूला भाइबहिनी, साथीहरू, आशा र इच्छाहरू, सामाजिक सञ्जाल, बायाँ कान, कुर्कुच्चा"),
+    HOUSE_DETAIL_INTERP_11("The Eleventh House is the house of gains and fulfillment of desires. It governs income, elder siblings, and friendships. A strong 11th house gives multiple sources of income, supportive friends, and fulfillment of hopes.", "एघारौं भाव नाफा र इच्छाहरूकोपूर्तिको भाव हो। यसले आय, ठूला भाइबहिनी, र मित्रतालाई नियन्त्रण गर्दछ। बलियो एघारौं भावले आयका धेरै स्रोतहरू, सहयोगी साथीहरू, र आशाहरूको पूर्ति दिन्छ।"),
+
+    HOUSE_DETAIL_NAME_12("Vyaya Bhava (Loss)", "व्यय भाव (हानि)"),
+    HOUSE_DETAIL_TYPE_12("Dusthana (Malefic) & Apoklima", "दुःस्थान (पापी) र आपोक्लिम"),
+    HOUSE_DETAIL_SIG_12("Losses & Expenses, Liberation (Moksha), Foreign lands, Isolation, Feet, Sleep, Subconscious", "हानि र खर्च, मुक्ति (मोक्ष), विदेशी भूमि, एकान्त, खुट्टा, निद्रा, अवचेतन"),
+    HOUSE_DETAIL_INTERP_12("The Twelfth House governs losses, expenses, and liberation. While it shows material losses, it also represents spiritual gains and final liberation. A strong 12th house gives spiritual inclinations, success abroad, and peaceful sleep.", "बाह्रौं भावले हानि, खर्च, र मुक्तिलाई नियन्त्रण गर्दछ। यसले भौतिक हानि देखाए पनि, यसले आध्यात्मिक लाभ र अन्तिम मुक्तिलाई पनि प्रतिनिधित्व गर्दछ। बलियो बाह्रौं भावले आध्यात्मिक झुकाव, विदेशमा सफलता, र शान्त निद्रा दिन्छ।"),
+
+    // ============================================
+    // HOUSE PLACEMENT INTERPRETATIONS (For ChartDialogs)
+    // ============================================
+    PLACEMENT_INTERP_SUN_1("Strong personality with natural leadership abilities. You have a prominent presence and strong willpower. May indicate good health and vitality.", "प्राकृतिक नेतृत्व क्षमताको साथ बलियो व्यक्तित्व। तपाईंसँग प्रमुख उपस्थिति र बलियो इच्छाशक्ति छ। राम्रो स्वास्थ्य र जीवनशक्तिको संकेत गर्न सक्छ।"),
+    PLACEMENT_INTERP_SUN_10("Excellent position for career success and recognition. Natural authority in professional life. Government positions or leadership roles favored.", "करियर सफलता र मान्यताको लागि उत्कृष्ट स्थिति। व्यावसायिक जीवनमा प्राकृतिक अधिकार। सरकारी पद वा नेतृत्व भूमिकाहरू अनुकूल छन्।"),
+    PLACEMENT_INTERP_MOON_4("Strong emotional foundation and attachment to home. Good relationship with mother. Domestic happiness and property gains likely.", "बलियो भावनात्मक आधार र घरप्रतिको लगाव। आमासँग राम्रो सम्बन्ध। पारिवारिक खुसी र सम्पत्ति लाभको सम्भावना छ।"),
+    PLACEMENT_INTERP_MOON_1("Emotional and intuitive personality. Strong connection to feelings. Popular with the public and adaptable nature.", "भावनात्मक र अन्तर्ज्ञानी व्यक्तित्व। भावनाहरूसँग बलियो सम्बन्ध। जनतामा लोकप्रिय र अनुकूलनशील स्वभाव।"),
+    PLACEMENT_INTERP_MARS_10("Dynamic career with technical or engineering success. Leadership in competitive fields. Achievement through bold actions.", "प्राविधिक वा इन्जिनियरिङ सफलताको साथ गतिशील करियर। प्रतिस्पर्धी क्षेत्रहरूमा नेतृत्व। साहसी कार्यहरू मार्फत उपलब्धि।"),
+    PLACEMENT_INTERP_MARS_1("Energetic and courageous personality. Athletic abilities. Can be aggressive or impulsive. Strong drive for success.", "ऊर्जावान र साहसी व्यक्तित्व। एथलेटिक क्षमताहरू। आक्रामक वा आवेगपूर्ण हुन सक्छ। सफलताको लागि बलियो प्रेरणा।"),
+    PLACEMENT_INTERP_MERCURY_1("Intelligent and communicative personality. Good business sense. Quick thinking and versatile nature.", "बुद्धिमान र मिलनसार व्यक्तित्व। राम्रो व्यापारिक ज्ञान। छिटो सोच्ने र बहुमुखी स्वभाव।"),
+    PLACEMENT_INTERP_MERCURY_5("Creative intelligence and good with children. Success in speculation and education. Artistic communication skills.", "सिर्जनात्मक बुद्धि र बालबालिकाहरूसँग राम्रो। अनुमान र शिक्षामा सफलता। कलात्मक सञ्चार सीपहरू।"),
+    PLACEMENT_INTERP_JUPITER_1("Wise and optimistic personality. Natural teacher or advisor. Good fortune and ethical nature. Respected by others.", "बुद्धिमान र आशावादी व्यक्तित्व। प्राकृतिक शिक्षक वा सल्लाहकार। राम्रो भाग्य र नैतिक स्वभाव। अरूद्वारा सम्मानित।"),
+    PLACEMENT_INTERP_JUPITER_9("Excellent position for spiritual growth and higher learning. Good fortune with father and long journeys. Success in teaching or law.", "आध्यात्मिक वृद्धि र उच्च शिक्षाको लागि उत्कृष्ट स्थिति। बुबा र लामो यात्रासँग राम्रो भाग्य। शिक्षण वा कानूनमा सफलता।"),
+    PLACEMENT_INTERP_VENUS_7("Beautiful spouse and harmonious marriage. Success in partnerships and business. Diplomatic abilities.", "सुन्दर जीवनसाथी र सामंजस्यपूर्ण विवाह। साझेदारी र व्यापारमा सफलता। कूटनीतिक क्षमताहरू।"),
+    PLACEMENT_INTERP_VENUS_4("Luxurious home and vehicles. Good relationship with mother. Domestic happiness and artistic home environment.", "विलासी घर र सवारी साधनहरू। आमासँग राम्रो सम्बन्ध। पारिवारिक खुसी र कलात्मक घरको वातावरण।"),
+    PLACEMENT_INTERP_SATURN_10("Slow but steady rise in career. Success through hard work and persistence. Authority gained through discipline.", "करियरमा ढिलो तर स्थिर वृद्धि। कडा परिश्रम र दृढता मार्फत सफलता। अनुशासन मार्फत प्राप्त अधिकार।"),
+    PLACEMENT_INTERP_SATURN_7("Delayed marriage but stable. Serious approach to partnerships. May marry someone older or more mature.", "विवाहमा ढिलाइ तर स्थिर। साझेदारीप्रति गम्भीर दृष्टिकोण। आफूभन्दा जेठो वा बढी परिपक्व व्यक्तिसँग विवाह गर्न सक्छ।"),
+    PLACEMENT_INTERP_RAHU_10("Unconventional career path. Success in foreign lands or technology. Ambitious and worldly.", "अपरम्परागत करियर मार्ग। विदेशी भूमि वा प्रविधिमा सफलता। महत्त्वाकांक्षी र सांसारिक।"),
+    PLACEMENT_INTERP_KETU_12("Strong spiritual inclinations. Interest in meditation and liberation. May spend time in foreign lands or ashrams.", "बलियो आध्यात्मिक झुकाव। ध्यान र मुक्तिमा रुचि। विदेशी भूमि वा आश्रमहरूमा समय बिताउन सक्छ।"),
+    PLACEMENT_INTERP_DEFAULT("The %s in the %dth house influences the areas of %s. Results depend on the sign placement, aspects, and overall chart strength.", "%dऔं भावमा रहेको %s ले %s का क्षेत्रहरूलाई प्रभाव पार्छ। परिणामहरू राशि स्थिति, दृष्टि, र समग्र कुण्डलीको बलमा निर्भर हुन्छन्।"),
+
+    // ============================================
+    // NAKSHATRA DETAILS (For ChartDialogs)
+    // ============================================
+    NAK_ASHWINI_SYMBOL("Horse's Head", "घोडाको टाउको"),
+    NAK_ASHWINI_CHARS("Ashwini natives are quick, energetic, and pioneering. They have natural healing abilities and are often the first to try new things. Speed and initiative are their hallmarks.", "अश्विनी जातकहरू छिटो, ऊर्जावान र अग्रगामी हुन्छन्। तिनीहरूसँग प्राकृतिक उपचार क्षमताहरू हुन्छन् र प्रायः नयाँ कुराहरू प्रयास गर्ने पहिलो हुन्छन्। गति र पहल तिनीहरूको चिनारी हो।"),
+    NAK_ASHWINI_CAREERS("Medical field, Emergency services, Sports, Transportation, Veterinary science", "चिकित्सा क्षेत्र, आपतकालीन सेवा, खेलकुद, यातायात, पशु चिकित्सा विज्ञान"),
+
+    NAK_BHARANI_SYMBOL("Yoni (Female reproductive organ)", "योनि (स्त्री प्रजनन अंग)"),
+    NAK_BHARANI_CHARS("Bharani natives are creative, responsible, and can bear heavy burdens. They understand life's transformative nature and often work with matters of birth, death, and transformation.", "भरणी जातकहरू सिर्जनशील, जिम्मेवार हुन्छन् र ठूलो बोझ उठाउन सक्छन्। तिनीहरू जीवनको परिवर्तनकारी प्रकृति बुझ्छन् र प्रायः जन्म, मृत्यु, र रूपान्तरणका विषयहरूसँग काम गर्छन्।"),
+    NAK_BHARANI_CAREERS("Midwifery, Funeral services, Entertainment, Creative arts, Psychology", "प्रसूति सेवा, अन्त्येष्टि सेवा, मनोरञ्जन, सिर्जनात्मक कला, मनोविज्ञान"),
+
+    NAK_ROHINI_SYMBOL("Ox Cart / Chariot", "गोरु गाडा / रथ"),
+    NAK_ROHINI_CHARS("Rohini natives are attractive, artistic, and materialistic in a positive way. They appreciate beauty and luxury. Strong creative and productive abilities.", "रोहिणी जातकहरू आकर्षक, कलात्मक र सकारात्मक रूपमा भौतिकवादी हुन्छन्। तिनीहरू सौन्दर्य र विलासिताको कदर गर्छन्। बलियो सिर्जनात्मक र उत्पादक क्षमताहरू।"),
+    NAK_ROHINI_CAREERS("Fashion, Beauty industry, Agriculture, Music, Hospitality", "फेसन, सौन्दर्य उद्योग, कृषि, संगीत, आतिथ्य"),
+
+    NAK_DEFAULT_CHARS("%s is ruled by %s. Natives are influenced by the deity %s.", "%s %s द्वारा शासित छ। जातकहरू देवता %s द्वारा प्रभावित हुन्छन्।"),
+    NAK_DEFAULT_CAREERS("Various fields depending on overall chart analysis", "समग्र कुण्डली विश्लेषणमा निर्भर गर्दै विभिन्न क्षेत्रहरू"),
+
+    PADA_DESC_TEMPLATE("Pada %d falls in %s Navamsa, ruled by %s. This pada emphasizes the %s element qualities combined with the main nakshatra characteristics.", "पद %d %s नवांशमा पर्छ, जुन %s द्वारा शासित छ। यो पदले मुख्य नक्षत्र विशेषताहरूसँग संयुक्त %s तत्व गुणहरूलाई जोड दिन्छ।"),
+
+    // ============================================
+    // PREDICTIONS SCREEN (Additional)
+    // ============================================
+    PRED_STRENGTH_DETERMINATION("Strong determination and resilience in your character", "तपाईंको चरित्रमा बलियो दृढ संकल्प र लचिलोपन"),
+    PRED_STRENGTH_SPIRITUAL("Natural ability to connect with spiritual wisdom", "आध्यात्मिक ज्ञानसँग जोडिने प्राकृतिक क्षमता"),
+    PRED_STRENGTH_EMOTIONAL("Capacity for deep emotional understanding", "गहिरो भावनात्मक समझको क्षमता"),
+    PRED_STRENGTH_PRACTICAL("Practical approach to life's challenges", "जीवनका चुनौतीहरूप्रति व्यावहारिक दृष्टिकोण"),
+    
+    PRED_LIFE_THEME_TEMPLATE("Path of %s", "%s को मार्ग"),
+    PRED_MAHADASHA_LABEL("%s Mahadasha", "%s महादशा")
 }

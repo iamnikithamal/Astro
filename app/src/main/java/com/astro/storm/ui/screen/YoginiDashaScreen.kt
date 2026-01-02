@@ -1237,7 +1237,7 @@ private fun YoginiAntardashaRow(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = String.format("%.1f", antardasha.durationMonths) + (if (language == Language.ENGLISH) " months" else " महिना"),
+                text = String.format("%.1f", antardasha.durationMonths) + " " + stringResource(StringKey.UNIT_MONTHS),
                 fontSize = 10.sp,
                 color = AppTheme.TextMuted.copy(alpha = 0.8f)
             )

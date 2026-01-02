@@ -243,8 +243,9 @@ private fun AshtakavargaTopBar(
                     )
                     if (chartName.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(2.dp))
+                        val language = LocalLanguage.current
                         Text(
-                            text = "Bindu strength analysis - $chartName",
+                            text = StringResources.get(StringKeyDosha.ASHTAKAVARGA_DESC_FMT, language, chartName),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppTheme.TextMuted
                         )
@@ -264,7 +265,7 @@ private fun AshtakavargaTopBar(
                 IconButton(onClick = onInfoClick) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
-                        contentDescription = "Ashtakavarga info",
+                        contentDescription = stringResource(StringKeyDosha.ASHTAKAVARGA_INFO_A11Y),
                         tint = AppTheme.TextPrimary
                     )
                 }
@@ -363,14 +364,14 @@ private fun AshtakavargaSummaryCard(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Ashtakavarga Summary",
+                        text = stringResource(StringKeyDosha.ASHTAKAVARGA_SUMMARY_TITLE),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
                     Text(
-                        text = "Bindu distribution analysis",
+                        text = stringResource(StringKeyDosha.ASHTAKAVARGA_DISTRIBUTION_DESC),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted,
                         fontWeight = FontWeight.Medium
@@ -385,19 +386,19 @@ private fun AshtakavargaSummaryCard(
             ) {
                 AshtakavargaStatItem(
                     value = totalBindus.toString(),
-                    label = "Total Bindus",
+                    label = stringResource(StringKeyDosha.ASHTAKAVARGA_TOTAL_BINDUS),
                     color = AppTheme.SuccessColor,
                     modifier = Modifier.weight(1f)
                 )
                 AshtakavargaStatItem(
                     value = String.format("%.1f", averageBindus),
-                    label = "Avg/House",
+                    label = stringResource(StringKeyDosha.ASHTAKAVARGA_AVG_PER_HOUSE),
                     color = AppTheme.AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 AshtakavargaStatItem(
                     value = "${strengthPercent.toInt()}%",
-                    label = "Strength",
+                    label = stringResource(StringKeyDosha.ASHTAKAVARGA_STRENGTH),
                     color = getBinduStrengthColor(strengthPercent),
                     modifier = Modifier.weight(1f)
                 )
@@ -418,7 +419,7 @@ private fun AshtakavargaSummaryCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Overall Chart Strength",
+                            text = stringResource(StringKeyDosha.ASHTAKAVARGA_CHART_STRENGTH),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = AppTheme.TextMuted
@@ -501,7 +502,7 @@ private fun HouseStrengthDistribution(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "House Strength Distribution",
+                    text = stringResource(StringKeyDosha.ASHTAKAVARGA_DISTRIBUTION_TITLE),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
@@ -581,9 +582,9 @@ private fun HouseStrengthDistribution(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                LegendItem(color = AppTheme.SuccessColor, label = ">30 Strong")
-                LegendItem(color = AppTheme.AccentGold, label = "25-30 Good")
-                LegendItem(color = AppTheme.WarningColor, label = "<25 Weak")
+                LegendItem(color = AppTheme.SuccessColor, label = stringResource(StringKeyDosha.ASHTAKAVARGA_LEGEND_STRONG))
+                LegendItem(color = AppTheme.AccentGold, label = stringResource(StringKeyDosha.ASHTAKAVARGA_LEGEND_GOOD))
+                LegendItem(color = AppTheme.WarningColor, label = stringResource(StringKeyDosha.ASHTAKAVARGA_LEGEND_WEAK))
             }
         }
     }
@@ -722,7 +723,7 @@ private fun InsightHouseChip(
                 color = AppTheme.TextPrimary
             )
             Text(
-                text = "$bindus bindus",
+                text = "$bindus " + stringResource(StringKeyDosha.ASHTAKAVARGA_BINDUS_SUFFIX),
                 fontSize = 10.sp,
                 color = AppTheme.TextMuted
             )
@@ -1017,7 +1018,7 @@ private fun PlanetAshtakavargaCard(
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            text = "Total: $totalBindus ${stringResource(StringKeyDosha.ASHTAKAVARGA_BINDUS_SUFFIX)}",
+                            text = StringResources.get(StringKeyDosha.ASHTAKAVARGA_TOTAL_BINDUS, language) + ": $totalBindus " + stringResource(StringKeyDosha.ASHTAKAVARGA_BINDUS_SUFFIX),
                             fontSize = 12.sp,
                             color = planetColor
                         )
@@ -1042,7 +1043,7 @@ private fun PlanetAshtakavargaCard(
 
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier
                         .size(24.dp)
@@ -1195,7 +1196,7 @@ private fun HouseDetailCard(
                             color = AppTheme.TextPrimary
                         )
                         Text(
-                            text = getHouseSignification(house),
+                            text = getHouseSignification(house, language),
                             fontSize = 11.sp,
                             color = AppTheme.TextMuted,
                             maxLines = 1,
@@ -1379,20 +1380,21 @@ private fun getStrengthLabel(percent: Double, language: Language): String {
     return stringResource(key, language)
 }
 
-private fun getHouseSignification(house: Int): String {
-    return when (house) {
-        1 -> "Self, Body, Personality"
-        2 -> "Wealth, Speech, Family"
-        3 -> "Siblings, Courage"
-        4 -> "Home, Mother, Property"
-        5 -> "Children, Education"
-        6 -> "Health, Enemies"
-        7 -> "Marriage, Partnership"
-        8 -> "Transformation"
-        9 -> "Fortune, Father"
-        10 -> "Career, Fame"
-        11 -> "Gains, Wishes"
-        12 -> "Losses, Liberation"
-        else -> ""
+private fun getHouseSignification(house: Int, language: Language): String {
+    val key = when (house) {
+        1 -> StringKeyAnalysis.HOUSE_1_SIG
+        2 -> StringKeyAnalysis.HOUSE_2_SIG
+        3 -> StringKeyAnalysis.HOUSE_3_SIG
+        4 -> StringKeyAnalysis.HOUSE_4_SIG
+        5 -> StringKeyAnalysis.HOUSE_5_SIG
+        6 -> StringKeyAnalysis.HOUSE_6_SIG
+        7 -> StringKeyAnalysis.HOUSE_7_SIG
+        8 -> StringKeyAnalysis.HOUSE_8_SIG
+        9 -> StringKeyAnalysis.HOUSE_9_SIG
+        10 -> StringKeyAnalysis.HOUSE_10_SIG
+        11 -> StringKeyAnalysis.HOUSE_11_SIG
+        12 -> StringKeyAnalysis.HOUSE_12_SIG
+        else -> null
     }
+    return key?.let { StringResources.get(it, language) } ?: ""
 }

@@ -802,7 +802,8 @@ private fun WeekDayChip(
 }
 
 @Composable
-private fun LifeAreaFocusCard(lifeAreaFocus: Map<String, List<RemediesCalculator.Remedy>>) {
+private fun LifeAreaFocusCard(lifeAreaFocus: Map<com.astro.storm.data.model.LifeArea, List<RemediesCalculator.Remedy>>) {
+    val language = LocalLanguage.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -821,15 +822,15 @@ private fun LifeAreaFocusCard(lifeAreaFocus: Map<String, List<RemediesCalculator
             Spacer(modifier = Modifier.height(12.dp))
 
             lifeAreaFocus.forEach { (area, remedies) ->
-                LifeAreaRow(area = area, remedyCount = remedies.size)
+                LifeAreaRow(area = area, remedyCount = remedies.size, language = language)
             }
         }
     }
 }
 
 @Composable
-private fun LifeAreaRow(area: String, remedyCount: Int) {
-    val areaColor = getLifeAreaColor(area)
+private fun LifeAreaRow(area: com.astro.storm.data.model.LifeArea, remedyCount: Int, language: Language) {
+    val areaColor = area.color
 
     Row(
         modifier = Modifier
@@ -843,14 +844,14 @@ private fun LifeAreaRow(area: String, remedyCount: Int) {
             modifier = Modifier.weight(1f)
         ) {
             Icon(
-                getLifeAreaIcon(area),
+                area.icon,
                 contentDescription = null,
                 tint = areaColor,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                area,
+                area.getLocalizedName(language),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppTheme.TextPrimary
             )
@@ -1897,46 +1898,14 @@ private fun getStrengthColor(strength: RemediesCalculator.PlanetaryStrength): Co
     }
 }
 
-private fun getLifeAreaIcon(area: String): ImageVector {
-    return when (area.lowercase()) {
-        "career" -> Icons.Outlined.Work
-        "relationships", "marriage" -> Icons.Outlined.Favorite
-        "health" -> Icons.Outlined.Healing
-        "wealth", "finance" -> Icons.Outlined.AttachMoney
-        "spiritual", "spirituality" -> Icons.Outlined.SelfImprovement
-        "education" -> Icons.Outlined.School
-        "family" -> Icons.Outlined.FamilyRestroom
-        "children" -> Icons.Outlined.ChildCare
-        else -> Icons.Outlined.Star
-    }
-}
-
-private fun getLifeAreaColor(area: String): Color {
-    return when (area.lowercase()) {
-        "career" -> Color(0xFF2196F3)
-        "relationships", "marriage" -> Color(0xFFE91E63)
-        "health" -> Color(0xFF4CAF50)
-        "wealth", "finance" -> Color(0xFFFF9800)
-        "spiritual", "spirituality" -> Color(0xFF9C27B0)
-        "education" -> Color(0xFF00BCD4)
-        "family" -> Color(0xFF795548)
-        "children" -> Color(0xFFFFEB3B)
-        else -> Color(0xFF607D8B)
-    }
+@Composable
+private fun getEnergyColor(energy: Int): Color = when {
+    energy >= 8 -> AppTheme.SuccessColor
+    energy >= 6 -> AppTheme.AccentGold
+    energy >= 4 -> AppTheme.WarningColor
+    else -> AppTheme.ErrorColor
 }
 
 @Composable
 private fun getWeekdayForPlanet(planet: Planet): String {
-    return when (planet) {
-        Planet.SUN -> stringResource(StringKeyMatch.DAY_SUNDAY)
-        Planet.MOON -> stringResource(StringKeyMatch.DAY_MONDAY)
-        Planet.MARS -> stringResource(StringKeyMatch.DAY_TUESDAY)
-        Planet.MERCURY -> stringResource(StringKeyMatch.DAY_WEDNESDAY)
-        Planet.JUPITER -> stringResource(StringKeyMatch.DAY_THURSDAY)
-        Planet.VENUS -> stringResource(StringKeyMatch.DAY_FRIDAY)
-        Planet.SATURN -> stringResource(StringKeyMatch.DAY_SATURDAY)
-        Planet.RAHU -> stringResource(StringKeyMatch.DAY_SATURDAY)
-        Planet.KETU -> stringResource(StringKeyMatch.DAY_TUESDAY)
-        else -> stringResource(StringKeyMatch.DAY_ANY)
-    }
 }

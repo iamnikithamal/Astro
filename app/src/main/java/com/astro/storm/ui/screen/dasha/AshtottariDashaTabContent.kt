@@ -195,7 +195,7 @@ private fun AshtottariCurrentPeriodCard(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Current Ashtottari Period",
+                        text = stringResource(StringKeyDosha.ASHTOTTARI_CURRENT_TITLE),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary,
@@ -242,7 +242,7 @@ private fun AshtottariCurrentPeriodCard(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "BIRTH NAKSHATRA",
+                            text = stringResource(StringKeyDosha.ASHTOTTARI_BIRTH_NAKSHATRA_HEADER),
                             fontSize = 11.sp,
                             color = AppTheme.TextMuted,
                             fontWeight = FontWeight.Medium,
@@ -258,7 +258,7 @@ private fun AshtottariCurrentPeriodCard(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "LORD",
+                            text = stringResource(StringKeyDosha.ASHTOTTARI_LORD_HEADER),
                             fontSize = 11.sp,
                             color = AppTheme.TextMuted,
                             fontWeight = FontWeight.Medium
@@ -284,7 +284,7 @@ private fun AshtottariCurrentPeriodCard(
                     val mdProgressPercent = if (mdTotalDuration > 0) (mdElapsedDuration / mdTotalDuration * 100).coerceIn(0.0, 100.0) else 0.0
 
                     AshtottariPeriodRow(
-                        label = "Mahadasha",
+                        label = stringResource(StringKeyDosha.ASHTOTTARI_MAHADASHA_LABEL),
                         planet = currentMD.planet,
                         startDate = currentMD.startDate,
                         endDate = currentMD.endDate,
@@ -299,7 +299,7 @@ private fun AshtottariCurrentPeriodCard(
                         val progressPercent = if (totalDuration > 0) (elapsedDuration / totalDuration * 100).coerceIn(0.0, 100.0) else 0.0
 
                         AshtottariPeriodRow(
-                            label = "Antardasha",
+                            label = stringResource(StringKeyDosha.ASHTOTTARI_ANTARDASHA_LABEL),
                             planet = ad.antardashaLord,
                             startDate = ad.startDate,
                             endDate = ad.endDate,
@@ -330,7 +330,7 @@ private fun AshtottariCurrentPeriodCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Period Insights",
+                                text = stringResource(StringKeyDosha.ASHTOTTARI_PERIOD_INSIGHTS),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.AccentGold
@@ -338,7 +338,7 @@ private fun AshtottariCurrentPeriodCard(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = getAshtottariInterpretation(currentMD.planet, currentAD?.planet),
+                            text = getAshtottariInterpretation(currentMD.planet, currentAD?.planet, language),
                             fontSize = 13.sp,
                             color = AppTheme.TextPrimary,
                             lineHeight = 20.sp
@@ -347,7 +347,7 @@ private fun AshtottariCurrentPeriodCard(
                 }
             } else {
                 Text(
-                    text = "Unable to calculate current period",
+                    text = stringResource(StringKeyDosha.ASHTOTTARI_UNABLE_CALC),
                     fontSize = 14.sp,
                     color = AppTheme.TextMuted
                 )
@@ -486,7 +486,7 @@ private fun AshtottariInfoCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "About Ashtottari Dasha",
+                        text = stringResource(StringKeyDosha.ASHTOTTARI_ABOUT_TITLE),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
@@ -494,7 +494,7 @@ private fun AshtottariInfoCard(
                 }
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier
                         .size(24.dp)
@@ -509,7 +509,7 @@ private fun AshtottariInfoCard(
             ) {
                 Column(modifier = Modifier.padding(top = 18.dp)) {
                     Text(
-                        text = "The Ashtottari Dasha system is a 108-year planetary period cycle, traditionally used for charts where the Moon is in Krishna Paksha (waning phase) between Shukla Chaturthi to Krishna Tritiya.",
+                        text = stringResource(StringKeyDosha.ASHTOTTARI_ABOUT_DESC_FULL),
                         fontSize = 13.sp,
                         color = AppTheme.TextSecondary,
                         lineHeight = 20.sp
@@ -524,7 +524,7 @@ private fun AshtottariInfoCard(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Planet Periods (108 Years Total)",
+                                text = stringResource(StringKeyDosha.ASHTOTTARI_PERIOD_LIST_HEADER),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.TextSecondary
@@ -637,13 +637,13 @@ private fun AshtottariTimelineCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Ashtottari Timeline",
+                        text = stringResource(StringKeyDosha.ASHTOTTARI_TIMELINE_TITLE),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        text = "108-Year Planetary Cycle",
+                        text = stringResource(StringKeyDosha.ASHTOTTARI_TIMELINE_DESC),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted
                     )
@@ -806,8 +806,9 @@ private fun AshtottariMahadashaCard(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val mahadashaLabel = stringResource(StringKeyDosha.ASHTOTTARI_MAHADASHA_LABEL)
                             Text(
-                                text = "${mahadasha.planet.getLocalizedName(language)} Mahadasha",
+                                text = "${mahadasha.planet.getLocalizedName(language)} $mahadashaLabel",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.TextPrimary
@@ -819,7 +820,7 @@ private fun AshtottariMahadashaCard(
                                     color = planetColor.copy(alpha = 0.2f)
                                 ) {
                                     Text(
-                                        text = "ACTIVE",
+                                        text = stringResource(StringKey.DASHA_ACTIVE),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = planetColor,
@@ -840,7 +841,7 @@ private fun AshtottariMahadashaCard(
 
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier
                         .size(26.dp)
@@ -861,7 +862,7 @@ private fun AshtottariMahadashaCard(
                         modifier = Modifier.padding(bottom = 12.dp)
                     ) {
                         Text(
-                            text = "Antardashas",
+                            text = stringResource(StringKeyDosha.ASHTOTTARI_ANTARDASHAS_TITLE),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextSecondary
@@ -872,7 +873,7 @@ private fun AshtottariMahadashaCard(
                             color = AppTheme.CardBackgroundElevated
                         ) {
                             Text(
-                                text = "${mahadasha.antardashas.size} sub-periods",
+                                text = StringResources.get(StringKeyDosha.ASHTOTTARI_SUB_PERIODS_FMT, language, mahadasha.antardashas.size),
                                 fontSize = 10.sp,
                                 color = AppTheme.TextMuted,
                                 fontWeight = FontWeight.Medium,
@@ -986,21 +987,22 @@ private fun formatShortDate(date: LocalDateTime): String {
     return date.format(DateTimeFormatter.ofPattern("MMM yyyy"))
 }
 
-private fun getAshtottariInterpretation(mahadashaPlanet: Planet, antardashaPlanet: Planet?): String {
+private fun getAshtottariInterpretation(mahadashaPlanet: Planet, antardashaPlanet: Planet?, language: com.astro.storm.data.localization.Language): String {
     val baseInterpretation = when (mahadashaPlanet) {
-        Planet.SUN -> "A period of authority, recognition, and self-expression. Focus on career, leadership, and dealings with father figures or government."
-        Planet.MOON -> "An emotionally rich period emphasizing mental peace, nurturing, domestic affairs, and connection with mother and public."
-        Planet.MARS -> "A period of increased energy, courage, and initiative. Property matters, technical pursuits, and competitive activities are highlighted."
-        Planet.MERCURY -> "A period of enhanced learning, communication, and commerce. Business, education, and intellectual pursuits flourish."
-        Planet.JUPITER -> "A period of wisdom, expansion, and prosperity. Spirituality, higher learning, children, and philosophical pursuits are emphasized."
-        Planet.VENUS -> "A period of luxury, beauty, and relationships. Romance, arts, and material comforts are highlighted."
-        Planet.SATURN -> "A period requiring discipline and perseverance. Long-term projects, responsibility, and karmic lessons come to the forefront."
-        Planet.RAHU -> "A period of intense ambition and unconventional paths. Foreign connections, technology, and sudden opportunities arise."
-        else -> "A period of karmic unfolding according to planetary influences."
+        Planet.SUN -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_SUN, language)
+        Planet.MOON -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_MOON, language)
+        Planet.MARS -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_MARS, language)
+        Planet.MERCURY -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_MERCURY, language)
+        Planet.JUPITER -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_JUPITER, language)
+        Planet.VENUS -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_VENUS, language)
+        Planet.SATURN -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_SATURN, language)
+        Planet.RAHU -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_RAHU, language)
+        else -> StringResources.get(StringKeyAnalysis.DASHA_INTERP_MAHADASHA_DEFAULT, language)
     }
 
     return if (antardashaPlanet != null && antardashaPlanet != mahadashaPlanet) {
-        "$baseInterpretation The ${antardashaPlanet.displayName} sub-period modifies these themes with its own energies."
+        val subEffect = StringResources.get(StringKeyAnalysis.DASHA_SUB_PERIOD_MODIFIER, language, antardashaPlanet.getLocalizedName(language))
+        "$baseInterpretation $subEffect"
     } else {
         baseInterpretation
     }

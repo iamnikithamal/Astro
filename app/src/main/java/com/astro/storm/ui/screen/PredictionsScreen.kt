@@ -40,6 +40,7 @@ import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.StringKeyPrediction
 import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.model.LifeArea
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
@@ -233,7 +234,7 @@ data class TransitHighlight(
 )
 
 data class LifeAreaPrediction(
-    val area: LifeArea,
+    val area: com.astro.storm.data.model.LifeArea,
     val rating: Int,
     val shortTerm: String,
     val mediumTerm: String,
@@ -241,18 +242,6 @@ data class LifeAreaPrediction(
     val keyFactors: List<String>,
     val advice: String
 )
-
-enum class LifeArea(val stringKey: StringKey, val icon: ImageVector) {
-    CAREER(StringKey.PREDICTIONS_CAREER_PROFESSION, Icons.Outlined.Work),
-    FINANCE(StringKey.PREDICTIONS_FINANCE_WEALTH, Icons.Outlined.AccountBalance),
-    RELATIONSHIPS(StringKey.PREDICTIONS_RELATIONSHIPS_MARRIAGE, Icons.Outlined.Favorite),
-    HEALTH(StringKey.PREDICTIONS_HEALTH_WELLBEING, Icons.Outlined.FavoriteBorder),
-    EDUCATION(StringKey.PREDICTIONS_EDUCATION_LEARNING, Icons.Outlined.School),
-    FAMILY(StringKey.PREDICTIONS_FAMILY_HOME, Icons.Outlined.Home),
-    SPIRITUAL(StringKey.LIFE_AREA_SPIRITUALITY, Icons.Outlined.Star);
-
-    fun getLocalizedName(language: Language): String = StringResources.get(stringKey, language)
-}
 
 data class ActiveYoga(
     val name: String,
@@ -954,7 +943,7 @@ private fun QuickLifeAreasSummary(areas: List<LifeAreaPrediction>) {
 @Composable
 private fun QuickLifeAreaRow(area: LifeAreaPrediction) {
     val language = currentLanguage()
-    val areaColor = getLifeAreaColor(area.area)
+    val areaColor = area.area.color
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -990,7 +979,7 @@ private fun QuickLifeAreaRow(area: LifeAreaPrediction) {
 private fun LifeAreaDetailCard(area: LifeAreaPrediction) {
     val language = currentLanguage()
     var expanded by remember { mutableStateOf(false) }
-    val areaColor = getLifeAreaColor(area.area)
+    val areaColor = area.area.color
 
     Card(
         modifier = Modifier
@@ -1639,13 +1628,13 @@ private fun calculateLifeOverview(chart: VedicChart, dashaTimeline: DashaCalcula
     }
 
     val keyStrengths = listOf(
-        "Strong determination and resilience in your character",
-        "Natural ability to connect with spiritual wisdom",
-        "Capacity for deep emotional understanding",
-        "Practical approach to life's challenges"
-    ) // TODO: Localize generic strengths
+        StringResources.get(StringKeyPrediction.PRED_STRENGTH_DETERMINATION, language),
+        StringResources.get(StringKeyPrediction.PRED_STRENGTH_SPIRITUAL, language),
+        StringResources.get(StringKeyPrediction.PRED_STRENGTH_EMOTIONAL, language),
+        StringResources.get(StringKeyPrediction.PRED_STRENGTH_PRACTICAL, language)
+    )
 
-    val lifeTheme = "Path of ${getLifeTheme(ascendant, language)}"
+    val lifeTheme = StringResources.get(StringKeyPrediction.PRED_LIFE_THEME_TEMPLATE, language, getLifeTheme(ascendant, language))
 
     val spiritualPath = StringResources.get(StringKeyPrediction.PRED_SPIRIT_TEMPLATE, language, 
         getSpiritualPath(moonPosition?.sign, language),
@@ -1670,7 +1659,7 @@ private fun calculateCurrentPeriod(chart: VedicChart, dashaTimeline: DashaCalcul
             val adName = currentAntardasha.planet.getLocalizedName(language)
             StringResources.get(StringKeyPrediction.PRED_DASHA_INFO_TEMPLATE, language, mdName, adName)
         } else {
-            "$mdName Mahadasha"
+            StringResources.get(StringKeyPrediction.PRED_MAHADASHA_LABEL, language, mdName)
         }
     } ?: StringResources.get(StringKeyPrediction.PRED_DASHA_PERIOD_DEFAULT, language)
 
@@ -1945,6 +1934,7 @@ private fun getShortTermPrediction(area: LifeArea, language: Language): String =
     LifeArea.EDUCATION -> StringResources.get(StringKeyPrediction.PRED_EDU_SHORT, language)
     LifeArea.FAMILY -> StringResources.get(StringKeyPrediction.PRED_FAMILY_SHORT, language)
     LifeArea.SPIRITUAL -> StringResources.get(StringKeyPrediction.PRED_SPIRIT_SHORT, language)
+    else -> StringResources.get(StringKeyPrediction.PRED_CAREER_SHORT, language)
 }
 
 private fun getMediumTermPrediction(area: LifeArea, language: Language): String = when (area) {
@@ -1955,6 +1945,7 @@ private fun getMediumTermPrediction(area: LifeArea, language: Language): String 
     LifeArea.EDUCATION -> StringResources.get(StringKeyPrediction.PRED_EDU_MED, language)
     LifeArea.FAMILY -> StringResources.get(StringKeyPrediction.PRED_FAMILY_MED, language)
     LifeArea.SPIRITUAL -> StringResources.get(StringKeyPrediction.PRED_SPIRIT_MED, language)
+    else -> StringResources.get(StringKeyPrediction.PRED_CAREER_MED, language)
 }
 
 private fun getLongTermPrediction(area: LifeArea, language: Language): String = when (area) {
@@ -1965,6 +1956,7 @@ private fun getLongTermPrediction(area: LifeArea, language: Language): String = 
     LifeArea.EDUCATION -> StringResources.get(StringKeyPrediction.PRED_EDU_LONG, language)
     LifeArea.FAMILY -> StringResources.get(StringKeyPrediction.PRED_FAMILY_LONG, language)
     LifeArea.SPIRITUAL -> StringResources.get(StringKeyPrediction.PRED_SPIRIT_LONG, language)
+    else -> StringResources.get(StringKeyPrediction.PRED_CAREER_LONG, language)
 }
 
 private fun getKeyFactors(area: LifeArea, language: Language): List<String> = when (area) {
@@ -2003,6 +1995,11 @@ private fun getKeyFactors(area: LifeArea, language: Language): List<String> = wh
         StringResources.get(StringKeyPrediction.PRED_SPIRIT_KEY_2, language),
         StringResources.get(StringKeyPrediction.PRED_SPIRIT_KEY_3, language)
     )
+    else -> listOf(
+        StringResources.get(StringKeyPrediction.PRED_CAREER_KEY_1, language),
+        StringResources.get(StringKeyPrediction.PRED_CAREER_KEY_2, language),
+        StringResources.get(StringKeyPrediction.PRED_CAREER_KEY_3, language)
+    )
 }
 
 private fun getAdvice(area: LifeArea, language: Language): String = when (area) {
@@ -2013,6 +2010,7 @@ private fun getAdvice(area: LifeArea, language: Language): String = when (area) 
     LifeArea.EDUCATION -> StringResources.get(StringKeyPrediction.PRED_EDU_ADVICE, language)
     LifeArea.FAMILY -> StringResources.get(StringKeyPrediction.PRED_FAMILY_ADVICE, language)
     LifeArea.SPIRITUAL -> StringResources.get(StringKeyPrediction.PRED_SPIRIT_ADVICE, language)
+    else -> StringResources.get(StringKeyPrediction.PRED_CAREER_ADVICE, language)
 }
 
 @Composable
@@ -2021,17 +2019,6 @@ private fun getEnergyColor(energy: Int): Color = when {
     energy >= 6 -> AppTheme.AccentGold
     energy >= 4 -> AppTheme.WarningColor
     else -> AppTheme.ErrorColor
-}
-
-@Composable
-private fun getLifeAreaColor(area: LifeArea): Color = when (area) {
-    LifeArea.CAREER -> AppTheme.LifeAreaCareer
-    LifeArea.FINANCE -> AppTheme.LifeAreaFinance
-    LifeArea.RELATIONSHIPS -> AppTheme.LifeAreaLove
-    LifeArea.HEALTH -> AppTheme.LifeAreaHealth
-    LifeArea.EDUCATION -> AppTheme.LifeAreaGrowth
-    LifeArea.FAMILY -> AppTheme.AccentTeal
-    LifeArea.SPIRITUAL -> AppTheme.LifeAreaSpiritual
 }
 
 @Composable

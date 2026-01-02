@@ -400,22 +400,23 @@ enum class StringKeyMatch(override val en: String, override val ne: String) : St
     // ============================================
     // MATCHMAKING CALCULATOR - YONI ANIMALS
     // ============================================
-    YONI_HORSE("Horse", "घोडा"),
-    YONI_ELEPHANT("Elephant", "हात्ती"),
-    YONI_SHEEP("Sheep", "भेडा"),
-    YONI_SERPENT("Serpent", "सर्प"),
-    YONI_DOG("Dog", "कुकुर"),
-    YONI_CAT("Cat", "बिरालो"),
-    YONI_RAT("Rat", "मुसो"),
-    YONI_COW("Cow", "गाई"),
-    YONI_BUFFALO("Buffalo", "भैंसी"),
-    YONI_TIGER("Tiger", "बाघ"),
-    YONI_DEER("Deer", "मृग"),
-    YONI_MONKEY("Monkey", "बाँदर"),
-    YONI_MONGOOSE("Mongoose", "न्यौरी"),
-    YONI_LION("Lion", "सिंह"),
-    YONI_MALE("Male", "पुरुष"),
-    YONI_FEMALE("Female", "स्त्री"),
+    YONI_ANIMAL_HORSE("Horse", "घोडा"),
+    YONI_ANIMAL_ELEPHANT("Elephant", "हात्ती"),
+    YONI_ANIMAL_SHEEP("Sheep", "भेडा"),
+    YONI_ANIMAL_SERPENT("Serpent", "सर्प"),
+    YONI_ANIMAL_DOG("Dog", "कुकुर"),
+    YONI_ANIMAL_CAT("Cat", "बिरालो"),
+    YONI_ANIMAL_RAT("Rat", "मुसो"),
+    YONI_ANIMAL_COW("Cow", "गाई"),
+    YONI_ANIMAL_BUFFALO("Buffalo", "भैंसी"),
+    YONI_ANIMAL_TIGER("Tiger", "बाघ"),
+    YONI_ANIMAL_DEER("Deer", "मृग"),
+    YONI_ANIMAL_MONKEY("Monkey", "बाँदर"),
+    YONI_ANIMAL_MONGOOSE("Mongoose", "न्यौरी"),
+    YONI_ANIMAL_LION("Lion", "सिंह"),
+    
+    GENDER_MALE("Male", "पुरुष"),
+    GENDER_FEMALE("Female", "स्त्री"),
 
     // ============================================
     // MATCHMAKING CALCULATOR - NADI
@@ -983,6 +984,12 @@ enum class StringKeyMatch(override val en: String, override val ne: String) : St
     COMPAT_FOCUS_TEMPERAMENT("Temperamental Balance: Understand personality differences, practice patience, compromise consciously, celebrate individual strengths.", "स्वभावगत सन्तुलन: व्यक्तित्व भिन्नताहरू बुझ्नुहोस्, धैर्य अभ्यास गर्नुहोस्, सचेत रूपमा सम्झौता गर्नुहोस्, व्यक्तिगत शक्तिहरू मनाउनुहोस्।"),
     COMPAT_FOCUS_FINANCIAL("Financial Harmony: Create joint financial plans, discuss money values openly, set shared goals, respect spending differences.", "आर्थिक सामञ्जस्य: संयुक्त वित्तीय योजनाहरू बनाउनुहोस्, पैसा मूल्यहरू खुलेर छलफल गर्नुहोस्, साझा लक्ष्यहरू सेट गर्नुहोस्, खर्च भिन्नताहरूलाई सम्मान गर्नुहोस्।"),
     COMPAT_FOCUS_HEALTH("Health & Progeny: Maintain healthy lifestyles, support each other's wellness, prepare mindfully for parenthood.", "स्वास्थ्य र सन्तान: स्वस्थ जीवनशैली कायम राख्नुहोस्, एकअर्काको कल्याणलाई समर्थन गर्नुहोस्, मातृत्व/पितृत्वको लागि सावधानीपूर्वक तयारी गर्नुहोस्।"),
+
+    // Manglik Quick Status
+    MANGLIK_QUICK_NONE("No Dosha", "दोष छैन"),
+    MANGLIK_QUICK_BOTH("Both Manglik", "दुवै मांगलिक"),
+    MANGLIK_QUICK_BRIDE("Bride Only", "दुलही मात्र"),
+    MANGLIK_QUICK_GROOM("Groom Only", "दुलाहा मात्र"),
 
     // ============================================
     // YOGA CALCULATOR - CATEGORIES & STRENGTH

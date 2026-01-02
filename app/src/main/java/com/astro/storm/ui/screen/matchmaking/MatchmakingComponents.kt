@@ -345,8 +345,9 @@ fun CompatibilityScoreCard(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
+                        val language = LocalLanguage.current
                         Text(
-                            result.rating.displayName,
+                            result.rating.getLocalizedName(language),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = getRatingColor(result.rating)
@@ -374,8 +375,9 @@ fun CompatibilityScoreCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Rating description
+                val language = LocalLanguage.current
                 Text(
-                    text = result.rating.description,
+                    text = result.rating.getLocalizedDescription(language),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.TextMuted,
                     textAlign = TextAlign.Center,
@@ -767,8 +769,9 @@ fun ManglikPersonCard(
                     color = getManglikSeverityColor(analysis.effectiveDosha).copy(alpha = 0.12f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
+                    val language = LocalLanguage.current
                     Text(
-                        analysis.effectiveDosha.displayName,
+                        analysis.effectiveDosha.getLocalizedName(language),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = getManglikSeverityColor(analysis.effectiveDosha),

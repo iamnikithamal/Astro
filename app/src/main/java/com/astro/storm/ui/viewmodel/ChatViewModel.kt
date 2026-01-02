@@ -17,6 +17,7 @@ import com.astro.storm.data.local.chat.ChatMessageModel
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.ChatRepository
 import com.astro.storm.data.repository.SavedChart
+import com.astro.storm.data.localization.Language
 import com.astro.storm.ui.components.ContentCleaner
 import com.astro.storm.ui.components.agentic.AgentSection
 import com.astro.storm.ui.components.agentic.AskUserOption
@@ -393,7 +394,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         content: String,
         currentChart: VedicChart?,
         savedCharts: List<SavedChart>,
-        selectedChartId: Long?
+        selectedChartId: Long?,
+        language: Language = Language.ENGLISH
     ) {
         val model = _selectedModel.value ?: return
 
@@ -516,7 +518,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         model = model,
                         currentProfile = currentProfile,
                         allProfiles = savedCharts,
-                        currentChart = currentChart
+                        currentChart = currentChart,
+                        language = language
                     ).collect { response ->
                         when (response) {
                             is AgentResponse.ContentChunk -> {
@@ -1512,7 +1515,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         response: String,
         currentChart: VedicChart?,
         savedCharts: List<SavedChart>,
-        selectedChartId: Long?
+        selectedChartId: Long?,
+        language: Language = Language.ENGLISH
     ) {
         val askUserState = _askUserState.value ?: return
         val conversationHistory = pendingConversationHistory ?: return
@@ -1559,7 +1563,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         model = model,
                         currentProfile = currentProfile,
                         allProfiles = savedCharts,
-                        currentChart = currentChart
+                        currentChart = currentChart,
+                        language = language
                     ).collect { response ->
                         when (response) {
                             is AgentResponse.ContentChunk -> {
@@ -1963,7 +1968,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun regenerateResponse(
         currentChart: VedicChart?,
         savedCharts: List<SavedChart>,
-        selectedChartId: Long?
+        selectedChartId: Long?,
+        language: Language = Language.ENGLISH
     ) {
         viewModelScope.launch {
             val conversationId = _currentConversationId.value ?: return@launch
@@ -1978,7 +1984,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 // Resend
-                sendMessage(lastUserMessage.content, currentChart, savedCharts, selectedChartId)
+                sendMessage(lastUserMessage.content, currentChart, savedCharts, selectedChartId, language)
             }
         }
     }

@@ -97,6 +97,12 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     PANCHANGA_KARANA_DESC("Each tithi has two karanas. There are 11 karanas (4 fixed, 7 repeating) cycling through the month.", "प्रत्येक तिथिमा दुई करण हुन्छन्। ११ करण (४ स्थिर, ७ दोहोरिने) महिनाभर चक्रित हुन्छन्।"),
     PANCHANGA_VARA_DESC("Each day is ruled by a planet, influencing the day's energy and suitable activities.", "प्रत्येक दिन एक ग्रहले शासन गर्दछ, दिनको ऊर्जा र उपयुक्त गतिविधिहरूलाई प्रभाव पार्दछ।"),
     PANCHANGA_BIRTH_INSIGHT("The Panchanga at birth reveals the cosmic influences active at the moment of incarnation, providing insights into one's inherent nature, tendencies, and life patterns.", "जन्मको समयको पञ्चाङ्गले अवतारको क्षणमा सक्रिय ब्रह्माण्डीय प्रभावहरू प्रकट गर्दछ, व्यक्तिको स्वभाविक प्रकृति, प्रवृत्ति र जीवन ढाँचामा अन्तर्दृष्टि प्रदान गर्दछ।"),
+    PANCHANGA_BIRTH_INTERP_MAIN("Born on %1$s, under the %2$s nakshatra during %3$s tithi.", "%1$sमा जन्म, %3$s तिथिमा %2$s नक्षत्र अन्तर्गत।"),
+    PANCHANGA_BIRTH_INTERP_YOGA("The %s yoga was active, indicating ", "%s योग सक्रिय थियो, जसले "),
+    PANCHANGA_BIRTH_INTERP_YOGA_CHALLENGE("challenges to overcome but also strength building opportunities. ", "पार गर्नुपर्ने चुनौतीहरू तर शक्ति निर्माणका अवसरहरू पनि संकेत गर्दछ।"),
+    PANCHANGA_BIRTH_INTERP_YOGA_AUSPICIOUS("highly auspicious conditions at birth, suggesting favorable karma. ", "जन्मको समयमा अत्यधिक शुभ परिस्थितिहरू, अनुकूल कर्मको संकेत गर्दछ।"),
+    PANCHANGA_BIRTH_INTERP_YOGA_MODERATE("moderate influences that support balanced development. ", "सन्तुलित विकासलाई समर्थन गर्ने मध्यम प्रभावहरू।"),
+    PANCHANGA_BIRTH_INTERP_KARANA("The %s karana further refines these birth energies.", "%s करणले यी जन्म ऊर्जाहरूलाई थप परिष्कृत गर्दछ।"),
 
     // Panchanga Info Card Element Titles (with Sanskrit)
     PANCHANGA_INFO_TITHI_TITLE("Tithi (तिथि)", "तिथि (तिथि)"),
@@ -943,6 +949,10 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     DASHA_INTERP_ANTARDASHA_SATURN(
         "Current sub-period brings discipline, responsibility, hard work, delays, and lessons requiring patience. Focus on service and long-term efforts.",
         "हालको उप-अवधिले अनुशासन, जिम्मेवारी, कठिन परिश्रम, ढिलाइ र धैर्य चाहिने पाठहरू ल्याउँछ। सेवा र दीर्घकालीन प्रयासमा ध्यान केन्द्रित।"
+    ),
+    DASHA_SUB_PERIOD_MODIFIER(
+        "The %s sub-period modifies these themes with its own energies.",
+        "%s उप-अवधिले यी विषयहरूलाई आफ्नै ऊर्जाका साथ परिमार्जन गर्दछ।"
     ),
     DASHA_INTERP_ANTARDASHA_RAHU(
         "Current sub-period emphasizes worldly ambitions, unconventional approaches, foreign matters, technology, and sudden changes or opportunities.",
@@ -2301,5 +2311,87 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
 
     PRASHNA_CHART_LABEL("Prashna Chart", "प्रश्न कुण्डली"),
     PRASHNA_QUESTION_LOCATION("Question Location", "प्रश्नस्थान"),
+
+    // ============================================
+    // AVASTHA STRINGS
+    // ============================================
+    AVASTHA_BALA_NAME("Bala (Infant)", "बाल (शिशु)"),
+    AVASTHA_BALA_DESC("Planet is in infant state - like a child, it gives results slowly and with help from others. Results manifest in the later part of life.", "ग्रह शिशु अवस्थामा छ - बच्चा जस्तै, यसले बिस्तारै र अरूको सहयोगमा नतिजा दिन्छ। नतिजाहरू जीवनको पछिल्लो भागमा प्रकट हुन्छन्।"),
+    AVASTHA_KUMARA_NAME("Kumara (Adolescent)", "कुमार (किशोर)"),
+    AVASTHA_KUMARA_DESC("Planet is in adolescent state - eager and active but not fully mature. Results come with some effort and learning.", "ग्रह किशोरावस्थामा छ - उत्सुक र सक्रिय तर पूर्ण रूपमा परिपक्व छैन। नतिजाहरू केही प्रयास र सिकाइसँगै आउँछन्।"),
+    AVASTHA_YUVA_NAME("Yuva (Young Adult)", "युवा (युवा)"),
+    AVASTHA_YUVA_DESC("Planet is in prime youthful state - most powerful and capable of giving full results. Best time for manifestation.", "ग्रह युवा अवस्थामा छ - सबैभन्दा शक्तिशाली र पूर्ण नतिजा दिन सक्षम। प्रकटीकरणको लागि उत्तम समय।"),
+    AVASTHA_VRIDDHA_NAME("Vriddha (Old)", "वृद्ध (वृद्ध)"),
+    AVASTHA_VRIDDHA_DESC("Planet is in aged state - wisdom but declining vitality. Results come through experience and patience.", "ग्रह वृद्ध अवस्थामा छ - ज्ञान तर घट्दो जीवनशक्ति। नतिजाहरू अनुभव र धैर्य मार्फत आउँछन्।"),
+    AVASTHA_MRITA_NAME("Mrita (Dead)", "मृत (मृत)"),
+    AVASTHA_MRITA_DESC("Planet is in dead state - minimal ability to give results. May need strong remedial measures.", "ग्रह मृत अवस्थामा छ - नतिजा दिने न्यूनतम क्षमता। बलियो उपचारात्मक उपायहरू आवश्यक हुन सक्छ।"),
+
+    AVASTHA_JAGRAT_NAME("Jagrat (Awake)", "जाग्रत (जागृत)"),
+    AVASTHA_JAGRAT_DESC("Planet is fully awake and alert - gives complete and timely results. Functions at full capacity.", "ग्रह पूर्ण रूपमा जागृत र सचेत छ - पूर्ण र समयमै नतिजा दिन्छ। पूर्ण क्षमतामा काम गर्दछ।"),
+    AVASTHA_SWAPNA_NAME("Swapna (Dreaming)", "स्वप्न (सपना)"),
+    AVASTHA_SWAPNA_DESC("Planet is in dreaming state - gives partial results, often delayed or through indirect means.", "ग्रह सपनाको अवस्थामा छ - आंशिक नतिजा दिन्छ, प्रायः ढिलो वा अप्रत्यक्ष माध्यमबाट।"),
+    AVASTHA_SUSHUPTI_NAME("Sushupti (Deep Sleep)", "सुषुप्ति (गहिरो निद्रा)"),
+    AVASTHA_SUSHUPTI_DESC("Planet is in deep sleep - struggles to manifest results. May give minimal or no results without remedies.", "ग्रह गहिरो निद्रामा छ - नतिजा प्रकट गर्न संघर्ष गर्दछ। उपाय बिना न्यूनतम वा कुनै नतिजा नदिन सक्छ।"),
+
+    AVASTHA_DEEPTA_NAME("Deepta (Blazing)", "दीप्त (प्रज्वलित)"),
+    AVASTHA_DEEPTA_DESC("Exalted planet - shines brilliantly and gives exceptional results in all areas it signifies.", "उच्चको ग्रह - उज्यालो भएर चम्कन्छ र यसले संकेत गर्ने सबै क्षेत्रहरूमा असाधारण नतिजा दिन्छ।"),
+    AVASTHA_SWASTHA_NAME("Swastha (Healthy)", "स्वस्थ (स्वस्थ)"),
+    AVASTHA_SWASTHA_DESC("Planet in own sign - comfortable and gives strong, natural results with ease.", "ग्रह आफ्नै राशिमा छ - सहज र सजिलै संग बलियो, प्राकृतिक नतिजा दिन्छ।"),
+    AVASTHA_MUDITA_NAME("Mudita (Delighted)", "मुदित (हर्षित)"),
+    AVASTHA_MUDITA_DESC("Planet in great friend's sign - happy and supported, gives good results with cooperation.", "ग्रह अति मित्रको राशिमा छ - खुसी र समर्थित, सहयोगको साथ राम्रो नतिजा दिन्छ।"),
+    AVASTHA_SHANTA_NAME("Shanta (Peaceful)", "शान्त (शान्त)"),
+    AVASTHA_SHANTA_DESC("Planet in friendly sign - calm and stable, gives consistent positive results.", "ग्रह मित्रको राशिमा छ - शान्त र स्थिर, निरन्तर सकारात्मक नतिजा दिन्छ।"),
+    AVASTHA_DINA_NAME("Dina (Ordinary)", "दीन (सामान्य)"),
+    AVASTHA_DINA_DESC("Planet in neutral sign - gives average results, neither specially good nor bad.", "ग्रह सम राशिमा छ - औसत नतिजा दिन्छ, न विशेष राम्रो न नराम्रो।"),
+    AVASTHA_VIKALA_NAME("Vikala (Afflicted)", "विकाल (पीडित)"),
+    AVASTHA_VIKALA_DESC("Combust planet - weakened by Sun's rays, struggles to give full results. Hidden or overshadowed.", "अस्त भएको ग्रह - सूर्यको किरणले कमजोर भएको, पूर्ण नतिजा दिन संघर्ष गर्छ। लुकेको वा छायामा परेको।"),
+    AVASTHA_KHALA_NAME("Khala (Debilitated)", "खल (नीच)"),
+    AVASTHA_KHALA_DESC("Planet in debilitation - significantly weakened, gives poor or opposite results.", "ग्रह नीच राशिमा छ - महत्त्वपूर्ण रूपमा कमजोर भएको, खराब वा विपरित नतिजा दिन्छ।"),
+    AVASTHA_KOPA_NAME("KOPA (Angry)", "कोप (क्रोधित)"),
+    AVASTHA_KOPA_DESC("Planet in enemy sign - frustrated and obstructed, gives results with difficulty.", "ग्रह शत्रु राशिमा छ - निराश र अवरुद्ध, कठिनाइको साथ नतिजा दिन्छ।"),
+    AVASTHA_BHITA_NAME("Bhita (Frightened)", "भीत (डराएको)"),
+    AVASTHA_BHITA_DESC("Planet in great enemy's sign - very uncomfortable, gives minimal or adverse results.", "ग्रह अति शत्रुको राशिमा छ - धेरै असहज, न्यूनतम वा प्रतिकूल नतिजा दिन्छ।"),
+
+    AVASTHA_LAJJITA_NAME("Lajjita (Ashamed)", "लज्जित (लज्जित)"),
+    AVASTHA_LAJJITA_DESC("Planet feels ashamed due to conjunction with Sun/Saturn in 5th house. Children and creativity matters may suffer.", "५औं भावमा सूर्य/शनिसँग युति भएका कारण ग्रहले लज्जित महसुस गर्छ। सन्तान र सिर्जनशीलताका मामिलाहरू प्रभावित हुन सक्छन्।"),
+    AVASTHA_GARVITA_NAME("Garvita (Proud)", "गर्वित (गर्वित)"),
+    AVASTHA_GARVITA_DESC("Planet in exaltation or moolatrikona - proud and confident, gives excellent results with dignity.", "ग्रह उच्च वा मूलत्रिकोणमा छ - गौरवान्वित र आत्मविश्वासी, मर्यादाका साथ उत्कृष्ट नतिजा दिन्छ।"),
+    AVASTHA_KSHUDITA_NAME("Kshudita (Hungry)", "क्षुधित (भोको)"),
+    AVASTHA_KSHUDITA_DESC("Planet in enemy sign with enemy aspect - constantly craving, never satisfied. Results feel incomplete.", "शत्रु राशिमा शत्रुको दृष्टि भएको ग्रह - निरन्तर चाहना राख्ने, कहिल्यै सन्तुष्ट नहुने। नतिजाहरू अपूर्ण महसुस हुन्छन्।"),
+    AVASTHA_TRUSHITA_NAME("Trushita (Thirsty)", "तृषित (तिर्खाएको)"),
+    AVASTHA_TRUSHITA_DESC("Planet in watery sign with enemy aspect - emotionally parched, seeking fulfillment. Emotional needs unmet.", "जल राशिमा शत्रुको दृष्टि भएको ग्रह - भावनात्मक रूपमा प्यासी, तृप्ति खोजिरहेको। भावनात्मक आवश्यकताहरू पूरा नभएका।"),
+    AVASTHA_MUDITA_LAJ_NAME("Mudita (Delighted)", "मुदित (हर्षित)"),
+    AVASTHA_MUDITA_LAJ_DESC("Planet with friendly influences - joyful and supported, gives pleasant and fulfilling results.", "मित्रवत प्रभाव भएको ग्रह - हर्षित र समर्थित, सुखद र सन्तोषजनक नतिजा दिन्छ।"),
+    AVASTHA_KSHOBHITA_NAME("Kshobhita (Agitated)", "क्षोभित (क्षुब्ध)"),
+    AVASTHA_KSHOBHITA_DESC("Planet conjunct Sun and aspected by malefic - disturbed and unsettled, gives erratic results.", "सूर्यसँग युति र पाप ग्रहद्वारा दृष्ट ग्रह - विचलित र अस्थिर, अनिश्चित नतिजा दिन्छ।"),
+
+    AVASTHA_PLANET_ANALYSIS("%s Analysis", "%s विश्लेषण"),
+    AVASTHA_AGE_STATE("Age State (Baladi)", "वय अवस्था (बालादि)"),
+    AVASTHA_ALERTNESS("Alertness (Jagradadi)", "सचेतता (जाग्रदादि)"),
+    AVASTHA_DIGNITY("Dignity (Deeptadi)", "मर्यादा (दीप्तादि)"),
+    AVASTHA_EMOTIONAL("Emotional (Lajjitadi)", "भावनात्मक (लज्जितादि)"),
+    AVASTHA_OVERALL_STRENGTH_LABEL("Overall Strength: %d%%", "समग्र बल: %d%%"),
+    AVASTHA_VERY_POWERFUL("This planet is very powerful and will deliver excellent results.", "यो ग्रह धेरै शक्तिशाली छ र उत्कृष्ट नतिजा दिनेछ।"),
+    AVASTHA_STRONG_RESULTS("This planet is strong and will give good results.", "यो ग्रह बलियो छ र राम्रो नतिजा दिनेछ।"),
+    AVASTHA_MODERATE_RESULTS("This planet has moderate strength with mixed results.", "यो ग्रहको मध्यम बल छ र मिश्रित नतिजा दिनेछ।"),
+    AVASTHA_WEAK_RESULTS("This planet is weak and may struggle to give full results.", "यो ग्रह कमजोर छ र पूर्ण नतिजा दिन संघर्ष गर्न सक्छ।"),
+    AVASTHA_VERY_WEAK_RESULTS("This planet is very weak and needs remedial measures.", "यो ग्रह धेरै कमजोर छ र उपचारात्मक उपायहरू आवश्यक छ।"),
+    
+    AVASTHA_STRONG_PLANETS("Strong Planets: %s", "बलिया ग्रहहरू: %s"),
+    AVASTHA_STRONG_PLANETS_NOTE("These planets are well-placed and will give favorable results.", "यी ग्रहहरू राम्रो स्थितिमा छन् र अनुकूल नतिजा दिनेछन्।"),
+    AVASTHA_WEAK_PLANETS("Weak Planets: %s", "कमजोर ग्रहहरू: %s"),
+    AVASTHA_WEAK_PLANETS_NOTE("These planets may need remedial measures to strengthen their significations.", "यी ग्रहहरूको कारकत्व बलियो बनाउन उपचारात्मक उपायहरू आवश्यक हुन सक्छ।"),
+    AVASTHA_MODERATE_PLANETS_NOTE("Most planets are in moderate states, giving mixed results based on their periods.", "धेरै जसो ग्रहहरू मध्यम अवस्थामा छन्, जसले आफ्नो अवधि अनुसार मिश्रित नतिजा दिन्छन्।"),
+    
+    AVASTHA_REC_LOW_STRENGTH("Low strength (%d%%)", "न्यून बल (%d%%)"),
+    AVASTHA_REC_STRENGTHEN("Strengthen %s through gemstones, mantras, or charitable acts", "रत्न, मन्त्र वा परोपकारी कार्यहरू मार्फत %s लाई बलियो बनाउनुहोस्"),
+    
+    AVASTHA_BALADI_DESC_INFO("Based on the planet's degree within a sign. Determines the maturity and capability of the planet to deliver results.", "राशिको डिग्रीमा आधारित। यसले ग्रहको नतिजा दिने परिपक्वता र क्षमता निर्धारण गर्दछ।"),
+    AVASTHA_JAGRADADI_DESC_INFO("Based on planet's relationship with sign lord. Determines how alert and active the planet is.", "राशि स्वामीसँगको सम्बन्धमा आधारित। यसले ग्रह कति सतर्क र सक्रिय छ भन्ने निर्धारण गर्दछ।"),
+    AVASTHA_DEEPTADI_DESC_INFO("Nine states based on exaltation, own sign, friends/enemies, and combustion. Determines overall dignity.", "उच्च, स्वराशि, मित्र/शत्रु र अस्तमा आधारित नौ अवस्थाहरू। यसले समग्र मर्यादा निर्धारण गर्दछ।"),
+    AVASTHA_LAJJITADI_DESC_INFO("Based on conjunctions and aspects. Determines the emotional state and how the planet feels in its position.", "युति र दृष्टिमा आधारित। यसले भावनात्मक अवस्था र ग्रह आफ्नो स्थितिमा कस्तो महसुस गर्छ भन्ने निर्धारण गर्दछ।"),
+    AVASTHA_RESULT_CAPACITY("%d%% result capacity", "%d%% नतिजा क्षमता"),
+    AVASTHA_NODE_POS("Node position in %s. %s", "%sमा नोडको स्थिति। %s"),
+    AVASTHA_ANALYZING("Analyzing Planetary States...", "ग्रहको अवस्थाहरू विश्लेषण गर्दै..."),
 ;
 }

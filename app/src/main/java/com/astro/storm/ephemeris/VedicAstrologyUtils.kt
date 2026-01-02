@@ -1015,19 +1015,67 @@ object VedicAstrologyUtils {
     }
 
     /**
-     * Check if a planet is hemmed between benefics (Shubhakartari Yoga).
+     * Check if a planet is in Gandanta point.
+     * Gandanta is the junction between a water sign and a fire sign.
+     * It's considered a very sensitive and difficult point in a chart.
+     * 
+     * Water-Fire junctions (Sidereal):
+     * - Pisces (Revati) -> Aries (Ashwini)
+     * - Cancer (Ashlesha) -> Leo (Magha)
+     * - Scorpio (Jyeshtha) -> Sagittarius (Mula)
+     *
+     * @param longitude The planet's longitude
+     * @param orb Degrees from the junction (default 3.33 deg = 1 Navamsa)
      */
-    fun isShubhakartari(pos: PlanetPosition, chart: VedicChart): Boolean {
-        val prevHouse = if (pos.house == 1) 12 else pos.house - 1
-        val nextHouse = if (pos.house == 12) 1 else pos.house + 1
-
-        val hasBeneficBefore = chart.planetPositions.any {
-            it.house == prevHouse && isNaturalBenefic(it.planet)
+    fun isGandanta(longitude: Double, orb: Double = 3.3333333333): Boolean {
+        val junctions = listOf(0.0, 120.0, 240.0) // Junction points in 360 deg circle
+        return junctions.any { j ->
+            val diff = abs(normalizeAngle(longitude - j))
+            diff <= orb || diff >= (360.0 - orb)
         }
-        val hasBeneficAfter = chart.planetPositions.any {
-            it.house == nextHouse && isNaturalBenefic(it.planet)
-        }
-
-        return hasBeneficBefore && hasBeneficAfter
     }
-}
+
+    /**
+     * Check for Planetary War (Graha Yuddha) between two planets.
+     * Graha Yuddha occurs when two planets are within 1 degree of each other.
+     * Only applies to Mars, Mercury, Jupiter, Venus, and Saturn.
+     * Sun, Moon, Rahu, and Ketu do not participate in Graha Yuddha.
+     */
+    fun checkGrahaYuddha(pos1: PlanetPosition, pos2: PlanetPosition): Boolean {
+        val warriors = setOf(Planet.MARS, Planet.MERCURY, Planet.JUPITER, Planet.VENUS, Planet.SATURN)
+        if (pos1.planet !in warriors || pos2.planet !in warriors) return false
+        
+        val diff = abs(normalizeAngle(pos1.longitude - pos2.longitude))
+        return (diff <= 1.0 || diff >= 359.0)
+    }
+
+    /**
+     * Determine the winner of Graha Yuddha.
+     * Generally, the planet with the lower longitude (higher declination/latitude rules vary)
+     * is considered the winner, but most commonly the lower longitude in the sign wins.
+     */
+    fun getGrahaYuddhaWinner(pos1: PlanetPosition, pos2: PlanetPosition): Planet? {
+        if (!checkGrahaYuddha(pos1, pos2)) return null
+        
+        // Simple rule: lower degree wins (more common rule)
+        // Advanced rule would consider brightness and latitude
+        return if (getDegreeInSign(pos1.longitude) < getDegreeInSign(pos2.longitude)) {
+            pos1.planet
+        } else {
+            pos2.planet
+        }
+    }
+
+    /**
+     * Check if a planet is in a Sandhi (junction) point of a house.
+     * Sandhi occurs when a planet is near the beginning or end of a house.
+     */
+    fun isHouseSandhi(pos: PlanetPosition, houseCusps: List<Double>, orb: Double = 1.0): Boolean {
+        val cuspStart = houseCusps[pos.house - 1]
+        val cuspEnd = if (pos.house == 12) houseCusps[0] else houseCusps[pos.house]
+        
+        val distToStart = angularDistance(pos.longitude, cuspStart)
+        val distToEnd = angularDistance(pos.longitude, cuspEnd)
+        
+        return distToStart <= orb || distToEnd <= orb
+    }

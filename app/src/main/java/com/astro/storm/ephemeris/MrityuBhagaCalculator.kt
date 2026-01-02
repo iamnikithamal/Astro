@@ -125,11 +125,11 @@ object MrityuBhagaCalculator {
     /**
      * Comprehensive sensitive degrees analysis
      */
-    fun analyzeSensitiveDegrees(chart: VedicChart): SensitiveDegreesAnalysis {
-        val mrityuBhagaResults = analyzeMrityuBhaga(chart)
-        val gandantaResults = analyzeGandanta(chart)
-        val pushkaraNavamsaResults = analyzePushkaraNavamsa(chart)
-        val pushkaraBhagaResults = analyzePushkaraBhaga(chart)
+    fun analyzeSensitiveDegrees(chart: VedicChart, language: Language): SensitiveDegreesAnalysis {
+        val mrityuBhagaResults = analyzeMrityuBhaga(chart, language)
+        val gandantaResults = analyzeGandanta(chart, language)
+        val pushkaraNavamsaResults = analyzePushkaraNavamsa(chart, language)
+        val pushkaraBhagaResults = analyzePushkaraBhaga(chart, language)
 
         val criticalPlanets = mrityuBhagaResults.filter { it.isInMrityuBhaga } +
                               gandantaResults.filter { it.isInGandanta }
@@ -138,7 +138,7 @@ object MrityuBhagaCalculator {
                                 pushkaraBhagaResults.filter { it.isInPushkaraBhaga }
 
         val overallAssessment = calculateOverallAssessment(
-            mrityuBhagaResults, gandantaResults, pushkaraNavamsaResults, pushkaraBhagaResults
+            mrityuBhagaResults, gandantaResults, pushkaraNavamsaResults, pushkaraBhagaResults, language
         )
 
         return SensitiveDegreesAnalysis(
@@ -161,14 +161,14 @@ object MrityuBhagaCalculator {
                 }
             }.distinct(),
             overallAssessment = overallAssessment,
-            recommendations = generateRecommendations(mrityuBhagaResults, gandantaResults)
+            recommendations = generateRecommendations(mrityuBhagaResults, gandantaResults, language)
         )
     }
 
     /**
      * Analyze Mrityu Bhaga placements for all planets
      */
-    fun analyzeMrityuBhaga(chart: VedicChart): List<MrityuBhagaResult> {
+    fun analyzeMrityuBhaga(chart: VedicChart, language: Language): List<MrityuBhagaResult> {
         return chart.planetPositions.mapNotNull { position ->
             val mrityuDegree = MRITYU_BHAGA_DEGREES[position.planet]?.get(position.sign)
                 ?: return@mapNotNull null
@@ -186,11 +186,11 @@ object MrityuBhagaCalculator {
             }
 
             val effects = if (isInMrityuBhaga) {
-                getMrityuBhagaEffects(position.planet)
+                getMrityuBhagaEffects(position.planet, language)
             } else emptyList()
 
             val vulnerabilityAreas = if (isInMrityuBhaga) {
-                getVulnerabilityAreas(position.planet)
+                getVulnerabilityAreas(position.planet, language)
             } else emptyList()
 
             MrityuBhagaResult(
@@ -203,7 +203,7 @@ object MrityuBhagaCalculator {
                 severity = severity,
                 effects = effects,
                 vulnerabilityAreas = vulnerabilityAreas,
-                remedies = if (isInMrityuBhaga) getMrityuBhagaRemedies(position.planet) else emptyList()
+                remedies = if (isInMrityuBhaga) getMrityuBhagaRemedies(position.planet, language) else emptyList()
             )
         }
     }
@@ -211,7 +211,7 @@ object MrityuBhagaCalculator {
     /**
      * Analyze Gandanta placements
      */
-    fun analyzeGandanta(chart: VedicChart): List<GandantaResult> {
+    fun analyzeGandanta(chart: VedicChart, language: Language): List<GandantaResult> {
         return chart.planetPositions.mapNotNull { position ->
             val degreeInSign = position.longitude % 30.0
 
@@ -248,8 +248,8 @@ object MrityuBhagaCalculator {
                     gandantaType = type,
                     waterSign = gp.waterSign,
                     fireSign = gp.fireSign,
-                    effects = getGandantaEffects(position.planet, type),
-                    remedies = getGandantaRemedies(position.planet, type)
+                    effects = getGandantaEffects(position.planet, type, language),
+                    remedies = getGandantaRemedies(position.planet, type, language)
                 )
             }
         }
@@ -258,7 +258,7 @@ object MrityuBhagaCalculator {
     /**
      * Analyze Pushkara Navamsa placements
      */
-    fun analyzePushkaraNavamsa(chart: VedicChart): List<PushkaraNavamsaResult> {
+    fun analyzePushkaraNavamsa(chart: VedicChart, language: Language): List<PushkaraNavamsaResult> {
         return chart.planetPositions.map { position ->
             val degreeInSign = position.longitude % 30.0
             val ranges = PUSHKARA_NAVAMSA[position.sign] ?: emptyList()
@@ -275,7 +275,7 @@ object MrityuBhagaCalculator {
                 degree = degreeInSign,
                 isInPushkaraNavamsa = isInPushkara,
                 pushkaraRange = matchingRange,
-                benefits = if (isInPushkara) getPushkaraNavamsaBenefits(position.planet) else emptyList()
+                benefits = if (isInPushkara) getPushkaraNavamsaBenefits(position.planet, language) else emptyList()
             )
         }
     }
@@ -283,7 +283,7 @@ object MrityuBhagaCalculator {
     /**
      * Analyze Pushkara Bhaga placements
      */
-    fun analyzePushkaraBhaga(chart: VedicChart): List<PushkaraBhagaResult> {
+    fun analyzePushkaraBhaga(chart: VedicChart, language: Language): List<PushkaraBhagaResult> {
         return chart.planetPositions.map { position ->
             val degreeInSign = position.longitude % 30.0
             val pushkaraDegree = PUSHKARA_BHAGA[position.sign] ?: 0.0
@@ -297,7 +297,7 @@ object MrityuBhagaCalculator {
                 pushkaraBhagaDegree = pushkaraDegree,
                 distance = distance,
                 isInPushkaraBhaga = isInPushkara,
-                benefits = if (isInPushkara) getPushkaraBhagaBenefits(position.planet) else emptyList()
+                benefits = if (isInPushkara) getPushkaraBhagaBenefits(position.planet, language) else emptyList()
             )
         }
     }
@@ -346,136 +346,137 @@ object MrityuBhagaCalculator {
         return if (diff in listOf(0, 3, 6, 9)) diff else null
     }
 
-    private fun getMrityuBhagaEffects(planet: Planet): List<String> {
+    private fun getMrityuBhagaEffects(planet: Planet, language: Language): List<String> {
         return when (planet) {
             Planet.SUN -> listOf(
-                "Challenges with authority figures or father",
-                "Potential health issues related to heart or vitality",
-                "Career obstacles during certain periods",
-                "Need for ego transformation"
+                StringResources.get(StringKeyFinder.MB_SUN_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_SUN_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_SUN_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_SUN_EFF_4, language)
             )
             Planet.MOON -> listOf(
-                "Emotional sensitivity and mental stress",
-                "Challenges with mother or maternal relationships",
-                "Fluctuating public image or reputation",
-                "Need for emotional healing and stability"
+                StringResources.get(StringKeyFinder.MB_MOON_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_MOON_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_MOON_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_MOON_EFF_4, language)
             )
             Planet.MARS -> listOf(
-                "Accident-prone tendencies during Mars periods",
-                "Blood-related or surgical issues possible",
-                "Conflicts with siblings or competitors",
-                "Need to channel energy constructively"
+                StringResources.get(StringKeyFinder.MB_MARS_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_MARS_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_MARS_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_MARS_EFF_4, language)
             )
             Planet.MERCURY -> listOf(
-                "Communication difficulties or misunderstandings",
-                "Nervous system sensitivity",
-                "Educational or business challenges",
-                "Need for mental clarity practices"
+                StringResources.get(StringKeyFinder.MB_MERC_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_MERC_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_MERC_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_MERC_EFF_4, language)
             )
             Planet.JUPITER -> listOf(
-                "Challenges in education or spiritual growth",
-                "Issues with teachers or mentors",
-                "Financial ups and downs",
-                "Need for wisdom and philosophical grounding"
+                StringResources.get(StringKeyFinder.MB_JUP_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_JUP_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_JUP_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_JUP_EFF_4, language)
             )
             Planet.VENUS -> listOf(
-                "Relationship challenges or disappointments",
-                "Reproductive health considerations",
-                "Artistic blocks or creative challenges",
-                "Need for self-love and relationship healing"
+                StringResources.get(StringKeyFinder.MB_VENUS_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_EFF_4, language)
             )
             Planet.SATURN -> listOf(
-                "Career delays or professional setbacks",
-                "Joint or bone-related health issues",
-                "Karmic lessons intensified",
-                "Need for patience and perseverance"
+                StringResources.get(StringKeyFinder.MB_SAT_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_SAT_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_SAT_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_SAT_EFF_4, language)
             )
             Planet.RAHU -> listOf(
-                "Sudden unexpected events",
-                "Foreign-related complications",
-                "Obsessive tendencies intensified",
-                "Need for grounding and reality checks"
+                StringResources.get(StringKeyFinder.MB_RAHU_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_EFF_4, language)
             )
             Planet.KETU -> listOf(
-                "Spiritual crises or confusion",
-                "Detachment-related challenges",
-                "Past-life karma surfacing",
-                "Need for spiritual practices"
+                StringResources.get(StringKeyFinder.MB_KETU_EFF_1, language),
+                StringResources.get(StringKeyFinder.MB_KETU_EFF_2, language),
+                StringResources.get(StringKeyFinder.MB_KETU_EFF_3, language),
+                StringResources.get(StringKeyFinder.MB_KETU_EFF_4, language)
             )
             else -> emptyList()
         }
     }
 
-    private fun getVulnerabilityAreas(planet: Planet): List<String> {
-        return when (planet) {
-            Planet.SUN -> listOf("Heart", "Eyes", "Spine", "Vitality")
-            Planet.MOON -> listOf("Mind", "Emotions", "Stomach", "Breasts", "Fluids")
-            Planet.MARS -> listOf("Blood", "Muscles", "Head", "Accidents", "Burns")
-            Planet.MERCURY -> listOf("Nervous system", "Skin", "Lungs", "Speech")
-            Planet.JUPITER -> listOf("Liver", "Fat tissues", "Ears", "Thighs")
-            Planet.VENUS -> listOf("Reproductive system", "Kidneys", "Throat", "Face")
-            Planet.SATURN -> listOf("Bones", "Joints", "Teeth", "Chronic conditions")
-            Planet.RAHU -> listOf("Poisons", "Sudden events", "Unknown diseases")
-            Planet.KETU -> listOf("Wounds", "Infections", "Accidents", "Spiritual crises")
+    private fun getVulnerabilityAreas(planet: Planet, language: Language): List<String> {
+        val keys = when (planet) {
+            Planet.SUN -> listOf(StringKeyFinder.AREA_HEART, StringKeyFinder.AREA_EYES, StringKeyFinder.AREA_SPINE, StringKeyFinder.AREA_VITALITY)
+            Planet.MOON -> listOf(StringKeyFinder.AREA_MIND, StringKeyFinder.AREA_EMOTIONS, StringKeyFinder.AREA_STOMACH, StringKeyFinder.AREA_BREASTS, StringKeyFinder.AREA_FLUIDS)
+            Planet.MARS -> listOf(StringKeyFinder.AREA_BLOOD, StringKeyFinder.AREA_MUSCLES, StringKeyFinder.AREA_HEAD, StringKeyFinder.AREA_ACCIDENTS, StringKeyFinder.AREA_BURNS)
+            Planet.MERCURY -> listOf(StringKeyFinder.AREA_NERVOUS, StringKeyFinder.AREA_SKIN, StringKeyFinder.AREA_LUNGS, StringKeyFinder.AREA_SPEECH)
+            Planet.JUPITER -> listOf(StringKeyFinder.AREA_LIVER, StringKeyFinder.AREA_FAT, StringKeyFinder.AREA_EARS, StringKeyFinder.AREA_THIGHS)
+            Planet.VENUS -> listOf(StringKeyFinder.AREA_REPRO, StringKeyFinder.AREA_KIDNEYS, StringKeyFinder.AREA_THROAT, StringKeyFinder.AREA_FACE)
+            Planet.SATURN -> listOf(StringKeyFinder.AREA_BONES, StringKeyFinder.AREA_JOINTS, StringKeyFinder.AREA_TEETH, StringKeyFinder.AREA_CHRONIC)
+            Planet.RAHU -> listOf(StringKeyFinder.AREA_POISONS, StringKeyFinder.AREA_ACCIDENTS, StringKeyFinder.AREA_UNKNOWN_DIS)
+            Planet.KETU -> listOf(StringKeyFinder.AREA_WOUNDS, StringKeyFinder.AREA_INFECTIONS, StringKeyFinder.AREA_ACCIDENTS, StringKeyFinder.AREA_SPIRIT_CRISIS)
             else -> emptyList()
         }
+        return keys.map { StringResources.get(it, language) }
     }
 
-    private fun getMrityuBhagaRemedies(planet: Planet): List<String> {
+    private fun getMrityuBhagaRemedies(planet: Planet, language: Language): List<String> {
         return when (planet) {
             Planet.SUN -> listOf(
-                "Offer water to Sun at sunrise",
-                "Recite Aditya Hridayam regularly",
-                "Wear Ruby with proper muhurta (if suitable)",
-                "Donate wheat and jaggery on Sundays"
+                StringResources.get(StringKeyFinder.MB_SUN_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_SUN_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_SUN_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_SUN_REM_4, language)
             )
             Planet.MOON -> listOf(
-                "Worship Divine Mother on Mondays",
-                "Wear Pearl or Moonstone (if suitable)",
-                "Offer milk to Shiva Lingam",
-                "Practice meditation for mental peace"
+                StringResources.get(StringKeyFinder.MB_MOON_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_MOON_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_MOON_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_MOON_REM_4, language)
             )
             Planet.MARS -> listOf(
-                "Recite Hanuman Chalisa daily",
-                "Wear Red Coral (if suitable)",
-                "Donate red lentils on Tuesdays",
-                "Practice physical exercise regularly"
+                StringResources.get(StringKeyFinder.MB_MARS_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_MARS_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_MARS_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_MARS_REM_4, language)
             )
             Planet.MERCURY -> listOf(
-                "Worship Lord Vishnu on Wednesdays",
-                "Wear Emerald (if suitable)",
-                "Donate green vegetables",
-                "Chant Om Budhaya Namaha"
+                StringResources.get(StringKeyFinder.MB_MERC_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_MERC_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_MERC_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_MERC_REM_4, language)
             )
             Planet.JUPITER -> listOf(
-                "Worship Lord Brihaspati on Thursdays",
-                "Wear Yellow Sapphire (if suitable)",
-                "Donate yellow items and turmeric",
-                "Respect teachers and elders"
+                StringResources.get(StringKeyFinder.MB_JUP_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_JUP_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_JUP_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_JUP_REM_4, language)
             )
             Planet.VENUS -> listOf(
-                "Worship Goddess Lakshmi on Fridays",
-                "Wear Diamond or White Sapphire (if suitable)",
-                "Donate white items and rice",
-                "Practice self-care and appreciation"
+                StringResources.get(StringKeyFinder.MB_VENUS_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_VENUS_REM_4, language)
             )
             Planet.SATURN -> listOf(
-                "Worship Lord Shani on Saturdays",
-                "Wear Blue Sapphire only after thorough analysis",
-                "Donate black sesame and iron items",
-                "Serve the elderly and underprivileged"
+                StringResources.get(StringKeyFinder.MB_SAT_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_SAT_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_SAT_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_SAT_REM_4, language)
             )
             Planet.RAHU -> listOf(
-                "Worship Goddess Durga",
-                "Wear Hessonite (Gomed) if suitable",
-                "Donate blue clothes and blankets",
-                "Avoid intoxicants and maintain ethics"
+                StringResources.get(StringKeyFinder.MB_RAHU_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_RAHU_REM_4, language)
             )
             Planet.KETU -> listOf(
-                "Worship Lord Ganesha",
-                "Wear Cat's Eye (if suitable)",
-                "Donate multi-colored blankets",
-                "Practice meditation and spiritual disciplines"
+                StringResources.get(StringKeyFinder.MB_KETU_REM_1, language),
+                StringResources.get(StringKeyFinder.MB_KETU_REM_2, language),
+                StringResources.get(StringKeyFinder.MB_KETU_REM_3, language),
+                StringResources.get(StringKeyFinder.MB_KETU_REM_4, language)
             )
             else -> emptyList()
         }
@@ -490,92 +491,115 @@ object MrityuBhagaCalculator {
         }
     }
 
-    private fun getGandantaEffects(planet: Planet, type: GandantaType): List<String> {
+    private fun getGandantaEffects(planet: Planet, type: GandantaType, language: Language): List<String> {
         val baseEffects = when (type) {
             GandantaType.BRAHMA_GANDANTA -> listOf(
-                "Initial life challenges (first 3 years critical)",
-                "Mother's health during pregnancy/delivery",
-                "Creative blocks requiring resolution"
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_EFF_2, language),
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_EFF_3, language)
             )
             GandantaType.VISHNU_GANDANTA -> listOf(
-                "Transformation through crisis",
-                "Hidden enemies or obstacles",
-                "Research and occult abilities"
+                StringResources.get(StringKeyFinder.GAND_VISHNU_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_VISHNU_EFF_2, language),
+                StringResources.get(StringKeyFinder.GAND_VISHNU_EFF_3, language)
             )
             GandantaType.SHIVA_GANDANTA -> listOf(
-                "Spiritual awakening through dissolution",
-                "Endings leading to new beginnings",
-                "Liberation from material attachments"
+                StringResources.get(StringKeyFinder.GAND_SHIVA_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_SHIVA_EFF_2, language),
+                StringResources.get(StringKeyFinder.GAND_SHIVA_EFF_3, language)
             )
         }
 
         val planetSpecific = when (planet) {
-            Planet.MOON -> listOf("Emotional turbulence at junction points", "Mental transformation needed")
-            Planet.SUN -> listOf("Identity crisis leading to self-realization", "Authority challenges")
-            Planet.MARS -> listOf("Physical challenges or accidents possible", "Courage tested")
+            Planet.MOON -> listOf(
+                StringResources.get(StringKeyFinder.GAND_MOON_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_MOON_EFF_2, language)
+            )
+            Planet.SUN -> listOf(
+                StringResources.get(StringKeyFinder.GAND_SUN_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_SUN_EFF_2, language)
+            )
+            Planet.MARS -> listOf(
+                StringResources.get(StringKeyFinder.GAND_MARS_EFF_1, language),
+                StringResources.get(StringKeyFinder.GAND_MARS_EFF_2, language)
+            )
             else -> emptyList()
         }
 
         return baseEffects + planetSpecific
     }
 
-    private fun getGandantaRemedies(planet: Planet, type: GandantaType): List<String> {
+    private fun getGandantaRemedies(planet: Planet, type: GandantaType, language: Language): List<String> {
         val typeRemedies = when (type) {
             GandantaType.BRAHMA_GANDANTA -> listOf(
-                "Perform Gandanta Shanti puja",
-                "Donate grains and gold",
-                "Worship Lord Brahma"
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_REM_1, language),
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_REM_2, language),
+                StringResources.get(StringKeyFinder.GAND_BRAHMA_REM_3, language)
             )
             GandantaType.VISHNU_GANDANTA -> listOf(
-                "Perform Vishnu Sahasranama recitation",
-                "Donate black sesame and oil",
-                "Worship Lord Vishnu regularly"
+                StringResources.get(StringKeyFinder.GAND_VISHNU_REM_1, language),
+                StringResources.get(StringKeyFinder.GAND_VISHNU_REM_2, language),
+                StringResources.get(StringKeyFinder.GAND_VISHNU_REM_3, language)
             )
             GandantaType.SHIVA_GANDANTA -> listOf(
-                "Perform Rudra Abhishekam",
-                "Donate silver and white items",
-                "Worship Lord Shiva with devotion"
+                StringResources.get(StringKeyFinder.GAND_SHIVA_REM_1, language),
+                StringResources.get(StringKeyFinder.GAND_SHIVA_REM_2, language),
+                StringResources.get(StringKeyFinder.GAND_SHIVA_REM_3, language)
             )
         }
 
-        val planetRemedies = getMrityuBhagaRemedies(planet)
+        val planetRemedies = getMrityuBhagaRemedies(planet, language)
 
         return typeRemedies + planetRemedies.take(2)
     }
 
-    private fun getPushkaraNavamsaBenefits(planet: Planet): List<String> {
+    private fun getPushkaraNavamsaBenefits(planet: Planet, language: Language): List<String> {
         val basebenefits = listOf(
-            "Highly auspicious placement bringing good fortune",
-            "Planet's significations strengthened",
-            "Protection during difficult periods"
+            StringResources.get(StringKeyFinder.PUSH_BASE_1, language),
+            StringResources.get(StringKeyFinder.PUSH_BASE_2, language),
+            StringResources.get(StringKeyFinder.PUSH_BASE_3, language)
         )
 
         val planetBenefits = when (planet) {
-            Planet.MOON -> listOf("Emotional stability and contentment", "Good mental health")
-            Planet.JUPITER -> listOf("Wisdom and spiritual growth enhanced", "Educational success")
-            Planet.VENUS -> listOf("Relationship harmony", "Artistic success and beauty")
-            Planet.MERCURY -> listOf("Intellectual brilliance", "Communication excellence")
-            else -> listOf("General protection and auspiciousness")
+            Planet.MOON -> listOf(
+                StringResources.get(StringKeyFinder.PUSH_MOON_1, language),
+                StringResources.get(StringKeyFinder.PUSH_MOON_2, language)
+            )
+            Planet.JUPITER -> listOf(
+                StringResources.get(StringKeyFinder.PUSH_JUP_1, language),
+                StringResources.get(StringKeyFinder.PUSH_JUP_2, language)
+            )
+            Planet.VENUS -> listOf(
+                StringResources.get(StringKeyFinder.PUSH_VENUS_1, language),
+                StringResources.get(StringKeyFinder.PUSH_VENUS_2, language)
+            )
+            Planet.MERCURY -> listOf(
+                StringResources.get(StringKeyFinder.PUSH_MERC_1, language),
+                StringResources.get(StringKeyFinder.PUSH_MERC_2, language)
+            )
+            else -> listOf(StringResources.get(StringKeyFinder.PUSH_GEN_PROT, language))
         }
 
         return basebenefits + planetBenefits
     }
 
-    private fun getPushkaraBhagaBenefits(planet: Planet): List<String> {
+    private fun getPushkaraBhagaBenefits(planet: Planet, language: Language): List<String> {
+        val planetName = planet.getLocalizedName(language)
         return listOf(
-            "Planet at its most nourishing degree",
-            "Significations of ${planet.displayName} receive special support",
-            "Auspicious for ${planet.displayName}-related activities",
-            "Natural protection during ${planet.displayName} periods"
+            StringResources.get(StringKeyFinder.PUSH_BHAGA_NOURISH, language),
+            StringResources.get(StringKeyFinder.PUSH_BHAGA_SUPPORT, language, planetName),
+            StringResources.get(StringKeyFinder.PUSH_BHAGA_ACT, language, planetName),
+            StringResources.get(StringKeyFinder.PUSH_BHAGA_PROT, language, planetName)
         )
     }
 
-    private fun getTransitRecommendations(planet: Planet): List<String> {
+    private fun getTransitRecommendations(planet: Planet, language: Language): List<String> {
+        val planetName = planet.getLocalizedName(language)
         return listOf(
-            "Be extra cautious during this transit period",
-            "Avoid major decisions related to ${planet.displayName}'s significations",
-            "Practice ${planet.displayName}'s remedies more intensely",
-            "Maintain awareness but avoid excessive worry"
+            StringResources.get(StringKeyFinder.TRANSIT_CAUTION, language),
+            StringResources.get(StringKeyFinder.TRANSIT_MAJOR_DEC, language, planetName),
+            StringResources.get(StringKeyFinder.TRANSIT_INTENSE_REM, language, planetName),
+            StringResources.get(StringKeyFinder.TRANSIT_AWARENESS, language)
         )
     }
 
@@ -583,7 +607,8 @@ object MrityuBhagaCalculator {
         mrityuBhaga: List<MrityuBhagaResult>,
         gandanta: List<GandantaResult>,
         pushkaraNavamsa: List<PushkaraNavamsaResult>,
-        pushkaraBhaga: List<PushkaraBhagaResult>
+        pushkaraBhaga: List<PushkaraBhagaResult>,
+        language: Language
     ): OverallSensitiveDegreesAssessment {
         val criticalCount = mrityuBhaga.count { it.isInMrityuBhaga } +
                            gandanta.count { it.isInGandanta }
@@ -599,16 +624,11 @@ object MrityuBhagaCalculator {
         }
 
         val summary = when (level) {
-            AssessmentLevel.NEEDS_ATTENTION ->
-                "Multiple sensitive placements require attention and regular remedies"
-            AssessmentLevel.MODERATE_CONCERN ->
-                "Some sensitive placements present; recommended remedies will help"
-            AssessmentLevel.BALANCED ->
-                "Balance of challenging and supportive placements"
-            AssessmentLevel.HIGHLY_AUSPICIOUS ->
-                "Multiple auspicious Pushkara placements provide natural protection"
-            AssessmentLevel.GENERALLY_POSITIVE ->
-                "Generally favorable placement pattern"
+            AssessmentLevel.NEEDS_ATTENTION -> StringResources.get(StringKeyFinder.ASSESS_NEEDS_ATTN, language)
+            AssessmentLevel.MODERATE_CONCERN -> StringResources.get(StringKeyFinder.ASSESS_MODERATE, language)
+            AssessmentLevel.BALANCED -> StringResources.get(StringKeyFinder.ASSESS_BALANCED, language)
+            AssessmentLevel.HIGHLY_AUSPICIOUS -> StringResources.get(StringKeyFinder.ASSESS_HIGHLY_AUSP, language)
+            AssessmentLevel.GENERALLY_POSITIVE -> StringResources.get(StringKeyFinder.ASSESS_GEN_POS, language)
         }
 
         return OverallSensitiveDegreesAssessment(
@@ -621,7 +641,8 @@ object MrityuBhagaCalculator {
 
     private fun generateRecommendations(
         mrityuBhaga: List<MrityuBhagaResult>,
-        gandanta: List<GandantaResult>
+        gandanta: List<GandantaResult>,
+        language: Language
     ): List<String> {
         val recommendations = mutableListOf<String>()
 
@@ -631,22 +652,22 @@ object MrityuBhagaCalculator {
                                                   it.severity == GandantaSeverity.CRITICAL }
 
         if (criticalMrityu.isNotEmpty()) {
-            recommendations.add("Perform specific planetary remedies for planets in exact Mrityu Bhaga")
-            recommendations.add("Be especially careful during Dasha/Antardasha of affected planets")
+            recommendations.add(StringResources.get(StringKeyFinder.REC_MB_SPECIFIC, language))
+            recommendations.add(StringResources.get(StringKeyFinder.REC_MB_CAREFUL, language))
         }
 
         if (criticalGandanta.isNotEmpty()) {
             val moonGandanta = criticalGandanta.find { it.planet == Planet.MOON }
             if (moonGandanta != null) {
-                recommendations.add("Moon in Gandanta requires special attention - Gandanta Shanti recommended")
-                recommendations.add("Practice meditation and emotional grounding regularly")
+                recommendations.add(StringResources.get(StringKeyFinder.REC_GAND_MOON_ATTN, language))
+                recommendations.add(StringResources.get(StringKeyFinder.REC_GAND_MOON_GROUND, language))
             }
-            recommendations.add("Gandanta placements indicate karmic knots requiring spiritual work")
+            recommendations.add(StringResources.get(StringKeyFinder.REC_GAND_KNOTS, language))
         }
 
         if (recommendations.isEmpty()) {
-            recommendations.add("No critical sensitive degree placements - general spiritual practices sufficient")
-            recommendations.add("Continue regular worship and ethical living")
+            recommendations.add(StringResources.get(StringKeyFinder.REC_NO_CRITICAL, language))
+            recommendations.add(StringResources.get(StringKeyFinder.REC_CONT_WORSHIP, language))
         }
 
         return recommendations

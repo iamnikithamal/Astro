@@ -257,6 +257,12 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     BTN_CREATE_CHART("Create Chart", "कुण्डली बनाउनुहोस्"),
 
     // ============================================
+    // LABELS & INDICATORS
+    // ============================================
+    LABEL_AD("AD", "ई.सं."),
+    LABEL_BS("BS", "वि.सं."),
+
+    // ============================================
     // INSIGHTS TAB
     // ============================================
     INSIGHTS_OVERALL_ENERGY("Overall Energy", "समग्र ऊर्जा"),
@@ -837,6 +843,23 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     YOGA_CATEGORY_NEGATIVE("Negative Yogas", "नकारात्मक योगहरू"),
     YOGA_CATEGORY_NEGATIVE_DESC("Combinations indicating challenges", "चुनौतीहरू संकेत गर्ने संयोजनहरू"),
 
+    // Singular Yoga Categories (for chips/labels)
+    YOGA_CAT_RAJA("Raja Yoga", "राज योग"),
+    YOGA_CAT_DHANA("Dhana Yoga", "धन योग"),
+    YOGA_CAT_MAHAPURUSHA("Mahapurusha Yoga", "महापुरुष योग"),
+    YOGA_CAT_NABHASA("Nabhasa Yoga", "नाभस योग"),
+    YOGA_CAT_CHANDRA("Chandra Yoga", "चन्द्र योग"),
+    YOGA_CAT_SOLAR("Solar Yoga", "सूर्य योग"),
+    YOGA_CAT_NEGATIVE("Negative Yoga", "नकारात्मक योग"),
+    YOGA_CAT_SPECIAL("Special Yoga", "विशेष योग"),
+
+    // Yoga Strength Levels
+    YOGA_STRENGTH_EXTREMELY_STRONG("Extremely Strong", "अत्यन्त बलियो"),
+    YOGA_STRENGTH_STRONG("Strong", "बलियो"),
+    YOGA_STRENGTH_MODERATE("Moderate", "मध्यम"),
+    YOGA_STRENGTH_WEAK("Weak", "कमजोर"),
+    YOGA_STRENGTH_VERY_WEAK("Very Weak", "धेरै कमजोर"),
+
     // Yoga Tab Content UI Strings
     YOGA_MOST_SIGNIFICANT("Most Significant Yogas", "सबैभन्दा महत्त्वपूर्ण योगहरू"),
     YOGA_SANSKRIT("Sanskrit", "संस्कृत"),
@@ -905,6 +928,26 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     ONBOARDING_WELCOME_SUBTITLE("Your personal Vedic astrology companion", "तपाईंको व्यक्तिगत वैदिक ज्योतिष साथी"),
     ONBOARDING_WELCOME_DESC("Discover the ancient wisdom of Vedic astrology with precision calculations and personalized insights.", "सटीक गणना र व्यक्तिगत अन्तर्दृष्टिका साथ वैदिक ज्योतिषको प्राचीन ज्ञान पत्ता लगाउनुहोस्।"),
 
+    ONBOARDING_TAGLINE("Precision Vedic Astrology", "सटीक वैदिक ज्योतिष"),
+    ONBOARDING_FEATURES_OVERVIEW_TITLE("What AstroStorm Offers", "AstroStorm ले के प्रदान गर्दछ"),
+
+    ONBOARDING_FEATURE_CAT_CHART("Complete Chart Analysis", "पूर्ण कुण्डली विश्लेषण"),
+    ONBOARDING_FEATURE_CAT_CHART_ITEMS("Rashi & Divisional Charts • Shadbala & Ashtakavarga • All 16 Vargas", "राशि र विभागीय कुण्डलीहरू • षड्बल र अष्टकवर्ग • सबै १६ वर्गहरू"),
+
+    ONBOARDING_FEATURE_CAT_DASHA("Dasha Systems", "दशा प्रणालीहरू"),
+    ONBOARDING_FEATURE_CAT_DASHA_ITEMS("Vimshottari & Yogini • Ashtottari & Chara • Kalachakra Dasha", "विम्शोत्तरी र योगिनी • अष्टोत्तरी र चर • कालचक्र दशा"),
+
+    ONBOARDING_FEATURE_CAT_PREDICTION("Predictions & Yogas", "भविष्यवाणी र योगहरू"),
+    ONBOARDING_FEATURE_CAT_PREDICTION_ITEMS("200+ Yoga Calculations • Transit Analysis • Matchmaking (Kundali Milan)", "२००+ योग गणनाहरू • गोचर विश्लेषण • कुण्डली मिलान"),
+
+    ONBOARDING_FEATURE_CAT_REMEDY("Remedies & Muhurta", "उपाय र मुहूर्त"),
+    ONBOARDING_FEATURE_CAT_REMEDY_ITEMS("Vedic & Lal Kitab Remedies • Auspicious Timing • Panchanga", "वैदिक र लाल किताब उपायहरू • शुभ समय • पञ्चाङ्ग"),
+
+    ONBOARDING_QUICK_START_TITLE("You'll need:", "तपाईंलाई आवश्यक पर्नेछ:"),
+    ONBOARDING_QUICK_START_1("Birth date & time", "जन्म मिति र समय"),
+    ONBOARDING_QUICK_START_2("Birth location (city)", "जन्म स्थान (शहर)"),
+    ONBOARDING_QUICK_START_3("That's all!", "त्यति मात्र हो!"),
+
     ONBOARDING_LANGUAGE_TITLE("Choose Your Language", "आफ्नो भाषा छान्नुहोस्"),
     ONBOARDING_LANGUAGE_SUBTITLE("Select your preferred language", "आफ्नो मनपर्ने भाषा छान्नुहोस्"),
     ONBOARDING_LANGUAGE_DESC("You can change this later in settings.", "तपाईं यसलाई पछि सेटिङ्समा परिवर्तन गर्न सक्नुहुन्छ।"),
@@ -931,6 +974,7 @@ enum class StringKey(override val en: String, override val ne: String) : StringK
     ONBOARDING_READY_TITLE("You're All Set!", "तपाईं तयार हुनुहुन्छ!"),
     ONBOARDING_READY_SUBTITLE("Start exploring your cosmic journey", "आफ्नो ब्रह्माण्डीय यात्रा अन्वेषण गर्न सुरु गर्नुहोस्"),
     ONBOARDING_READY_DESC("Create your first birth chart and discover personalized astrological insights.", "आफ्नो पहिलो जन्म कुण्डली बनाउनुहोस् र व्यक्तिगत ज्योतिषीय अन्तर्दृष्टिहरू पत्ता लगाउनुहोस्।"),
+    ONBOARDING_CREATE_FIRST_CHART("Create Your First Chart", "तपाईंको पहिलो कुण्डली बनाउनुहोस्"),
 
     ONBOARDING_BTN_NEXT("Next", "अर्को"),
     ONBOARDING_BTN_BACK("Back", "पछाडि"),

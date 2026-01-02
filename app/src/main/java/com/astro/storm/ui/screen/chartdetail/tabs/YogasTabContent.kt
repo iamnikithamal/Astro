@@ -618,39 +618,19 @@ private fun EmptyYogasMessage(category: YogaCalculator.YogaCategory?) {
 // LOCALIZATION HELPER FUNCTIONS
 // ============================================
 
-private fun getCategoryDisplayName(category: YogaCalculator.YogaCategory, language: Language): String = when (category) {
-    YogaCalculator.YogaCategory.RAJA_YOGA -> when (language) {
-        Language.ENGLISH -> "Raja Yoga"
-        Language.NEPALI -> "राज योग"
+@Composable
+private fun getCategoryDisplayName(category: YogaCalculator.YogaCategory, language: Language): String {
+    val key = when (category) {
+        YogaCalculator.YogaCategory.RAJA_YOGA -> StringKey.YOGA_CAT_RAJA
+        YogaCalculator.YogaCategory.DHANA_YOGA -> StringKey.YOGA_CAT_DHANA
+        YogaCalculator.YogaCategory.MAHAPURUSHA_YOGA -> StringKey.YOGA_CAT_MAHAPURUSHA
+        YogaCalculator.YogaCategory.NABHASA_YOGA -> StringKey.YOGA_CAT_NABHASA
+        YogaCalculator.YogaCategory.CHANDRA_YOGA -> StringKey.YOGA_CAT_CHANDRA
+        YogaCalculator.YogaCategory.SOLAR_YOGA -> StringKey.YOGA_CAT_SOLAR
+        YogaCalculator.YogaCategory.NEGATIVE_YOGA -> StringKey.YOGA_CAT_NEGATIVE
+        YogaCalculator.YogaCategory.SPECIAL_YOGA -> StringKey.YOGA_CAT_SPECIAL
     }
-    YogaCalculator.YogaCategory.DHANA_YOGA -> when (language) {
-        Language.ENGLISH -> "Dhana Yoga"
-        Language.NEPALI -> "धन योग"
-    }
-    YogaCalculator.YogaCategory.MAHAPURUSHA_YOGA -> when (language) {
-        Language.ENGLISH -> "Mahapurusha Yoga"
-        Language.NEPALI -> "महापुरुष योग"
-    }
-    YogaCalculator.YogaCategory.NABHASA_YOGA -> when (language) {
-        Language.ENGLISH -> "Nabhasa Yoga"
-        Language.NEPALI -> "नाभस योग"
-    }
-    YogaCalculator.YogaCategory.CHANDRA_YOGA -> when (language) {
-        Language.ENGLISH -> "Chandra Yoga"
-        Language.NEPALI -> "चन्द्र योग"
-    }
-    YogaCalculator.YogaCategory.SOLAR_YOGA -> when (language) {
-        Language.ENGLISH -> "Solar Yoga"
-        Language.NEPALI -> "सूर्य योग"
-    }
-    YogaCalculator.YogaCategory.NEGATIVE_YOGA -> when (language) {
-        Language.ENGLISH -> "Negative Yoga"
-        Language.NEPALI -> "नकारात्मक योग"
-    }
-    YogaCalculator.YogaCategory.SPECIAL_YOGA -> when (language) {
-        Language.ENGLISH -> "Special Yoga"
-        Language.NEPALI -> "विशेष योग"
-    }
+    return stringResource(key)
 }
 
 @Composable
@@ -694,25 +674,14 @@ private fun formatPercentage(value: Double, language: Language): String {
     }
 }
 
-private fun getLocalizedStrength(strength: YogaCalculator.YogaStrength, language: Language): String = when (strength) {
-    YogaCalculator.YogaStrength.EXTREMELY_STRONG -> when (language) {
-        Language.ENGLISH -> "Extremely Strong"
-        Language.NEPALI -> "अत्यन्त बलियो"
+@Composable
+private fun getLocalizedStrength(strength: YogaCalculator.YogaStrength, language: Language): String {
+    val key = when (strength) {
+        YogaCalculator.YogaStrength.EXTREMELY_STRONG -> StringKey.YOGA_STRENGTH_EXTREMELY_STRONG
+        YogaCalculator.YogaStrength.STRONG -> StringKey.YOGA_STRENGTH_STRONG
+        YogaCalculator.YogaStrength.MODERATE -> StringKey.YOGA_STRENGTH_MODERATE
+        YogaCalculator.YogaStrength.WEAK -> StringKey.YOGA_STRENGTH_WEAK
+        YogaCalculator.YogaStrength.VERY_WEAK -> StringKey.YOGA_STRENGTH_VERY_WEAK
     }
-    YogaCalculator.YogaStrength.STRONG -> when (language) {
-        Language.ENGLISH -> "Strong"
-        Language.NEPALI -> "बलियो"
-    }
-    YogaCalculator.YogaStrength.MODERATE -> when (language) {
-        Language.ENGLISH -> "Moderate"
-        Language.NEPALI -> "मध्यम"
-    }
-    YogaCalculator.YogaStrength.WEAK -> when (language) {
-        Language.ENGLISH -> "Weak"
-        Language.NEPALI -> "कमजोर"
-    }
-    YogaCalculator.YogaStrength.VERY_WEAK -> when (language) {
-        Language.ENGLISH -> "Very Weak"
-        Language.NEPALI -> "धेरै कमजोर"
-    }
+    return stringResource(key)
 }

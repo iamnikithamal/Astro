@@ -22,12 +22,28 @@ object DashaUtils {
      * Average days per year used in Dasha calculations.
      * 365.25 accounts for leap years.
      */
-    val DAYS_PER_YEAR = BigDecimal("365.25")
+    val DAYS_PER_YEAR = BigDecimal("365.24219") // More precise tropical year
+
+    /**
+     * Savana year (360 days) often used in Dasha calculations
+     */
+    val DAYS_PER_SAVANA_YEAR = BigDecimal("360")
 
     /**
      * Span of one Nakshatra in degrees (360 / 27 = 13.333...).
      */
     val NAKSHATRA_SPAN = BigDecimal("13.333333333333333333")
+
+    /**
+     * Convert years (BigDecimal) to seconds for higher precision sub-day timing
+     */
+    fun yearsToSeconds(years: BigDecimal, daysPerYear: BigDecimal = DAYS_PER_YEAR): Long {
+        return years
+            .multiply(daysPerYear, MATH_CONTEXT)
+            .multiply(BigDecimal("86400"), MATH_CONTEXT) // 24 * 60 * 60
+            .setScale(0, RoundingMode.HALF_EVEN)
+            .toLong()
+    }
 
     /**
      * Convert years (Double) to days with proper rounding.

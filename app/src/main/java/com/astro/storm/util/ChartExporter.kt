@@ -416,7 +416,7 @@ class ChartExporter(private val context: Context) {
         // Column 2 (same row as column 1 items)
         val col2Y = startY + cardPadding + 20f
         canvas.drawText("${formatCoordinate(chart.birthData.latitude.toDouble(), true)}, ${formatCoordinate(chart.birthData.longitude.toDouble(), false)}", col2X, col2Y + 10f, paint)
-        canvas.drawText("TZ: ${chart.birthData.timezone}", col2X, col2Y + 24f, paint)
+        canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_TIMEZONE)}: ${chart.birthData.timezone}", col2X, col2Y + 24f, paint)
 
         return startY + cardHeight
     }
@@ -791,9 +791,9 @@ class ChartExporter(private val context: Context) {
             canvas.drawText("${locManager.getString(StringKeyAnalysis.EXPORT_OVERALL_YOGA_STRENGTH)} ${String.format("%.1f", yogaAnalysis.overallYogaStrength)}%", pageWidth / 2f, summaryY, paint)
 
             paint.color = COLOR_SUCCESS
-            canvas.drawText("Auspicious: ${yogaAnalysis.allYogas.count { it.isAuspicious }}", PDF_MARGIN.toFloat() + 16f, summaryY + 16f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_YOGA_AUSPICIOUS)}: ${yogaAnalysis.allYogas.count { it.isAuspicious }}", PDF_MARGIN.toFloat() + 16f, summaryY + 16f, paint)
             paint.color = COLOR_WARNING
-            canvas.drawText("Challenging: ${yogaAnalysis.negativeYogas.size}", pageWidth / 2f, summaryY + 16f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_YOGA_CHALLENGING)}: ${yogaAnalysis.negativeYogas.size}", pageWidth / 2f, summaryY + 16f, paint)
 
             yPos += summaryCardHeight + 20f
 
@@ -1468,32 +1468,33 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 10f
         paint.color = COLOR_TEXT_MUTED
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-        canvas.drawText("Current Planetary Periods", PDF_MARGIN.toFloat() + 16f, yPos + 18f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_CURRENT_PERIODS), PDF_MARGIN.toFloat() + 16f, yPos + 18f, paint)
 
         if (currentMahadasha != null) {
             paint.textSize = 12f
             paint.color = COLOR_PRIMARY
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-            canvas.drawText("Mahadasha: ${currentMahadasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 38f, paint)
+            canvas.drawText("${locManager.getString(StringKey.DASHA_MAHADASHA)}: ${currentMahadasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 38f, paint)
 
             paint.textSize = 10f
             paint.color = COLOR_TEXT
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-            canvas.drawText("Duration: ${currentMahadasha.durationYears.toInt()} years", PDF_MARGIN.toFloat() + 200f, yPos + 38f, paint)
+            val yrsLabel = locManager.getString(StringKeyMatch.MISC_YEARS)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_DURATION)}: ${currentMahadasha.durationYears.toInt()} $yrsLabel", PDF_MARGIN.toFloat() + 200f, yPos + 38f, paint)
 
             if (currentAntardasha != null) {
                 paint.color = COLOR_SECONDARY
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-                canvas.drawText("Antardasha: ${currentAntardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
+                canvas.drawText("${locManager.getString(StringKey.DASHA_ANTARDASHA)}: ${currentAntardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
 
                 paint.color = COLOR_TEXT
                 paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-                canvas.drawText("Ends: ${currentAntardasha.endDate}", PDF_MARGIN.toFloat() + 200f, yPos + 56f, paint)
+                canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_ENDS)}: ${currentAntardasha.endDate}", PDF_MARGIN.toFloat() + 200f, yPos + 56f, paint)
             }
 
             if (currentPratyantardasha != null) {
                 paint.color = COLOR_TEXT_MUTED
-                canvas.drawText("Pratyantardasha: ${currentPratyantardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
+                canvas.drawText("${locManager.getString(StringKey.DASHA_PRATYANTARDASHA)}: ${currentPratyantardasha.planet.displayName}", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
             }
         }
 
@@ -1503,7 +1504,7 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 11f
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         paint.color = COLOR_PRIMARY
-        canvas.drawText("Complete Mahadasha Sequence", PDF_MARGIN.toFloat(), yPos + 12f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_MAHADASHAS), PDF_MARGIN.toFloat(), yPos + 12f, paint)
         yPos += 24f
 
         // Timeline table
@@ -1539,21 +1540,24 @@ class ChartExporter(private val context: Context) {
             // Duration
             paint.color = COLOR_TEXT
             paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-            canvas.drawText("${dasha.durationYears.toInt()} years", PDF_MARGIN.toFloat() + 80f, yPos + 14f, paint)
+            val yrsLabel = locManager.getString(StringKeyMatch.MISC_YEARS)
+            canvas.drawText("${dasha.durationYears.toInt()} $yrsLabel", PDF_MARGIN.toFloat() + 80f, yPos + 14f, paint)
 
             // Date range
             paint.color = COLOR_TEXT_MUTED
-            canvas.drawText("${dasha.startDate} to ${dasha.endDate}", PDF_MARGIN.toFloat() + 150f, yPos + 14f, paint)
+            val toLabel = locManager.getString(StringKeyExport.EXPORT_TO)
+            canvas.drawText("${dasha.startDate} $toLabel ${dasha.endDate}", PDF_MARGIN.toFloat() + 150f, yPos + 14f, paint)
 
             // Status
-            val statusText = when {
-                dasha.isActive -> "CURRENT"
-                dasha.startDate.isAfter(java.time.LocalDate.now()) -> "UPCOMING"
-                else -> "COMPLETED"
+            val status = when {
+                dasha.isActive -> StringKeyExport.EXPORT_STATUS_CURRENT
+                dasha.startDate.isAfter(java.time.LocalDateTime.now()) -> StringKeyExport.EXPORT_STATUS_UPCOMING
+                else -> StringKeyExport.EXPORT_STATUS_COMPLETED
             }
-            paint.color = when (statusText) {
-                "CURRENT" -> COLOR_SUCCESS
-                "UPCOMING" -> COLOR_WARNING
+            val statusText = locManager.getString(status)
+            paint.color = when (status) {
+                StringKeyExport.EXPORT_STATUS_CURRENT -> COLOR_SUCCESS
+                StringKeyExport.EXPORT_STATUS_UPCOMING -> COLOR_WARNING
                 else -> COLOR_TEXT_MUTED
             }
             canvas.drawText(statusText, pageWidth - PDF_MARGIN - 60f, yPos + 14f, paint)
@@ -1762,19 +1766,19 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Manglik Dosha (Kuja Dosha)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_MANGLIK_TITLE), PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
 
         paint.textSize = 14f
         paint.color = manglikAccent
-        canvas.drawText(if (manglikAnalysis.isManglik) "PRESENT" else "NOT PRESENT", pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
+        canvas.drawText(if (manglikAnalysis.isManglik) locManager.getString(StringKeyExport.EXPORT_VAL_PRESENT) else locManager.getString(StringKeyExport.EXPORT_VAL_NOT_PRESENT), pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
         if (manglikAnalysis.isManglik) {
-            canvas.drawText("Level: ${manglikAnalysis.effectiveLevel.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
-            canvas.drawText("Mars Position: House ${manglikAnalysis.marsPosition?.house ?: "N/A"}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_LEVEL)}: ${manglikAnalysis.effectiveLevel.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText("${locManager.getString(StringKeyMatch.MATCH_MARS_PLACEMENT)}: ${locManager.getString(StringKeyMatch.HOUSE_LABEL, manglikAnalysis.marsPosition?.house ?: 0)}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
 
             // Cancellation factors
             if (manglikAnalysis.cancellationFactors.isNotEmpty()) {
@@ -1782,10 +1786,10 @@ class ChartExporter(private val context: Context) {
                 val cancellationFactor = manglikAnalysis.cancellationFactors.firstOrNull()
                 val cancellation = cancellationFactor?.getTitle(locManager.language.value) ?: ""
                 val truncated = if (cancellation.length > 80) cancellation.substring(0, 77) + "..." else cancellation
-                canvas.drawText("Cancellation: $truncated", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
+                canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_CANCELLATION)}: $truncated", PDF_MARGIN.toFloat() + 16f, yPos + 74f, paint)
             }
         } else {
-            canvas.drawText("Mars is not placed in houses 1, 2, 4, 7, 8, or 12 in a way that causes Manglik Dosha.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText(locManager.getString(StringKeyExport.EXPORT_MARS_PLACEMENT_OK), PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
         }
 
         yPos += manglikCardHeight + 20f
@@ -1807,25 +1811,25 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Pitra Dosha (Ancestral Karmic Debt)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_PITRA_TITLE), PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
 
         paint.textSize = 14f
         paint.color = pitraAccent
-        canvas.drawText(if (pitraAnalysis.isPresent) "INDICATED" else "NOT INDICATED", pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
+        canvas.drawText(if (pitraAnalysis.isPresent) locManager.getString(StringKeyExport.EXPORT_VAL_INDICATED) else locManager.getString(StringKeyExport.EXPORT_VAL_NOT_INDICATED), pageWidth - PDF_MARGIN - 100f, yPos + 22f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
         if (pitraAnalysis.isPresent) {
-            canvas.drawText("Level: ${pitraAnalysis.level.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_LEVEL)}: ${pitraAnalysis.level.name}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
             if (pitraAnalysis.affectedLifeAreas.isNotEmpty()) {
                 val factor = pitraAnalysis.affectedLifeAreas.firstOrNull() ?: ""
                 val truncatedFactor = if (factor.length > 70) factor.substring(0, 67) + "..." else factor
-                canvas.drawText("Area: $truncatedFactor", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+                canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_AREA)}: $truncatedFactor", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
             }
         } else {
-            canvas.drawText("No significant Pitra Dosha indicators found in the chart.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText(locManager.getString(StringKeyExport.EXPORT_PITRA_OK), PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
         }
 
         yPos += pitraCardHeight + 20f
@@ -1848,22 +1852,22 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Sade Sati (Saturn Transit)", PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_SADE_SATI_TITLE), PDF_MARGIN.toFloat() + 16f, yPos + 22f, paint)
 
         paint.textSize = 14f
         paint.color = sadeSatiAccent
-        canvas.drawText(if (sadeSatiResult.isActive) "CURRENTLY ACTIVE" else "NOT ACTIVE", pageWidth - PDF_MARGIN - 120f, yPos + 22f, paint)
+        canvas.drawText(if (sadeSatiResult.isActive) locManager.getString(StringKeyExport.EXPORT_VAL_ACTIVE) else locManager.getString(StringKeyExport.EXPORT_VAL_NOT_ACTIVE), pageWidth - PDF_MARGIN - 120f, yPos + 22f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
         if (sadeSatiResult.isActive) {
-            canvas.drawText("Phase: ${sadeSatiResult.currentPhase?.name ?: "N/A"}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
-            canvas.drawText("Severity: ${sadeSatiResult.severity.name}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
-            canvas.drawText("Ends: ${sadeSatiResult.approximateEndDate ?: "N/A"}", PDF_MARGIN.toFloat() + 200f, yPos + 58f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_PHASE)}: ${sadeSatiResult.currentPhase?.name ?: locManager.getString(StringKeyExport.EXPORT_VAL_NA)}", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_SEVERITY)}: ${sadeSatiResult.severity.name}", PDF_MARGIN.toFloat() + 16f, yPos + 58f, paint)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_ENDS)}: ${sadeSatiResult.approximateEndDate ?: locManager.getString(StringKeyExport.EXPORT_VAL_NA)}", PDF_MARGIN.toFloat() + 200f, yPos + 58f, paint)
         } else {
-            canvas.drawText("Saturn is not currently transiting near your Moon sign.", PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
+            canvas.drawText(locManager.getString(StringKeyExport.EXPORT_SADE_SATI_OK), PDF_MARGIN.toFloat() + 16f, yPos + 42f, paint)
         }
 
         addPageFooter(canvas, options.pageSize, pageNumber, paint)
@@ -1900,7 +1904,7 @@ class ChartExporter(private val context: Context) {
         var yPos = PDF_MARGIN_TOP.toFloat()
 
         // Title
-        drawPageHeader(canvas, paint, pageWidth, yPos, "Life Area Predictions")
+        drawPageHeader(canvas, paint, pageWidth, yPos, locManager.getString(StringKey.FEATURE_PREDICTIONS))
         yPos += 48f
 
         // Calculate horoscope data
@@ -2052,7 +2056,7 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Recommended Gemstones", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_GEMSTONES), PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
@@ -2060,14 +2064,15 @@ class ChartExporter(private val context: Context) {
 
         if (gemstones.isNotEmpty()) {
             val primary = gemstones.first()
-            canvas.drawText("Primary: ${primary.title} (${primary.planet?.displayName ?: "N/A"})", PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
+            val naVal = locManager.getString(StringKeyExport.EXPORT_VAL_NA)
+            canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_PRIMARY)}: ${primary.title} (${primary.planet?.displayName ?: naVal})", PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
             canvas.drawText("${primary.method}", PDF_MARGIN.toFloat() + 16f, yPos + 56f, paint)
             if (gemstones.size > 1) {
                 val secondary = gemstones.drop(1).take(2).map { it.title }.joinToString(", ")
-                canvas.drawText("Alternatives: $secondary", pageWidth / 2f, yPos + 40f, paint)
+                canvas.drawText("${locManager.getString(StringKeyExport.EXPORT_ALTERNATIVES)}: $secondary", pageWidth / 2f, yPos + 40f, paint)
             }
         } else {
-            canvas.drawText("No gemstone recommendations at this time", PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
+            canvas.drawText(locManager.getString(StringKeyExport.EXPORT_NO_GEMSTONES), PDF_MARGIN.toFloat() + 16f, yPos + 40f, paint)
         }
 
         yPos += gemstoneCardHeight + 20f
@@ -2088,18 +2093,19 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Recommended Mantras", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_MANTRAS), PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
         if (mantras.isNotEmpty()) {
+            val generalLabel = locManager.getString(StringKeyExport.EXPORT_GENERAL)
             mantras.take(3).forEachIndexed { index, mantra ->
                 val mantraText = mantra.mantraText?.let { text ->
                     if (text.length > 60) text.substring(0, 57) + "..." else text
                 } ?: mantra.title
-                canvas.drawText("${mantra.planet?.displayName ?: "General"}: $mantraText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
+                canvas.drawText("${mantra.planet?.displayName ?: generalLabel}: $mantraText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
             }
         }
 
@@ -2121,16 +2127,17 @@ class ChartExporter(private val context: Context) {
         paint.textSize = 12f
         paint.color = COLOR_PRIMARY
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        canvas.drawText("Charitable Activities (Daan)", PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
+        canvas.drawText(locManager.getString(StringKeyExport.EXPORT_CHARITY), PDF_MARGIN.toFloat() + 16f, yPos + 20f, paint)
 
         paint.textSize = 10f
         paint.color = COLOR_TEXT
         paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
 
         if (charities.isNotEmpty()) {
+            val generalLabel = locManager.getString(StringKeyExport.EXPORT_GENERAL)
             charities.take(3).forEachIndexed { index, charity ->
                 val charityText = if (charity.description.length > 70) charity.description.substring(0, 67) + "..." else charity.description
-                canvas.drawText("${charity.planet?.displayName ?: "General"}: $charityText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
+                canvas.drawText("${charity.planet?.displayName ?: generalLabel}: $charityText", PDF_MARGIN.toFloat() + 16f, yPos + 38f + (index * 14f), paint)
             }
         }
 

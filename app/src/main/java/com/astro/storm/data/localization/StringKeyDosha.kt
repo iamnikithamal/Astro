@@ -1998,6 +1998,78 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     // General UI labels needed by screens
     BIRTH_NAKSHATRA("Birth Nakshatra", "जन्म नक्षत्र"),
     BALANCE_LABEL("Balance at Birth", "जन्ममा सन्तुलन"),
+
+    // ============================================
+    // ASHTAKAVARGA (Additional)
+    // ============================================
+    ASHTAKAVARGA_SUMMARY_TITLE("Ashtakavarga Summary", "अष्टकवर्ग सारांश"),
+    ASHTAKAVARGA_DISTRIBUTION_TITLE("House Strength Distribution", "भाव बल विभाजन"),
+    ASHTAKAVARGA_TOTAL_BINDUS("Total Bindus", "कुल विन्दुहरू"),
+    ASHTAKAVARGA_AVG_PER_HOUSE("Avg/House", "औसत/भाव"),
+    ASHTAKAVARGA_STRENGTH("Strength", "बल"),
+    ASHTAKAVARGA_CHART_STRENGTH("Overall Chart Strength", "समग्र कुण्डली बल"),
+    ASHTAKAVARGA_LEGEND_STRONG(">30 Strong", ">३० बलियो"),
+    ASHTAKAVARGA_LEGEND_GOOD("25-30 Good", "२५-३० राम्रो"),
+    ASHTAKAVARGA_LEGEND_WEAK("<25 Weak", "<२५ कमजोर"),
+    ASHTAKAVARGA_BINDUS_SUFFIX("bindus", "विन्दु"),
+    ASHTAKAVARGA_DESC_FMT("Bindu strength analysis - %s", "विन्दु बल विश्लेषण - %s"),
+    ASHTAKAVARGA_DISTRIBUTION_DESC("Bindu distribution analysis", "विन्दु वितरण विश्लेषण"),
+    ASHTAKAVARGA_INFO_A11Y("Ashtakavarga info", "अष्टकवर्ग जानकारी"),
+    ASHTAKAVARGA_PLANET_TOTALS("Planet Totals", "कुल ग्रह विन्दु"),
+    ASHTAKAVARGA_SARVA_DESC("Sarvashtakavarga represents the collective strength of all planets in each house.", "सर्वाष्टकवर्गले प्रत्येक भावमा सबै ग्रहहरूको सामूहिक बल प्रतिनिधित्व गर्दछ।"),
+    UI_NO_ASHTAKAVARGA_DATA("No Ashtakavarga Data", "कुनै अष्टकवर्ग डाटा छैन"),
+    UI_SELECT_CHART("Please select a chart to view Ashtakavarga analysis", "अष्टकवर्ग विश्लेषण हेर्न कृपया कुण्डली चयन गर्नुहोस्"),
+    ASHTAKAVARGA_INTERPRETATION("Interpretation Guide", "व्याख्या मार्गदर्शन"),
+    ASHTAKAVARGA_GUIDE_TEXT("30+ bindus: Excellent results for the house matters.\n25-30 bindus: Good results and steady progress.\nBelow 25: Challenges and delays in house significations.", "३०+ विन्दु: भाव सम्बन्धी मामिलामा उत्कृष्ट परिणाम।\n२५-३० विन्दु: राम्रो परिणाम र स्थिर प्रगति।\n२५ मुनि: भावको कारकत्वमा चुनौती र ढिलाइ।"),
+    BTN_GOT_IT("Got it", "बुझें"),
+    ASHTAKAVARGA_KEY_INSIGHTS("Key Insights", "मुख्य अन्तर्दृष्टि"),
+    ASHTAKAVARGA_STRONGEST("Strongest Houses", "सबैभन्दा बलियो भाव"),
+    ASHTAKAVARGA_WEAKEST("Weakest Houses", "सबैभन्दा कमजोर भाव"),
+
+    // ============================================
+    // ASHTOTTARI DASHA (Additional)
+    // ============================================
+    ASHTOTTARI_CURRENT_TITLE("Current Ashtottari Period", "वर्तमान अष्टोत्तरी अवधि"),
+    ASHTOTTARI_BIRTH_NAKSHATRA_HEADER("BIRTH NAKSHATRA", "जन्म नक्षत्र"),
+    ASHTOTTARI_LORD_HEADER("LORD", "स्वामी"),
+    ASHTOTTARI_MAHADASHA_LABEL("Mahadasha", "महादशा"),
+    ASHTOTTARI_ANTARDASHA_LABEL("Antardasha", "अन्तर्दशा"),
+    ASHTOTTARI_PERIOD_INSIGHTS("Period Insights", "अवधि अन्तर्दृष्टि"),
+    ASHTOTTARI_ABOUT_TITLE("About Ashtottari Dasha", "अष्टोत्तरी दशा बारे"),
+    ASHTOTTARI_ABOUT_DESC_FULL("The Ashtottari Dasha system is a 108-year planetary period cycle, traditionally used for charts where the Moon is in Krishna Paksha (waning phase) between Shukla Chaturthi to Krishna Tritiya.", "अष्टोत्तरी दशा प्रणाली १०८-वर्षे ग्रह अवधि चक्र हो, जुन परम्परागत रूपमा शुक्ल चतुर्थीदेखि कृष्ण तृतीयासम्म चन्द्रमा कृष्ण पक्षमा (घट्दो चरण) हुने कुण्डलीहरूको लागि प्रयोग गरिन्छ।"),
+    ASHTOTTARI_PERIOD_LIST_HEADER("Planet Periods (108 Years Total)", "ग्रह अवधिहरू (कुल १०८ वर्ष)"),
+    ASHTOTTARI_TIMELINE_TITLE("Ashtottari Timeline", "अष्टोत्तरी समयरेखा"),
+    ASHTOTTARI_TIMELINE_DESC("108-Year Planetary Cycle", "१०८-वर्षे ग्रह चक्र"),
+    ASHTOTTARI_ANTARDASHAS_TITLE("Antardashas", "अन्तर्दशाहरू"),
+    ASHTOTTARI_SUB_PERIODS_FMT("%d sub-periods", "%d उप-अवधिहरू"),
+    ASHTOTTARI_UNABLE_CALC("Unable to calculate current period", "वर्तमान अवधि गणना गर्न असमर्थ"),
+
+    // ============================================
+    // SUDARSHANA CHAKRA (Additional)
+    // ============================================
+    SUDARSHANA_YEAR_HEADER("Sudarshana Chakra - %d", "सुदर्शन चक्र - %d"),
+    SUDARSHANA_TRIPLE_DESC("Triple-Reference Annual Analysis", "त्रि-सन्दर्भ वार्षिक विश्लेषण"),
+    SUDARSHANA_YEAR_STRENGTH("OVERALL YEAR STRENGTH", "समग्र वर्ष बल"),
+    SUDARSHANA_YEAR_THEMES("Year Themes", "वर्षका विषयहरू"),
+    SUDARSHANA_BIRTH_REF_TITLE("Birth Reference Points", "जन्म सन्दर्भ बिन्दुहरू"),
+    SUDARSHANA_BIRTH_REF_DESC("Starting positions for chakra progression", "चक्र प्रगतिका लागि सुरुवाती स्थिति"),
+    SUDARSHANA_PERSPECTIVES_TITLE("Three Perspectives", "तीन दृष्टिकोण"),
+    SUDARSHANA_LAGNA_CHAKRA_DESC("Physical body, appearance, overall life direction", "भौतिक शरीर, रूप, समग्र जीवन दिशा"),
+    SUDARSHANA_MOON_CHAKRA_DESC("Mind, emotions, mother, public image", "मन, भावना, आमा, सार्वजनिक छवि"),
+    SUDARSHANA_SUN_CHAKRA_DESC("Soul, authority, father, career recognition", "आत्मा, अधिकार, बुबा, करियर मान्यता"),
+    SUDARSHANA_COMBINED_NOTE("The combined analysis of all three chakras gives the most accurate prediction of annual themes and events.", "सबै तीन चक्रहरूको संयुक्त विश्लेषणले वार्षिक विषय र घटनाहरूको सबैभन्दा सटीक भविष्यवाणी दिन्छ।"),
+    SUDARSHANA_YEARLY_PROGRESSION("Yearly Progression", "वार्षिक प्रगति"),
+    SUDARSHANA_YEARS_COUNT_FMT("%d years", "%d वर्ष"),
+    SUDARSHANA_AGE_FMT("Age %d", "उमेर %d"),
+    SUDARSHANA_UNABLE_CALC("Current year analysis not available", "वर्तमान वर्षको विश्लेषण उपलब्ध छैन"),
+
+    // ============================================
+    // YOGINI DASHA ERRORS
+    // ============================================
+    YOGINI_ERROR_MOON("Unable to determine Moon's Nakshatra position. Please verify birth data.", "चन्द्रमाको नक्षत्र स्थिति निर्धारण गर्न असमर्थ। कृपया जन्म डाटा प्रमाणित गर्नुहोस्।"),
+    YOGINI_ERROR_BIRTH("Invalid birth data provided. Please check date, time, and location.", "अमान्य जन्म डाटा प्रदान गरियो। कृपया मिति, समय र स्थान जाँच गर्नुहोस्।"),
+    YOGINI_ERROR_NAKSHATRA("Unable to calculate Yogini Dasha. Nakshatra calculation error.", "योगिनी दशा गणना गर्न असमर्थ। नक्षत्र गणना त्रुटि।"),
+    YOGINI_ERROR_GENERIC("Failed to calculate Yogini Dasha. Please try again.", "योगिनी दशा गणना गर्न असफल। कृपया फेरि प्रयास गर्नुहोस्।"),
     KEY_THEMES("Key Themes", "मुख्य विषयहरू"),
     EFFECTS_LABEL("Effects", "प्रभावहरू"),
     CURRENT_LABEL("Current", "वर्तमान"),

@@ -194,16 +194,16 @@ object MatchmakingReportUtils {
     /**
      * Get the nakshatra name from a chart's Moon position.
      */
-    fun getNakshatraName(chart: VedicChart): String {
-        return getMoonPosition(chart)?.nakshatra?.displayName ?: "N/A"
+    fun getNakshatraName(chart: VedicChart, language: Language = Language.ENGLISH): String {
+        return getMoonPosition(chart)?.nakshatra?.getLocalizedName(language) ?: StringResources.get(StringKeyMatch.REPORT_NA, language)
     }
 
     /**
      * Get the rashi (moon sign) name from a chart.
      */
-    fun getRashiName(chart: VedicChart): String {
-        val moonPosition = getMoonPosition(chart) ?: return "N/A"
-        return moonPosition.sign.displayName
+    fun getRashiName(chart: VedicChart, language: Language = Language.ENGLISH): String {
+        val moonPosition = getMoonPosition(chart) ?: return StringResources.get(StringKeyMatch.REPORT_NA, language)
+        return moonPosition.sign.getLocalizedName(language)
     }
 
     /**
@@ -217,24 +217,24 @@ object MatchmakingReportUtils {
     /**
      * Get the nakshatra lord from a chart's Moon position.
      */
-    fun getNakshatraLord(chart: VedicChart): String {
-        val moonPosition = getMoonPosition(chart) ?: return "N/A"
-        return moonPosition.nakshatra.ruler.displayName
+    fun getNakshatraLord(chart: VedicChart, language: Language = Language.ENGLISH): String {
+        val moonPosition = getMoonPosition(chart) ?: return StringResources.get(StringKeyMatch.REPORT_NA, language)
+        return moonPosition.nakshatra.ruler.getLocalizedName(language)
     }
 }
 
 /**
  * Extension functions for quick Manglik status determination.
  */
-fun MatchmakingResult.getManglikQuickStatus(): String {
+fun MatchmakingResult.getManglikQuickStatus(language: Language = Language.ENGLISH): String {
     val brideStatus = brideManglik.effectiveDosha
     val groomStatus = groomManglik.effectiveDosha
 
     return when {
-        brideStatus == ManglikDosha.NONE && groomStatus == ManglikDosha.NONE -> "No Dosha"
-        brideStatus != ManglikDosha.NONE && groomStatus != ManglikDosha.NONE -> "Both Manglik"
-        brideStatus != ManglikDosha.NONE -> "Bride Only"
-        groomStatus != ManglikDosha.NONE -> "Groom Only"
-        else -> "Check Details"
+        brideStatus == ManglikDosha.NONE && groomStatus == ManglikDosha.NONE -> StringResources.get(StringKeyMatch.MANGLIK_QUICK_NONE, language)
+        brideStatus != ManglikDosha.NONE && groomStatus != ManglikDosha.NONE -> StringResources.get(StringKeyMatch.MANGLIK_QUICK_BOTH, language)
+        brideStatus != ManglikDosha.NONE -> StringResources.get(StringKeyMatch.MANGLIK_QUICK_BRIDE, language)
+        groomStatus != ManglikDosha.NONE -> StringResources.get(StringKeyMatch.MANGLIK_QUICK_GROOM, language)
+        else -> StringResources.get(StringKeyMatch.DETAILS, language)
     }
 }

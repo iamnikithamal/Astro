@@ -119,13 +119,14 @@ fun SudarshanaChakraTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Yearly Progression",
+                    text = stringResource(StringKeyDosha.SUDARSHANA_YEARLY_PROGRESSION),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
                 )
+                val language = LocalLanguage.current
                 Text(
-                    text = "${timeline.yearlyAnalysis.size} years",
+                    text = StringResources.get(StringKeyDosha.SUDARSHANA_YEARS_COUNT_FMT, language, timeline.yearlyAnalysis.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppTheme.TextMuted
                 )
@@ -165,6 +166,7 @@ private fun SudarshanaCurrentYearCard(
 ) {
     val currentYear = LocalDate.now().year
     val currentYearData = timeline.yearlyAnalysis.find { it.year == currentYear }
+    val language = LocalLanguage.current
 
     Surface(
         modifier = Modifier
@@ -208,14 +210,14 @@ private fun SudarshanaCurrentYearCard(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column {
                     Text(
-                        text = "Sudarshana Chakra - $currentYear",
+                        text = StringResources.get(StringKeyDosha.SUDARSHANA_YEAR_HEADER, language, currentYear),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
                     Text(
-                        text = "Triple-Reference Annual Analysis",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_TRIPLE_DESC),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted,
                         fontWeight = FontWeight.Medium
@@ -231,19 +233,19 @@ private fun SudarshanaCurrentYearCard(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     ReferencePointCard(
-                        title = "Lagna",
+                        title = stringResource(StringKeyDosha.LAGNA_LABEL),
                         sign = currentYearData.lagnaSign,
                         color = AppTheme.AccentPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     ReferencePointCard(
-                        title = "Moon",
+                        title = stringResource(StringKeyDosha.MOON_LABEL),
                         sign = currentYearData.moonSign,
                         color = AppTheme.LifeAreaLove,
                         modifier = Modifier.weight(1f)
                     )
                     ReferencePointCard(
-                        title = "Sun",
+                        title = stringResource(StringKeyDosha.SUN_LABEL),
                         sign = currentYearData.sunSign,
                         color = AppTheme.AccentGold,
                         modifier = Modifier.weight(1f)
@@ -264,7 +266,7 @@ private fun SudarshanaCurrentYearCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "OVERALL YEAR STRENGTH",
+                                text = stringResource(StringKeyDosha.SUDARSHANA_YEAR_STRENGTH),
                                 fontSize = 11.sp,
                                 color = AppTheme.TextMuted,
                                 fontWeight = FontWeight.Medium,
@@ -290,7 +292,7 @@ private fun SudarshanaCurrentYearCard(
                                 color = getStrengthColor(currentYearData.combinedStrength)
                             )
                             Text(
-                                text = getStrengthLabel(currentYearData.combinedStrength),
+                                text = getStrengthLabel(currentYearData.combinedStrength, language),
                                 fontSize = 11.sp,
                                 color = AppTheme.TextMuted
                             )
@@ -320,7 +322,7 @@ private fun SudarshanaCurrentYearCard(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Year Themes",
+                                    text = stringResource(StringKeyDosha.SUDARSHANA_YEAR_THEMES),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = AppTheme.AccentTeal
@@ -352,7 +354,7 @@ private fun SudarshanaCurrentYearCard(
                 }
             } else {
                 Text(
-                    text = "Current year analysis not available",
+                    text = stringResource(StringKeyDosha.SUDARSHANA_UNABLE_CALC),
                     fontSize = 14.sp,
                     color = AppTheme.TextMuted,
                     textAlign = TextAlign.Center,
@@ -438,13 +440,13 @@ private fun SudarshanaTripleReferenceCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Birth Reference Points",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_BIRTH_REF_TITLE),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
                     )
                     Text(
-                        text = "Starting positions for chakra progression",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_BIRTH_REF_DESC),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted
                     )
@@ -457,19 +459,19 @@ private fun SudarshanaTripleReferenceCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 BirthReferenceItem(
-                    label = "Lagna",
+                    label = stringResource(StringKeyDosha.LAGNA_LABEL),
                     sign = timeline.lagnaSign,
                     color = AppTheme.AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 BirthReferenceItem(
-                    label = "Moon",
+                    label = stringResource(StringKeyDosha.MOON_LABEL),
                     sign = timeline.moonSign,
                     color = AppTheme.LifeAreaLove,
                     modifier = Modifier.weight(1f)
                 )
                 BirthReferenceItem(
-                    label = "Sun",
+                    label = stringResource(StringKeyDosha.SUN_LABEL),
                     sign = timeline.sunSign,
                     color = AppTheme.AccentGold,
                     modifier = Modifier.weight(1f)
@@ -577,7 +579,7 @@ private fun SudarshanaInfoCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "About Sudarshana Chakra",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT_TITLE),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
@@ -585,7 +587,7 @@ private fun SudarshanaInfoCard(
                 }
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier
                         .size(24.dp)
@@ -600,7 +602,7 @@ private fun SudarshanaInfoCard(
             ) {
                 Column(modifier = Modifier.padding(top = 18.dp)) {
                     Text(
-                        text = "Sudarshana Chakra Dasha is a unique annual timing system that analyzes each year from three simultaneous reference points: Lagna (Ascendant), Moon, and Sun. The signs progress one year at a time from each reference point, creating a comprehensive view of yearly influences.",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT_DESC),
                         fontSize = 13.sp,
                         color = AppTheme.TextSecondary,
                         lineHeight = 20.sp
@@ -614,7 +616,7 @@ private fun SudarshanaInfoCard(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Three Perspectives",
+                                text = stringResource(StringKeyDosha.SUDARSHANA_PERSPECTIVES_TITLE),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.TextSecondary
@@ -622,18 +624,18 @@ private fun SudarshanaInfoCard(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             PerspectiveInfoRow(
-                                title = "Lagna Chakra",
-                                description = "Physical body, appearance, overall life direction",
+                                title = stringResource(StringKeyDosha.SUDARSHANA_LAGNA_CHAKRA),
+                                description = stringResource(StringKeyDosha.SUDARSHANA_LAGNA_CHAKRA_DESC),
                                 color = AppTheme.AccentPrimary
                             )
                             PerspectiveInfoRow(
-                                title = "Moon Chakra",
-                                description = "Mind, emotions, mother, public image",
+                                title = stringResource(StringKeyDosha.SUDARSHANA_CHANDRA_CHAKRA),
+                                description = stringResource(StringKeyDosha.SUDARSHANA_MOON_CHAKRA_DESC),
                                 color = AppTheme.LifeAreaLove
                             )
                             PerspectiveInfoRow(
-                                title = "Sun Chakra",
-                                description = "Soul, authority, father, career recognition",
+                                title = stringResource(StringKeyDosha.SUDARSHANA_SURYA_CHAKRA),
+                                description = stringResource(StringKeyDosha.SUDARSHANA_SUN_CHAKRA_DESC),
                                 color = AppTheme.AccentGold
                             )
                         }
@@ -642,7 +644,7 @@ private fun SudarshanaInfoCard(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "The combined analysis of all three chakras gives the most accurate prediction of annual themes and events.",
+                        text = stringResource(StringKeyDosha.SUDARSHANA_COMBINED_NOTE),
                         fontSize = 12.sp,
                         color = AppTheme.TextMuted,
                         lineHeight = 18.sp
@@ -744,8 +746,9 @@ private fun SudarshanaYearCard(
 
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val language = LocalLanguage.current
                             Text(
-                                text = "Age ${yearData.age}",
+                                text = StringResources.get(StringKeyDosha.SUDARSHANA_AGE_FMT, language, yearData.age),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AppTheme.TextPrimary
@@ -757,7 +760,7 @@ private fun SudarshanaYearCard(
                                     color = strengthColor.copy(alpha = 0.2f)
                                 ) {
                                     Text(
-                                        text = "CURRENT",
+                                        text = stringResource(StringKey.DASHA_ACTIVE),
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = strengthColor,
@@ -767,7 +770,7 @@ private fun SudarshanaYearCard(
                             }
                         }
                         Text(
-                            text = "${yearData.lagnaSign.displayName} / ${yearData.moonSign.displayName} / ${yearData.sunSign.displayName}",
+                            text = "${yearData.lagnaSign.getLocalizedName(language)} / ${yearData.moonSign.getLocalizedName(language)} / ${yearData.sunSign.getLocalizedName(language)}",
                             fontSize = 11.sp,
                             color = AppTheme.TextMuted,
                             maxLines = 1,
@@ -786,7 +789,7 @@ private fun SudarshanaYearCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                         tint = AppTheme.TextMuted,
                         modifier = Modifier
                             .size(22.dp)
@@ -809,19 +812,19 @@ private fun SudarshanaYearCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         YearSignDetail(
-                            label = "Lagna",
+                            label = stringResource(StringKeyDosha.LAGNA_LABEL),
                             sign = yearData.lagnaSign,
                             color = AppTheme.AccentPrimary,
                             modifier = Modifier.weight(1f)
                         )
                         YearSignDetail(
-                            label = "Moon",
+                            label = stringResource(StringKeyDosha.MOON_LABEL),
                             sign = yearData.moonSign,
                             color = AppTheme.LifeAreaLove,
                             modifier = Modifier.weight(1f)
                         )
                         YearSignDetail(
-                            label = "Sun",
+                            label = stringResource(StringKeyDosha.SUN_LABEL),
                             sign = yearData.sunSign,
                             color = AppTheme.AccentGold,
                             modifier = Modifier.weight(1f)
@@ -832,7 +835,7 @@ private fun SudarshanaYearCard(
                     if (yearData.combinedEffects.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Year Themes",
+                            text = stringResource(StringKeyDosha.SUDARSHANA_YEAR_THEMES),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppTheme.TextSecondary,
@@ -916,11 +919,12 @@ private fun getStrengthColor(strength: Double): Color {
     }
 }
 
-private fun getStrengthLabel(strength: Double): String {
-    return when {
-        strength >= 70 -> "Excellent"
-        strength >= 50 -> "Good"
-        strength >= 30 -> "Moderate"
-        else -> "Challenging"
+private fun getStrengthLabel(strength: Double, language: com.astro.storm.data.localization.Language): String {
+    val key = when {
+        strength >= 70 -> StringKeyAnalysis.STRENGTH_EXCELLENT
+        strength >= 50 -> StringKeyAnalysis.STRENGTH_GOOD
+        strength >= 30 -> StringKeyAnalysis.STRENGTH_AVERAGE
+        else -> StringKeyAnalysis.STRENGTH_CHALLENGING
     }
+    return StringResources.get(key, language)
 }

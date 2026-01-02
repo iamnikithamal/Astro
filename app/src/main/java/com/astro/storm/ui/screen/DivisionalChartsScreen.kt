@@ -101,11 +101,11 @@ fun DivisionalChartsScreen(
         isCalculating = true
         delay(300)
         withContext(Dispatchers.Default) {
-            horaAnalysis = DivisionalChartAnalyzer.analyzeHora(chart)
-            drekkanaAnalysis = DivisionalChartAnalyzer.analyzeDrekkana(chart)
-            navamsaAnalysis = DivisionalChartAnalyzer.analyzeNavamsaForMarriage(chart)
-            dashamsaAnalysis = DivisionalChartAnalyzer.analyzeDashamsa(chart)
-            dwadasamsaAnalysis = DivisionalChartAnalyzer.analyzeDwadasamsa(chart)
+            horaAnalysis = DivisionalChartAnalyzer.analyzeHora(chart, language)
+            drekkanaAnalysis = DivisionalChartAnalyzer.analyzeDrekkana(chart, language)
+            navamsaAnalysis = DivisionalChartAnalyzer.analyzeNavamsaForMarriage(chart, language)
+            dashamsaAnalysis = DivisionalChartAnalyzer.analyzeDashamsa(chart, language)
+            dwadasamsaAnalysis = DivisionalChartAnalyzer.analyzeDwadasamsa(chart, language)
         }
         isCalculating = false
     }
@@ -355,14 +355,13 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
 
 @Composable
 private fun WealthPotentialCard(analysis: HoraAnalysis) {
-    val (color, icon, labelKey) = when (analysis.overallWealthPotential) {
-        WealthPotential.EXCEPTIONAL -> Triple(AppTheme.SuccessColor, Icons.Filled.Star, StringKeyDosha.HORA_POTENTIAL_EXCEPTIONAL)
-        WealthPotential.HIGH -> Triple(AppTheme.SuccessColor.copy(alpha = 0.8f), Icons.Filled.TrendingUp, StringKeyDosha.HORA_POTENTIAL_HIGH)
-        WealthPotential.MODERATE -> Triple(AppTheme.AccentGold, Icons.Filled.TrendingFlat, StringKeyDosha.HORA_POTENTIAL_MODERATE)
-        WealthPotential.AVERAGE -> Triple(AppTheme.TextMuted, Icons.Filled.HorizontalRule, StringKeyDosha.HORA_POTENTIAL_AVERAGE)
-        WealthPotential.LOW -> Triple(AppTheme.WarningColor, Icons.Filled.TrendingDown, StringKeyDosha.HORA_POTENTIAL_NEEDS_EFFORT)
+    val (color, icon, label) = when (analysis.overallWealthPotential) {
+        WealthPotential.EXCEPTIONAL -> Triple(AppTheme.SuccessColor, Icons.Filled.Star, analysis.overallWealthPotential.getLocalizedName(language))
+        WealthPotential.HIGH -> Triple(AppTheme.SuccessColor.copy(alpha = 0.8f), Icons.Filled.TrendingUp, analysis.overallWealthPotential.getLocalizedName(language))
+        WealthPotential.MODERATE -> Triple(AppTheme.AccentGold, Icons.Filled.TrendingFlat, analysis.overallWealthPotential.getLocalizedName(language))
+        WealthPotential.AVERAGE -> Triple(AppTheme.TextMuted, Icons.Filled.HorizontalRule, analysis.overallWealthPotential.getLocalizedName(language))
+        WealthPotential.LOW -> Triple(AppTheme.WarningColor, Icons.Filled.TrendingDown, analysis.overallWealthPotential.getLocalizedName(language))
     }
-    val label = stringResource(labelKey)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -553,14 +552,14 @@ private fun DrekkanaTab(analysis: DrekkanaAnalysis, language: Language) {
 
 @Composable
 private fun CourageAnalysisCard(analysis: com.astro.storm.ephemeris.CourageAnalysis) {
-    val (color, labelKey) = when (analysis.overallCourageLevel) {
-        CourageLevel.EXCEPTIONAL -> AppTheme.SuccessColor to StringKeyDosha.COURAGE_EXCEPTIONAL
-        CourageLevel.HIGH -> AppTheme.SuccessColor.copy(alpha = 0.8f) to StringKeyDosha.COURAGE_HIGH
-        CourageLevel.MODERATE -> AppTheme.AccentGold to StringKeyDosha.COURAGE_MODERATE
-        CourageLevel.LOW -> AppTheme.WarningColor to StringKeyDosha.COURAGE_DEVELOPING
-        CourageLevel.VERY_LOW -> AppTheme.ErrorColor to StringKeyDosha.COURAGE_NEEDS_WORK
+    val language = LocalLanguage.current
+    val (color, label) = when (analysis.overallCourageLevel) {
+        CourageLevel.EXCEPTIONAL -> AppTheme.SuccessColor to analysis.overallCourageLevel.getLocalizedName(language)
+        CourageLevel.HIGH -> AppTheme.SuccessColor.copy(alpha = 0.8f) to analysis.overallCourageLevel.getLocalizedName(language)
+        CourageLevel.MODERATE -> AppTheme.AccentGold to analysis.overallCourageLevel.getLocalizedName(language)
+        CourageLevel.LOW -> AppTheme.WarningColor to analysis.overallCourageLevel.getLocalizedName(language)
+        CourageLevel.VERY_LOW -> AppTheme.ErrorColor to analysis.overallCourageLevel.getLocalizedName(language)
     }
-    val label = stringResource(labelKey)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -665,7 +664,7 @@ private fun SiblingIndicatorsCard(indicators: com.astro.storm.ephemeris.SiblingI
                 Column {
                     Text(stringResource(StringKeyDosha.DREKKANA_RELATIONSHIP), fontSize = 11.sp, color = AppTheme.TextMuted)
                     Text(
-                        indicators.relationshipQuality.name,
+                        indicators.relationshipQuality.getLocalizedName(language),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = relationshipColor

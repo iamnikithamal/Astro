@@ -163,35 +163,42 @@ enum class YoniGender { MALE, FEMALE }
  * Yoni represents sexual and physical compatibility.
  * Each Nakshatra is assigned an animal nature with male/female classification.
  */
-enum class Yoni(val animal: String, val gender: YoniGender, val groupId: Int) {
-    ASHWA_MALE("Horse", YoniGender.MALE, 1),
-    ASHWA_FEMALE("Horse", YoniGender.FEMALE, 1),
-    GAJA_MALE("Elephant", YoniGender.MALE, 2),
-    GAJA_FEMALE("Elephant", YoniGender.FEMALE, 2),
-    MESHA_MALE("Sheep", YoniGender.MALE, 3),
-    MESHA_FEMALE("Sheep", YoniGender.FEMALE, 3),
-    SARPA_MALE("Serpent", YoniGender.MALE, 4),
-    SARPA_FEMALE("Serpent", YoniGender.FEMALE, 4),
-    SHWAN_MALE("Dog", YoniGender.MALE, 5),
-    SHWAN_FEMALE("Dog", YoniGender.FEMALE, 5),
-    MARJAR_MALE("Cat", YoniGender.MALE, 6),
-    MARJAR_FEMALE("Cat", YoniGender.FEMALE, 6),
-    MUSHAK_MALE("Rat", YoniGender.MALE, 7),
-    MUSHAK_FEMALE("Rat", YoniGender.FEMALE, 7),
-    GAU_MALE("Cow", YoniGender.MALE, 8),
-    GAU_FEMALE("Cow", YoniGender.FEMALE, 8),
-    MAHISH_MALE("Buffalo", YoniGender.MALE, 9),
-    MAHISH_FEMALE("Buffalo", YoniGender.FEMALE, 9),
-    VYAGHRA_MALE("Tiger", YoniGender.MALE, 10),
-    VYAGHRA_FEMALE("Tiger", YoniGender.FEMALE, 10),
-    MRIGA_MALE("Deer", YoniGender.MALE, 11),
-    MRIGA_FEMALE("Deer", YoniGender.FEMALE, 11),
-    VANAR_MALE("Monkey", YoniGender.MALE, 12),
-    VANAR_FEMALE("Monkey", YoniGender.FEMALE, 12),
-    NAKUL_MALE("Mongoose", YoniGender.MALE, 13),
-    NAKUL_FEMALE("Mongoose", YoniGender.FEMALE, 13),
-    SIMHA_MALE("Lion", YoniGender.MALE, 14),
-    SIMHA_FEMALE("Lion", YoniGender.FEMALE, 14);
+enum class Yoni(val animalKey: StringKeyMatch, val gender: YoniGender, val groupId: Int) {
+    ASHWA_MALE(StringKeyMatch.YONI_ANIMAL_HORSE, YoniGender.MALE, 1),
+    ASHWA_FEMALE(StringKeyMatch.YONI_ANIMAL_HORSE, YoniGender.FEMALE, 1),
+    GAJA_MALE(StringKeyMatch.YONI_ANIMAL_ELEPHANT, YoniGender.MALE, 2),
+    GAJA_FEMALE(StringKeyMatch.YONI_ANIMAL_ELEPHANT, YoniGender.FEMALE, 2),
+    MESHA_MALE(StringKeyMatch.YONI_ANIMAL_SHEEP, YoniGender.MALE, 3),
+    MESHA_FEMALE(StringKeyMatch.YONI_ANIMAL_SHEEP, YoniGender.FEMALE, 3),
+    SARPA_MALE(StringKeyMatch.YONI_ANIMAL_SERPENT, YoniGender.MALE, 4),
+    SARPA_FEMALE(StringKeyMatch.YONI_ANIMAL_SERPENT, YoniGender.FEMALE, 4),
+    SHWAN_MALE(StringKeyMatch.YONI_ANIMAL_DOG, YoniGender.MALE, 5),
+    SHWAN_FEMALE(StringKeyMatch.YONI_ANIMAL_DOG, YoniGender.FEMALE, 5),
+    MARJAR_MALE(StringKeyMatch.YONI_ANIMAL_CAT, YoniGender.MALE, 6),
+    MARJAR_FEMALE(StringKeyMatch.YONI_ANIMAL_CAT, YoniGender.FEMALE, 6),
+    MUSHAK_MALE(StringKeyMatch.YONI_ANIMAL_RAT, YoniGender.MALE, 7),
+    MUSHAK_FEMALE(StringKeyMatch.YONI_ANIMAL_RAT, YoniGender.FEMALE, 7),
+    GAU_MALE(StringKeyMatch.YONI_ANIMAL_COW, YoniGender.MALE, 8),
+    GAU_FEMALE(StringKeyMatch.YONI_ANIMAL_COW, YoniGender.FEMALE, 8),
+    MAHISH_MALE(StringKeyMatch.YONI_ANIMAL_BUFFALO, YoniGender.MALE, 9),
+    MAHISH_FEMALE(StringKeyMatch.YONI_ANIMAL_BUFFALO, YoniGender.FEMALE, 9),
+    VYAGHRA_MALE(StringKeyMatch.YONI_ANIMAL_TIGER, YoniGender.MALE, 10),
+    VYAGHRA_FEMALE(StringKeyMatch.YONI_ANIMAL_TIGER, YoniGender.FEMALE, 10),
+    MRIGA_MALE(StringKeyMatch.YONI_ANIMAL_DEER, YoniGender.MALE, 11),
+    MRIGA_FEMALE(StringKeyMatch.YONI_ANIMAL_DEER, YoniGender.FEMALE, 11),
+    VANAR_MALE(StringKeyMatch.YONI_ANIMAL_MONKEY, YoniGender.MALE, 12),
+    VANAR_FEMALE(StringKeyMatch.YONI_ANIMAL_MONKEY, YoniGender.FEMALE, 12),
+    NAKUL_MALE(StringKeyMatch.YONI_ANIMAL_MONGOOSE, YoniGender.MALE, 13),
+    NAKUL_FEMALE(StringKeyMatch.YONI_ANIMAL_MONGOOSE, YoniGender.FEMALE, 13),
+    SIMHA_MALE(StringKeyMatch.YONI_ANIMAL_LION, YoniGender.MALE, 14),
+    SIMHA_FEMALE(StringKeyMatch.YONI_ANIMAL_LION, YoniGender.FEMALE, 14);
+
+    fun getLocalizedAnimal(language: Language): String = StringResources.get(animalKey, language)
+    
+    fun getLocalizedGender(language: Language): String = when (gender) {
+        YoniGender.MALE -> StringResources.get(StringKeyMatch.GENDER_MALE, language)
+        YoniGender.FEMALE -> StringResources.get(StringKeyMatch.GENDER_FEMALE, language)
+    }
 
     companion object {
         fun fromNakshatra(nakshatra: Nakshatra): Yoni = when (nakshatra) {

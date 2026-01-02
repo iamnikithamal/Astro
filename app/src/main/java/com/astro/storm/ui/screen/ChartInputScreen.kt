@@ -623,14 +623,8 @@ private fun DateSystemToggle(
     onToggle: () -> Unit
 ) {
     val colors = LocalAppThemeColors.current
-    val adLabel = when (language) {
-        Language.ENGLISH -> "AD"
-        Language.NEPALI -> "ई.सं."
-    }
-    val bsLabel = when (language) {
-        Language.ENGLISH -> "BS"
-        Language.NEPALI -> "वि.सं."
-    }
+    val adLabel = stringResource(StringKey.LABEL_AD)
+    val bsLabel = stringResource(StringKey.LABEL_BS)
 
     Surface(
         onClick = onToggle,

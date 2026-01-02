@@ -7,9 +7,13 @@ import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.data.model.BirthData
 import com.astro.storm.data.model.HouseSystem
-import java.time.LocalDateTime
-import java.time.ZoneId
-import kotlin.math.abs
+import com.astro.storm.data.localization.StringKeyHoroscope
+import com.astro.storm.data.localization.StringKeyMatch
+import com.astro.storm.data.localization.StringKeyTransit
+import com.astro.storm.data.localization.StringKeyInterface
+import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.LocalizationManager
 
 /**
  * Comprehensive Transit Analysis System
@@ -29,6 +33,10 @@ import kotlin.math.abs
 class TransitAnalyzer(private val context: Context) {
 
     private val ephemerisEngine = SwissEphemerisEngine.getInstance(context)
+    private val localizationManager = LocalizationManager.getInstance(context)
+
+    private fun getString(key: StringKeyInterface): String = localizationManager.getString(key)
+    private fun getString(key: StringKeyInterface, vararg args: Any): String = localizationManager.getString(key, *args)
 
     companion object {
         /**
@@ -113,6 +121,32 @@ class TransitAnalyzer(private val context: Context) {
         )
 
         /**
+         * Gochara interpretation keys mapping
+         */
+        private val GOCHARA_FAVORABLE_KEYS = mapOf(
+            Planet.SUN to mapOf(3 to StringKeyHoroscope.GOCHARA_SUN_3, 6 to StringKeyHoroscope.GOCHARA_SUN_6, 10 to StringKeyHoroscope.GOCHARA_SUN_10, 11 to StringKeyHoroscope.GOCHARA_SUN_11),
+            Planet.MOON to mapOf(1 to StringKeyHoroscope.GOCHARA_MOON_1, 3 to StringKeyHoroscope.GOCHARA_MOON_3, 6 to StringKeyHoroscope.GOCHARA_MOON_6, 7 to StringKeyHoroscope.GOCHARA_MOON_7, 10 to StringKeyHoroscope.GOCHARA_MOON_10, 11 to StringKeyHoroscope.GOCHARA_MOON_11),
+            Planet.MARS to mapOf(3 to StringKeyHoroscope.GOCHARA_MARS_3, 6 to StringKeyHoroscope.GOCHARA_MARS_6, 11 to StringKeyHoroscope.GOCHARA_MARS_11),
+            Planet.MERCURY to mapOf(2 to StringKeyHoroscope.GOCHARA_MERCURY_2, 4 to StringKeyHoroscope.GOCHARA_MERCURY_4, 6 to StringKeyHoroscope.GOCHARA_MERCURY_6, 8 to StringKeyHoroscope.GOCHARA_MERCURY_8, 10 to StringKeyHoroscope.GOCHARA_MERCURY_10, 11 to StringKeyHoroscope.GOCHARA_MERCURY_11),
+            Planet.JUPITER to mapOf(2 to StringKeyHoroscope.GOCHARA_JUPITER_2, 5 to StringKeyHoroscope.GOCHARA_JUPITER_5, 7 to StringKeyHoroscope.GOCHARA_JUPITER_7, 9 to StringKeyHoroscope.GOCHARA_JUPITER_9, 11 to StringKeyHoroscope.GOCHARA_JUPITER_11),
+            Planet.VENUS to mapOf(1 to StringKeyHoroscope.GOCHARA_VENUS_1, 2 to StringKeyHoroscope.GOCHARA_VENUS_2, 3 to StringKeyHoroscope.GOCHARA_VENUS_3, 4 to StringKeyHoroscope.GOCHARA_VENUS_4, 5 to StringKeyHoroscope.GOCHARA_VENUS_5, 8 to StringKeyHoroscope.GOCHARA_VENUS_8, 9 to StringKeyHoroscope.GOCHARA_VENUS_9, 11 to StringKeyHoroscope.GOCHARA_VENUS_11, 12 to StringKeyHoroscope.GOCHARA_VENUS_12),
+            Planet.SATURN to mapOf(3 to StringKeyHoroscope.GOCHARA_SATURN_3, 6 to StringKeyHoroscope.GOCHARA_SATURN_6, 11 to StringKeyHoroscope.GOCHARA_SATURN_11),
+            Planet.RAHU to mapOf(3 to StringKeyHoroscope.GOCHARA_RAHU_3, 6 to StringKeyHoroscope.GOCHARA_RAHU_6, 10 to StringKeyHoroscope.GOCHARA_RAHU_10, 11 to StringKeyHoroscope.GOCHARA_RAHU_11),
+            Planet.KETU to mapOf(3 to StringKeyHoroscope.GOCHARA_KETU_3, 6 to StringKeyHoroscope.GOCHARA_KETU_6, 9 to StringKeyHoroscope.GOCHARA_KETU_9, 11 to StringKeyHoroscope.GOCHARA_KETU_11)
+        )
+
+        private val GOCHARA_UNFAVORABLE_KEYS = mapOf(
+            Planet.SUN to mapOf(1 to StringKeyHoroscope.GOCHARA_SUN_1, 2 to StringKeyHoroscope.GOCHARA_SUN_2, 4 to StringKeyHoroscope.GOCHARA_SUN_4, 5 to StringKeyHoroscope.GOCHARA_SUN_5, 7 to StringKeyHoroscope.GOCHARA_SUN_7, 8 to StringKeyHoroscope.GOCHARA_SUN_8, 9 to StringKeyHoroscope.GOCHARA_SUN_9, 12 to StringKeyHoroscope.GOCHARA_SUN_12),
+            Planet.MOON to mapOf(2 to StringKeyHoroscope.GOCHARA_MOON_2, 4 to StringKeyHoroscope.GOCHARA_MOON_4, 5 to StringKeyHoroscope.GOCHARA_MOON_5, 8 to StringKeyHoroscope.GOCHARA_MOON_8, 9 to StringKeyHoroscope.GOCHARA_MOON_9, 12 to StringKeyHoroscope.GOCHARA_MOON_12),
+            Planet.MARS to mapOf(1 to StringKeyHoroscope.GOCHARA_MARS_1, 2 to StringKeyHoroscope.GOCHARA_MARS_2, 4 to StringKeyHoroscope.GOCHARA_MARS_4, 5 to StringKeyHoroscope.GOCHARA_MARS_5, 7 to StringKeyHoroscope.GOCHARA_MARS_7, 8 to StringKeyHoroscope.GOCHARA_MARS_8, 9 to StringKeyHoroscope.GOCHARA_MARS_9, 10 to StringKeyHoroscope.GOCHARA_MARS_10, 12 to StringKeyHoroscope.GOCHARA_MARS_12),
+            Planet.MERCURY to mapOf(1 to StringKeyHoroscope.GOCHARA_MERCURY_1, 3 to StringKeyHoroscope.GOCHARA_MERCURY_3, 5 to StringKeyHoroscope.GOCHARA_MERCURY_5, 7 to StringKeyHoroscope.GOCHARA_MERCURY_7, 9 to StringKeyHoroscope.GOCHARA_MERCURY_9, 12 to StringKeyHoroscope.GOCHARA_MERCURY_12),
+            Planet.JUPITER to mapOf(1 to StringKeyHoroscope.GOCHARA_JUPITER_1, 3 to StringKeyHoroscope.GOCHARA_JUPITER_3, 4 to StringKeyHoroscope.GOCHARA_JUPITER_4, 6 to StringKeyHoroscope.GOCHARA_JUPITER_6, 8 to StringKeyHoroscope.GOCHARA_JUPITER_8, 10 to StringKeyHoroscope.GOCHARA_JUPITER_10, 12 to StringKeyHoroscope.GOCHARA_JUPITER_12),
+            Planet.SATURN to mapOf(1 to StringKeyHoroscope.GOCHARA_SATURN_1, 2 to StringKeyHoroscope.GOCHARA_SATURN_2, 4 to StringKeyHoroscope.GOCHARA_SATURN_4, 5 to StringKeyHoroscope.GOCHARA_SATURN_5, 7 to StringKeyHoroscope.GOCHARA_SATURN_7, 8 to StringKeyHoroscope.GOCHARA_SATURN_8, 9 to StringKeyHoroscope.GOCHARA_SATURN_9, 10 to StringKeyHoroscope.GOCHARA_SATURN_10, 12 to StringKeyHoroscope.GOCHARA_SATURN_12),
+            Planet.RAHU to mapOf(1 to StringKeyHoroscope.GOCHARA_RAHU_1, 2 to StringKeyHoroscope.GOCHARA_RAHU_2, 4 to StringKeyHoroscope.GOCHARA_RAHU_4, 5 to StringKeyHoroscope.GOCHARA_RAHU_5, 7 to StringKeyHoroscope.GOCHARA_RAHU_7, 8 to StringKeyHoroscope.GOCHARA_RAHU_8, 9 to StringKeyHoroscope.GOCHARA_RAHU_9, 12 to StringKeyHoroscope.GOCHARA_RAHU_12),
+            Planet.KETU to mapOf(1 to StringKeyHoroscope.GOCHARA_KETU_1, 2 to StringKeyHoroscope.GOCHARA_KETU_2, 4 to StringKeyHoroscope.GOCHARA_KETU_4, 5 to StringKeyHoroscope.GOCHARA_KETU_5, 7 to StringKeyHoroscope.GOCHARA_KETU_7, 8 to StringKeyHoroscope.GOCHARA_KETU_8, 10 to StringKeyHoroscope.GOCHARA_KETU_10, 12 to StringKeyHoroscope.GOCHARA_KETU_12)
+        )
+
+        /**
          * Neutral transit houses from Moon
          */
         private val NEUTRAL_TRANSITS = mapOf(
@@ -146,11 +180,11 @@ class TransitAnalyzer(private val context: Context) {
          * Aspect angles and their names
          */
         private val ASPECT_ANGLES = mapOf(
-            0.0 to "Conjunction",
-            60.0 to "Sextile",
-            90.0 to "Square",
-            120.0 to "Trine",
-            180.0 to "Opposition"
+            0.0 to StringKeyTransit.ASPECT_CONJUNCTION,
+            60.0 to StringKeyTransit.ASPECT_SEXTILE,
+            90.0 to StringKeyTransit.ASPECT_SQUARE,
+            120.0 to StringKeyTransit.ASPECT_TRINE,
+            180.0 to StringKeyTransit.ASPECT_OPPOSITION
         )
 
         /**
@@ -180,63 +214,69 @@ class TransitAnalyzer(private val context: Context) {
         val transitAspects: List<TransitAspect>,
         val ashtakavargaScores: Map<Planet, AshtakavargaCalculator.TransitScore>,
         val overallAssessment: OverallTransitAssessment,
-        val significantPeriods: List<SignificantPeriod>
+        val significantPeriods: List<SignificantPeriod>,
+        val language: Language
     ) {
         fun toPlainText(): String = buildString {
-            appendLine("═══════════════════════════════════════════════════════════")
-            appendLine("              TRANSIT ANALYSIS REPORT")
-            appendLine("═══════════════════════════════════════════════════════════")
+            val title = StringResources.get(StringKeyTransit.REPORT_TITLE_LINE1, language)
+            val line = "═".repeat(title.length + 10)
+            
+            appendLine(line)
+            appendLine("     $title     ")
+            appendLine(line)
             appendLine()
-            appendLine("Transit Date/Time: $transitDateTime")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_DATE_LABEL, language, transitDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))))
             appendLine()
 
-            appendLine("CURRENT PLANETARY POSITIONS")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SECTION_POSITIONS, language))
             appendLine("─────────────────────────────────────────────────────────")
             transitPositions.forEach { pos ->
                 val retro = if (pos.isRetrograde) " (R)" else ""
-                appendLine("${pos.planet.displayName.padEnd(10)}: ${pos.sign.displayName.padEnd(12)} ${formatDegree(pos.longitude)}$retro")
+                appendLine("${pos.planet.getLocalizedName(language).padEnd(10)}: ${pos.sign.getLocalizedName(language).padEnd(12)} ${formatDegree(pos.longitude)}$retro")
             }
             appendLine()
 
-            appendLine("GOCHARA ANALYSIS (Transit from Moon)")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SECTION_GOCHARA, language))
             appendLine("─────────────────────────────────────────────────────────")
             gocharaResults.forEach { result ->
                 val vedhaStr = if (result.isVedhaAffected) " [VEDHA]" else ""
-                appendLine("${result.planet.displayName.padEnd(10)}: House ${result.houseFromMoon.toString().padStart(2)} - ${result.effect.displayName}$vedhaStr")
+                val effectName = StringResources.get(result.effect.key, language)
+                appendLine("${result.planet.getLocalizedName(language).padEnd(10)}: House ${result.houseFromMoon.toString().padStart(2)} - $effectName$vedhaStr")
                 if (result.isVedhaAffected && result.vedhaSource != null) {
-                    appendLine("             └─ Vedha from ${result.vedhaSource.displayName}")
+                    appendLine(StringResources.get(StringKeyTransit.REPORT_VEDHA_FROM, language, result.vedhaSource.getLocalizedName(language)))
                 }
             }
             appendLine()
 
-            appendLine("TRANSIT ASPECTS TO NATAL PLANETS")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SECTION_ASPECTS, language))
             appendLine("─────────────────────────────────────────────────────────")
             if (transitAspects.isEmpty()) {
-                appendLine("No significant aspects currently active.")
+                appendLine(StringResources.get(StringKeyTransit.REPORT_NO_ASPECTS, language))
             } else {
                 transitAspects.sortedByDescending { it.strength }.take(10).forEach { aspect ->
-                    val applying = if (aspect.isApplying) "Applying" else "Separating"
-                    appendLine("Transit ${aspect.transitingPlanet.displayName} ${aspect.aspectType} Natal ${aspect.natalPlanet.displayName}")
-                    appendLine("  Orb: ${String.format("%.2f", aspect.orb)}° ($applying) | Strength: ${String.format("%.0f", aspect.strength * 100)}%")
+                    val applying = if (aspect.isApplying) StringResources.get(StringKeyTransit.ASPECT_APPLYING, language) else StringResources.get(StringKeyTransit.ASPECT_SEPARATING, language)
+                    val aspectName = StringResources.get(aspect.aspectKey, language)
+                    appendLine(StringResources.get(StringKeyTransit.REPORT_ASPECT_LINE, language, aspect.transitingPlanet.getLocalizedName(language), aspectName, aspect.natalPlanet.getLocalizedName(language)))
+                    appendLine(StringResources.get(StringKeyTransit.REPORT_ASPECT_DETAILS, language, String.format("%.2f", aspect.orb), applying, String.format("%.0f", aspect.strength * 100)))
                 }
             }
             appendLine()
 
-            appendLine("ASHTAKAVARGA TRANSIT SCORES")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SECTION_ASHTAKAVARGA, language))
             appendLine("─────────────────────────────────────────────────────────")
             ashtakavargaScores.forEach { (planet, score) ->
-                appendLine("${planet.displayName.padEnd(10)}: BAV=${score.binduScore}, SAV=${score.savScore} - ${score.interpretation}")
+                appendLine(StringResources.get(StringKeyTransit.REPORT_BAV_SAV, language, planet.getLocalizedName(language), score.binduScore, score.savScore, score.interpretation))
             }
             appendLine()
 
-            appendLine("OVERALL ASSESSMENT")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SECTION_ASSESSMENT, language))
             appendLine("─────────────────────────────────────────────────────────")
-            appendLine("Period Quality: ${overallAssessment.quality.displayName}")
-            appendLine("Score: ${String.format("%.1f", overallAssessment.score)}/100")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_PERIOD_QUALITY, language, StringResources.get(overallAssessment.quality.key, language)))
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SCORE, language, String.format("%.1f", overallAssessment.score)))
             appendLine()
-            appendLine("Summary: ${overallAssessment.summary}")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_SUMMARY, language, overallAssessment.summary))
             appendLine()
-            appendLine("Key Areas of Focus:")
+            appendLine(StringResources.get(StringKeyTransit.REPORT_FOCUS_AREAS, language))
             overallAssessment.focusAreas.forEachIndexed { index, area ->
                 appendLine("${index + 1}. $area")
             }
@@ -269,7 +309,8 @@ class TransitAnalyzer(private val context: Context) {
     data class TransitAspect(
         val transitingPlanet: Planet,
         val natalPlanet: Planet,
-        val aspectType: String,
+        val aspectType: String, // Kept for legacy compatibility if needed
+        val aspectKey: StringKeyTransit, // Localized key
         val exactAngle: Double,
         val orb: Double,
         val isApplying: Boolean,
@@ -280,12 +321,15 @@ class TransitAnalyzer(private val context: Context) {
     /**
      * Transit effect enumeration
      */
-    enum class TransitEffect(val displayName: String, val score: Int) {
-        EXCELLENT("Excellent", 5),
-        GOOD("Good", 4),
-        NEUTRAL("Neutral", 3),
-        CHALLENGING("Challenging", 2),
-        DIFFICULT("Difficult", 1)
+    enum class TransitEffect(val key: StringKeyTransit, val score: Int) {
+        EXCELLENT(StringKeyTransit.EFFECT_EXCELLENT, 5),
+        GOOD(StringKeyTransit.EFFECT_GOOD, 4),
+        NEUTRAL(StringKeyTransit.EFFECT_NEUTRAL, 3),
+        CHALLENGING(StringKeyTransit.EFFECT_CHALLENGING, 2),
+        DIFFICULT(StringKeyTransit.EFFECT_DIFFICULT, 1);
+        
+        // Helper to get displayName in code that hasn't been updated to use keys directly
+        val displayName: String get() = StringResources.get(key, Language.ENGLISH)
     }
 
     /**
@@ -301,12 +345,12 @@ class TransitAnalyzer(private val context: Context) {
     /**
      * Transit quality
      */
-    enum class TransitQuality(val displayName: String) {
-        EXCELLENT("Excellent Period"),
-        GOOD("Good Period"),
-        MIXED("Mixed Period"),
-        CHALLENGING("Challenging Period"),
-        DIFFICULT("Difficult Period")
+    enum class TransitQuality(val key: StringKeyTransit) {
+        EXCELLENT(StringKeyTransit.QUALITY_EXCELLENT),
+        GOOD(StringKeyTransit.QUALITY_GOOD),
+        MIXED(StringKeyTransit.QUALITY_MIXED),
+        CHALLENGING(StringKeyTransit.QUALITY_CHALLENGING),
+        DIFFICULT(StringKeyTransit.QUALITY_DIFFICULT)
     }
 
     /**
@@ -355,7 +399,8 @@ class TransitAnalyzer(private val context: Context) {
      */
     fun analyzeTransits(
         natalChart: VedicChart,
-        transitDateTime: LocalDateTime = LocalDateTime.now()
+        transitDateTime: LocalDateTime = LocalDateTime.now(),
+        language: Language = Language.ENGLISH
     ): TransitAnalysis {
         // Get transit positions
         val transitPositions = getTransitPositionsForDateTime(
@@ -368,10 +413,10 @@ class TransitAnalyzer(private val context: Context) {
             ?: throw IllegalStateException("Natal Moon position not found")
 
         // Calculate Gochara results
-        val gocharaResults = calculateGochara(natalMoon, transitPositions)
+        val gocharaResults = calculateGochara(natalMoon, transitPositions, language)
 
         // Calculate transit aspects
-        val transitAspects = calculateTransitAspects(natalChart, transitPositions)
+        val transitAspects = calculateTransitAspects(natalChart, transitPositions, language)
 
         // Calculate Ashtakavarga scores
         val ashtakavargaAnalysis = AshtakavargaCalculator.calculateAshtakavarga(natalChart)
@@ -386,10 +431,10 @@ class TransitAnalyzer(private val context: Context) {
             }
 
         // Calculate overall assessment
-        val overallAssessment = calculateOverallAssessment(gocharaResults, transitAspects, ashtakavargaScores)
+        val overallAssessment = calculateOverallAssessment(gocharaResults, transitAspects, ashtakavargaScores, language)
 
         // Find significant periods
-        val significantPeriods = findSignificantPeriods(natalChart, transitDateTime)
+        val significantPeriods = findSignificantPeriods(natalChart, transitDateTime, language)
 
         return TransitAnalysis(
             natalChart = natalChart,
@@ -399,7 +444,8 @@ class TransitAnalyzer(private val context: Context) {
             transitAspects = transitAspects,
             ashtakavargaScores = ashtakavargaScores,
             overallAssessment = overallAssessment,
-            significantPeriods = significantPeriods
+            significantPeriods = significantPeriods,
+            language = language
         )
     }
 
@@ -408,7 +454,8 @@ class TransitAnalyzer(private val context: Context) {
      */
     private fun calculateGochara(
         natalMoon: PlanetPosition,
-        transitPositions: List<PlanetPosition>
+        transitPositions: List<PlanetPosition>,
+        language: Language
     ): List<GocharaResult> {
         val results = mutableListOf<GocharaResult>()
         val natalMoonSign = natalMoon.sign
@@ -442,7 +489,7 @@ class TransitAnalyzer(private val context: Context) {
                 baseEffect
             }
 
-            val interpretation = generateGocharaInterpretation(planet, houseFromMoon, finalEffect, isVedhaAffected)
+            val interpretation = generateGocharaInterpretation(planet, houseFromMoon, finalEffect, isVedhaAffected, language)
 
             results.add(
                 GocharaResult(
@@ -500,7 +547,8 @@ class TransitAnalyzer(private val context: Context) {
      */
     private fun calculateTransitAspects(
         natalChart: VedicChart,
-        transitPositions: List<PlanetPosition>
+        transitPositions: List<PlanetPosition>,
+        language: Language
     ): List<TransitAspect> {
         val aspects = mutableListOf<TransitAspect>()
 
@@ -513,19 +561,21 @@ class TransitAnalyzer(private val context: Context) {
                 )
 
                 // Check each aspect angle
-                ASPECT_ANGLES.forEach { (aspectAngle, aspectName) ->
+                ASPECT_ANGLES.forEach { (aspectAngle, aspectKey) ->
                     val orb = calculateOrb(angularSeparation, aspectAngle)
                     val maxOrb = TRANSIT_ORBS[transitPos.planet] ?: 6.0
 
                     if (orb <= maxOrb) {
                         val strength = 1.0 - (orb / maxOrb)
                         val isApplying = isAspectApplying(transitPos, natalPos, aspectAngle)
+                        val aspectName = StringResources.get(aspectKey, language)
 
                         val interpretation = generateAspectInterpretation(
                             transitPos.planet,
                             natalPos.planet,
-                            aspectName,
-                            isApplying
+                            aspectKey,
+                            isApplying,
+                            language
                         )
 
                         aspects.add(
@@ -533,6 +583,7 @@ class TransitAnalyzer(private val context: Context) {
                                 transitingPlanet = transitPos.planet,
                                 natalPlanet = natalPos.planet,
                                 aspectType = aspectName,
+                                aspectKey = aspectKey,
                                 exactAngle = angularSeparation,
                                 orb = orb,
                                 isApplying = isApplying,
@@ -554,7 +605,8 @@ class TransitAnalyzer(private val context: Context) {
     private fun calculateOverallAssessment(
         gocharaResults: List<GocharaResult>,
         transitAspects: List<TransitAspect>,
-        ashtakavargaScores: Map<Planet, AshtakavargaCalculator.TransitScore>
+        ashtakavargaScores: Map<Planet, AshtakavargaCalculator.TransitScore>,
+        language: Language
     ): OverallTransitAssessment {
         // Score from Gochara (handle empty list case to avoid NaN)
         val gocharaScore = if (gocharaResults.isNotEmpty()) {
@@ -564,11 +616,13 @@ class TransitAnalyzer(private val context: Context) {
         // Score from strong aspects
         val aspectScore = if (transitAspects.isNotEmpty()) {
             val beneficAspects = transitAspects.count { aspect ->
-                (aspect.aspectType in listOf("Trine", "Sextile") ||
-                        (aspect.aspectType == "Conjunction" && aspect.transitingPlanet in listOf(Planet.JUPITER, Planet.VENUS)))
+                val type = StringResources.get(aspect.aspectKey, Language.ENGLISH) // Check conceptual type
+                (type in listOf("Trine", "Sextile") ||
+                        (type == "Conjunction" && aspect.transitingPlanet in listOf(Planet.JUPITER, Planet.VENUS)))
             }
             val maleficAspects = transitAspects.count { aspect ->
-                aspect.aspectType in listOf("Square", "Opposition") &&
+                val type = StringResources.get(aspect.aspectKey, Language.ENGLISH)
+                type in listOf("Square", "Opposition") &&
                         aspect.transitingPlanet in listOf(Planet.SATURN, Planet.MARS, Planet.RAHU, Planet.KETU)
             }
             ((beneficAspects * 10) - (maleficAspects * 5) + 50).coerceIn(0, 100).toDouble()
@@ -590,8 +644,8 @@ class TransitAnalyzer(private val context: Context) {
             else -> TransitQuality.DIFFICULT
         }
 
-        val summary = generateOverallSummary(quality, gocharaResults, transitAspects)
-        val focusAreas = generateFocusAreas(gocharaResults, transitAspects)
+        val summary = generateOverallSummary(quality, gocharaResults, transitAspects, language)
+        val focusAreas = generateFocusAreas(gocharaResults, transitAspects, language)
 
         return OverallTransitAssessment(
             quality = quality,
@@ -606,7 +660,8 @@ class TransitAnalyzer(private val context: Context) {
      */
     private fun findSignificantPeriods(
         natalChart: VedicChart,
-        startDate: LocalDateTime
+        startDate: LocalDateTime,
+        language: Language
     ): List<SignificantPeriod> {
         val periods = mutableListOf<SignificantPeriod>()
 
@@ -633,7 +688,7 @@ class TransitAnalyzer(private val context: Context) {
                 }
 
                 if (isSignificant) {
-                    val description = generatePeriodDescription(planet, houseFromMoon)
+                    val description = generatePeriodDescription(planet, houseFromMoon, language)
                     val intensity = when {
                         planet == Planet.SATURN && houseFromMoon == 8 -> 5 // Ashtama Shani
                         planet == Planet.SATURN && houseFromMoon in listOf(1, 12) -> 4 // Sade Sati peak/end
@@ -664,16 +719,14 @@ class TransitAnalyzer(private val context: Context) {
      * Calculate house from one sign to another
      */
     private fun calculateHouseFromSign(targetSign: ZodiacSign, referenceSign: ZodiacSign): Int {
-        val diff = targetSign.number - referenceSign.number
-        return if (diff >= 0) diff + 1 else diff + 13
+        return VedicAstrologyUtils.getHouseFromSigns(targetSign, referenceSign)
     }
 
     /**
      * Calculate angular separation
      */
     private fun calculateAngularSeparation(long1: Double, long2: Double): Double {
-        val diff = abs(long1 - long2)
-        return if (diff > 180.0) 360.0 - diff else diff
+        return VedicAstrologyUtils.angularDistance(long1, long2)
     }
 
     /**
@@ -695,14 +748,14 @@ class TransitAnalyzer(private val context: Context) {
         // If transit planet is moving faster than natal (always true for transits to natal),
         // check if the orb is decreasing
         val currentOrb = calculateOrb(
-            calculateAngularSeparation(transitPos.longitude, natalPos.longitude),
+            VedicAstrologyUtils.angularDistance(transitPos.longitude, natalPos.longitude),
             aspectAngle
         )
 
         // Estimate future position based on speed
-        val futureLong = transitPos.longitude + transitPos.speed
+        val futureLong = VedicAstrologyUtils.normalizeLongitude(transitPos.longitude + transitPos.speed)
         val futureOrb = calculateOrb(
-            calculateAngularSeparation(futureLong, natalPos.longitude),
+            VedicAstrologyUtils.angularDistance(futureLong, natalPos.longitude),
             aspectAngle
         )
 
@@ -716,32 +769,50 @@ class TransitAnalyzer(private val context: Context) {
         planet: Planet,
         houseFromMoon: Int,
         effect: TransitEffect,
-        isVedhaAffected: Boolean
+        isVedhaAffected: Boolean,
+        language: Language
     ): String {
-        val houseMatters = when (houseFromMoon) {
-            1 -> "self, health, personality"
-            2 -> "wealth, family, speech"
-            3 -> "courage, siblings, short journeys"
-            4 -> "home, mother, mental peace"
-            5 -> "children, creativity, romance"
-            6 -> "enemies, health issues, debts"
-            7 -> "marriage, partnerships, business"
-            8 -> "obstacles, longevity, occult"
-            9 -> "fortune, father, religion"
-            10 -> "career, status, government"
-            11 -> "gains, friends, elder siblings"
-            12 -> "expenses, spirituality, foreign"
-            else -> "general matters"
+        val planetName = planet.getLocalizedName(language)
+        val isFavorable = effect in listOf(TransitEffect.EXCELLENT, TransitEffect.GOOD)
+        
+        val effectKey = if (isFavorable) {
+            GOCHARA_FAVORABLE_KEYS[planet]?.get(houseFromMoon)
+        } else {
+            GOCHARA_UNFAVORABLE_KEYS[planet]?.get(houseFromMoon)
         }
 
-        val vedhaNote = if (isVedhaAffected) " Effects may be diminished due to Vedha." else ""
+        val baseInterpretation = effectKey?.let { getString(it) } ?: run {
+            // Fallback if key missing
+            val houseMattersKey = when (houseFromMoon) {
+                1 -> StringKeyTransit.GOCHARA_MATTERS_1
+                2 -> StringKeyTransit.GOCHARA_MATTERS_2
+                3 -> StringKeyTransit.GOCHARA_MATTERS_3
+                4 -> StringKeyTransit.GOCHARA_MATTERS_4
+                5 -> StringKeyTransit.GOCHARA_MATTERS_5
+                6 -> StringKeyTransit.GOCHARA_MATTERS_6
+                7 -> StringKeyTransit.GOCHARA_MATTERS_7
+                8 -> StringKeyTransit.GOCHARA_MATTERS_8
+                9 -> StringKeyTransit.GOCHARA_MATTERS_9
+                10 -> StringKeyTransit.GOCHARA_MATTERS_10
+                11 -> StringKeyTransit.GOCHARA_MATTERS_11
+                12 -> StringKeyTransit.GOCHARA_MATTERS_12
+                else -> StringKeyTransit.GOCHARA_MATTERS_GENERAL
+            }
+            val houseMatters = StringResources.get(houseMattersKey, language)
+            val templateKey = when (effect) {
+                TransitEffect.EXCELLENT -> StringKeyTransit.GOCHARA_EFFECT_EXCELLENT
+                TransitEffect.GOOD -> StringKeyTransit.GOCHARA_EFFECT_GOOD
+                TransitEffect.NEUTRAL -> StringKeyTransit.GOCHARA_EFFECT_NEUTRAL
+                TransitEffect.CHALLENGING -> StringKeyTransit.GOCHARA_EFFECT_CHALLENGING
+                TransitEffect.DIFFICULT -> StringKeyTransit.GOCHARA_EFFECT_DIFFICULT
+            }
+            StringResources.get(templateKey, language, planetName, houseFromMoon, houseMatters, "")
+        }
 
-        return when (effect) {
-            TransitEffect.EXCELLENT -> "${planet.displayName} transit in ${houseFromMoon}th house brings excellent results for $houseMatters.$vedhaNote"
-            TransitEffect.GOOD -> "${planet.displayName} transit in ${houseFromMoon}th house supports $houseMatters.$vedhaNote"
-            TransitEffect.NEUTRAL -> "${planet.displayName} transit in ${houseFromMoon}th house has neutral effects on $houseMatters.$vedhaNote"
-            TransitEffect.CHALLENGING -> "${planet.displayName} transit in ${houseFromMoon}th house may challenge $houseMatters.$vedhaNote"
-            TransitEffect.DIFFICULT -> "${planet.displayName} transit in ${houseFromMoon}th house requires caution in $houseMatters.$vedhaNote"
+        return if (isVedhaAffected) {
+            baseInterpretation + getString(StringKeyHoroscope.VEDHA_OBSTRUCTION, "...") // Analyzer doesn't always have source here
+        } else {
+            baseInterpretation
         }
     }
 
@@ -751,18 +822,26 @@ class TransitAnalyzer(private val context: Context) {
     private fun generateAspectInterpretation(
         transitingPlanet: Planet,
         natalPlanet: Planet,
-        aspectType: String,
-        isApplying: Boolean
+        aspectKey: StringKeyTransit,
+        isApplying: Boolean,
+        language: Language
     ): String {
-        val applyingStr = if (isApplying) "becoming exact" else "separating"
+        val applyingStr = if (isApplying) StringResources.get(StringKeyTransit.ASPECT_APPLYING, language) else StringResources.get(StringKeyTransit.ASPECT_SEPARATING, language)
         val beneficTransit = transitingPlanet in listOf(Planet.JUPITER, Planet.VENUS)
-        val harmonicAspect = aspectType in listOf("Trine", "Sextile")
+        
+        // We use the English name conceptually for logic, but display localized string
+        val aspectName = StringResources.get(aspectKey, Language.ENGLISH)
+        val harmonicAspect = aspectName in listOf("Trine", "Sextile")
+        
+        val transitingName = transitingPlanet.getLocalizedName(language)
+        val natalName = natalPlanet.getLocalizedName(language)
+        val localizedAspectName = StringResources.get(aspectKey, language)
 
         return when {
-            beneficTransit && harmonicAspect -> "Favorable: Transit ${transitingPlanet.displayName} $aspectType natal ${natalPlanet.displayName} ($applyingStr) - beneficial influence"
-            beneficTransit -> "Transit ${transitingPlanet.displayName} $aspectType natal ${natalPlanet.displayName} ($applyingStr) - mixed but generally supportive"
-            harmonicAspect -> "Transit ${transitingPlanet.displayName} $aspectType natal ${natalPlanet.displayName} ($applyingStr) - harmonious connection"
-            else -> "Transit ${transitingPlanet.displayName} $aspectType natal ${natalPlanet.displayName} ($applyingStr) - requires attention"
+            beneficTransit && harmonicAspect -> StringResources.get(StringKeyTransit.ASPECT_INTERP_BENEFIC_HARMONIC, language, transitingName, localizedAspectName, natalName, applyingStr)
+            beneficTransit -> StringResources.get(StringKeyTransit.ASPECT_INTERP_BENEFIC, language, transitingName, localizedAspectName, natalName, applyingStr)
+            harmonicAspect -> StringResources.get(StringKeyTransit.ASPECT_INTERP_HARMONIC, language, transitingName, localizedAspectName, natalName, applyingStr)
+            else -> StringResources.get(StringKeyTransit.ASPECT_INTERP_CHALLENGING, language, transitingName, localizedAspectName, natalName, applyingStr)
         }
     }
 
@@ -772,19 +851,23 @@ class TransitAnalyzer(private val context: Context) {
     private fun generateOverallSummary(
         quality: TransitQuality,
         gocharaResults: List<GocharaResult>,
-        transitAspects: List<TransitAspect>
+        transitAspects: List<TransitAspect>,
+        language: Language
     ): String {
         val favorablePlanets = gocharaResults.filter { it.effect in listOf(TransitEffect.EXCELLENT, TransitEffect.GOOD) }
-            .map { it.planet.displayName }
+            .map { it.planet.getLocalizedName(language) }
         val challengingPlanets = gocharaResults.filter { it.effect in listOf(TransitEffect.CHALLENGING, TransitEffect.DIFFICULT) }
-            .map { it.planet.displayName }
+            .map { it.planet.getLocalizedName(language) }
+
+        val favStr = favorablePlanets.joinToString(", ")
+        val chalStr = challengingPlanets.joinToString(", ")
 
         return when (quality) {
-            TransitQuality.EXCELLENT -> "This is an excellent transit period. ${favorablePlanets.joinToString(", ")} are well-placed from Moon, supporting growth and positive developments."
-            TransitQuality.GOOD -> "Overall favorable transit period. ${favorablePlanets.joinToString(", ")} provide support. Good time for important initiatives."
-            TransitQuality.MIXED -> "Mixed transit influences present. Balance ${favorablePlanets.joinToString(", ")} positives against ${challengingPlanets.joinToString(", ")} challenges."
-            TransitQuality.CHALLENGING -> "Challenging period requiring patience. ${challengingPlanets.joinToString(", ")} may create obstacles. Focus on steady progress."
-            TransitQuality.DIFFICULT -> "Difficult transit period. ${challengingPlanets.joinToString(", ")} create significant challenges. Exercise caution and avoid major decisions."
+            TransitQuality.EXCELLENT -> getString(StringKeyTransit.SUMMARY_EXCELLENT, favStr)
+            TransitQuality.GOOD -> getString(StringKeyTransit.SUMMARY_GOOD, favStr)
+            TransitQuality.MIXED -> getString(StringKeyTransit.SUMMARY_MIXED, favStr, chalStr)
+            TransitQuality.CHALLENGING -> getString(StringKeyTransit.SUMMARY_CHALLENGING, chalStr)
+            TransitQuality.DIFFICULT -> getString(StringKeyTransit.SUMMARY_DIFFICULT, chalStr)
         }
     }
 
@@ -793,34 +876,40 @@ class TransitAnalyzer(private val context: Context) {
      */
     private fun generateFocusAreas(
         gocharaResults: List<GocharaResult>,
-        transitAspects: List<TransitAspect>
+        transitAspects: List<TransitAspect>,
+        language: Language
     ): List<String> {
         val areas = mutableListOf<String>()
 
         // Check Saturn transit
         gocharaResults.find { it.planet == Planet.SATURN }?.let { saturnResult ->
-            when (saturnResult.houseFromMoon) {
-                1, 12 -> areas.add("Sade Sati period - focus on patience, health, and spiritual growth")
-                8 -> areas.add("Ashtama Shani - be cautious about health, unexpected challenges")
-                4 -> areas.add("Saturn transiting 4th - attention to home, mother, mental peace")
-                10 -> areas.add("Saturn transiting 10th - career responsibilities, hard work pays off")
-                else -> { /* No specific focus area for other houses */ }
+            val focusKey = when (saturnResult.houseFromMoon) {
+                1, 12 -> StringKeyTransit.FOCUS_SADE_SATI
+                8 -> StringKeyTransit.FOCUS_ASHTAMA_SHANI
+                4 -> StringKeyTransit.FOCUS_SATURN_4
+                10 -> StringKeyTransit.FOCUS_SATURN_10
+                else -> null
             }
+            focusKey?.let { areas.add(getString(it)) }
         }
 
         // Check Jupiter transit
         gocharaResults.find { it.planet == Planet.JUPITER }?.let { jupiterResult ->
-            when (jupiterResult.houseFromMoon) {
-                1, 5, 9 -> areas.add("Jupiter in trine houses - excellent for expansion, learning, spirituality")
-                2 -> areas.add("Jupiter transiting 2nd - favorable for wealth accumulation")
-                11 -> areas.add("Jupiter transiting 11th - gains through networking, fulfillment of desires")
-                else -> { /* No specific focus area for other houses */ }
+            val focusKey = when (jupiterResult.houseFromMoon) {
+                1, 5, 9 -> StringKeyTransit.FOCUS_JUPITER_TRINE
+                2 -> StringKeyTransit.FOCUS_JUPITER_2
+                11 -> StringKeyTransit.FOCUS_JUPITER_11
+                else -> null
             }
+            focusKey?.let { areas.add(getString(it)) }
         }
 
         // Check strong aspects
         transitAspects.filter { it.strength > 0.8 }.take(3).forEach { aspect ->
-            areas.add("Strong ${aspect.aspectType} from transit ${aspect.transitingPlanet.displayName} to natal ${aspect.natalPlanet.displayName}")
+            val aspectName = getString(aspect.aspectKey)
+            val transitName = aspect.transitingPlanet.getLocalizedName(language)
+            val natalName = aspect.natalPlanet.getLocalizedName(language)
+            areas.add(getString(StringKeyTransit.FOCUS_STRONG_ASPECT, aspectName, transitName, natalName))
         }
 
         return areas.take(5)
@@ -829,27 +918,27 @@ class TransitAnalyzer(private val context: Context) {
     /**
      * Generate period description
      */
-    private fun generatePeriodDescription(planet: Planet, houseFromMoon: Int): String {
+    private fun generatePeriodDescription(planet: Planet, houseFromMoon: Int, language: Language): String {
         return when (planet) {
             Planet.SATURN -> when (houseFromMoon) {
-                12 -> "Sade Sati beginning phase (Saturn in 12th from Moon)"
-                1 -> "Sade Sati peak phase (Saturn over natal Moon)"
-                2 -> "Sade Sati ending phase (Saturn in 2nd from Moon)"
-                8 -> "Ashtama Shani (Saturn in 8th from Moon)"
-                4 -> "Kantak Shani (Saturn in 4th from Moon)"
-                7 -> "Saturn in 7th from Moon - relationship focus"
-                10 -> "Saturn in 10th from Moon - career challenges and growth"
-                else -> "Saturn transit in ${houseFromMoon}th from Moon"
+                12 -> getString(StringKeyTransit.PERIOD_SADE_SATI_BEGIN)
+                1 -> getString(StringKeyTransit.PERIOD_SADE_SATI_PEAK)
+                2 -> getString(StringKeyTransit.PERIOD_SADE_SATI_END)
+                8 -> getString(StringKeyTransit.PERIOD_ASHTAMA_SHANI)
+                4 -> getString(StringKeyTransit.PERIOD_KANTAK_SHANI)
+                7 -> getString(StringKeyTransit.PERIOD_SATURN_7)
+                10 -> getString(StringKeyTransit.PERIOD_SATURN_10)
+                else -> getString(StringKeyTransit.PERIOD_SATURN_GENERIC, houseFromMoon)
             }
             Planet.JUPITER -> when (houseFromMoon) {
-                1 -> "Jupiter over natal Moon - expansion and growth"
-                5 -> "Jupiter in 5th from Moon - creativity and children"
-                9 -> "Jupiter in 9th from Moon - fortune and dharma"
-                else -> "Jupiter transit in ${houseFromMoon}th from Moon"
+                1 -> getString(StringKeyTransit.PERIOD_JUPITER_1)
+                5 -> getString(StringKeyTransit.PERIOD_JUPITER_5)
+                9 -> getString(StringKeyTransit.PERIOD_JUPITER_9)
+                else -> getString(StringKeyTransit.PERIOD_JUPITER_GENERIC, houseFromMoon)
             }
-            Planet.RAHU -> "Rahu transit in ${houseFromMoon}th from Moon - worldly desires amplified"
-            Planet.KETU -> "Ketu transit in ${houseFromMoon}th from Moon - spiritual detachment"
-            else -> "${planet.displayName} transit in ${houseFromMoon}th from Moon"
+            Planet.RAHU -> getString(StringKeyTransit.PERIOD_RAHU_GENERIC, houseFromMoon)
+            Planet.KETU -> getString(StringKeyTransit.PERIOD_KETU_GENERIC, houseFromMoon)
+            else -> getString(StringKeyTransit.PERIOD_GENERIC, planet.getLocalizedName(language), houseFromMoon)
         }
     }
 

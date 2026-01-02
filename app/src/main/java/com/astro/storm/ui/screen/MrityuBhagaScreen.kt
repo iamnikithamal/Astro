@@ -88,11 +88,11 @@ fun MrityuBhagaScreen(
     )
 
     // Calculate analysis
-    LaunchedEffect(chart) {
+    LaunchedEffect(chart, language) {
         isCalculating = true
         delay(300)
         withContext(Dispatchers.Default) {
-            analysisResult = MrityuBhagaCalculator.analyzeSensitiveDegrees(chart)
+            analysisResult = MrityuBhagaCalculator.analyzeSensitiveDegrees(chart, language)
         }
         isCalculating = false
     }
@@ -828,7 +828,7 @@ private fun PushkaraNavamsaCard(result: PushkaraNavamsaResult, language: Languag
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "${result.planet.getLocalizedName(language)} in Pushkara Navamsa",
+                    "${result.planet.getLocalizedName(language)} " + stringResource(StringKeyFinder.LABEL_PUSH_NAV_IN),
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
                 )
@@ -872,12 +872,12 @@ private fun PushkaraBhagaCard(result: PushkaraBhagaResult, language: Language) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "${result.planet.getLocalizedName(language)} in Pushkara Bhaga",
+                    "${result.planet.getLocalizedName(language)} " + stringResource(StringKeyFinder.LABEL_PUSH_BHAGA_IN),
                     fontWeight = FontWeight.SemiBold,
                     color = AppTheme.TextPrimary
                 )
                 Text(
-                    "Nourishing degree: ${String.format("%.1f", result.pushkaraBhagaDegree)}° (Orb: ${String.format("%.2f", result.distance)}°)",
+                    StringResources.get(StringKeyFinder.LABEL_NOURISHING_DEGREE, language, String.format("%.1f", result.pushkaraBhagaDegree), String.format("%.2f", result.distance)),
                     fontSize = 12.sp,
                     color = AppTheme.TextMuted
                 )
@@ -953,13 +953,13 @@ private fun SignDegreesTab(analysis: SensitiveDegreesAnalysis, language: Languag
                             )
                             Row {
                                 Text(
-                                    "MB: ${String.format("%.0f", result.mrityuBhagaDegree)}°",
+                                    StringResources.get(StringKeyFinder.LABEL_MB_DEGREE, language, String.format("%.0f", result.mrityuBhagaDegree)),
                                     fontSize = 12.sp,
                                     color = AppTheme.TextMuted
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    "Actual: ${String.format("%.1f", result.actualDegree)}°",
+                                    StringResources.get(StringKeyFinder.LABEL_ACTUAL_DEGREE, language, String.format("%.1f", result.actualDegree)),
                                     fontSize = 12.sp,
                                     color = if (isInMrityu) AppTheme.WarningColor else AppTheme.TextSecondary,
                                     fontWeight = if (isInMrityu) FontWeight.Medium else FontWeight.Normal
@@ -1033,108 +1033,107 @@ private fun RemediesTab(analysis: SensitiveDegreesAnalysis, language: Language) 
         // Planet-specific remedies
         val criticalPlanets = analysis.mrityuBhagaAnalysis.filter { it.isInMrityuBhaga }
 
-        if (criticalPlanets.isNotEmpty()) {
-            item {
-                Text(
-                    "Planet-Specific Remedies",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = AppTheme.TextPrimary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(criticalPlanets) { result ->
-                if (result.remedies.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = AppTheme.CardBackground),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(AppTheme.getPlanetColor(result.planet).copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        result.planet.displayName.take(2),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
-                                        color = AppTheme.getPlanetColor(result.planet)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    "${result.planet.getLocalizedName(language)} Remedies",
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = AppTheme.TextPrimary
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            result.remedies.forEach { remedy ->
-                                Row(
-                                    modifier = Modifier.padding(vertical = 3.dp),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Text("•", color = AppTheme.AccentPrimary, fontSize = 14.sp)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        remedy,
-                                        fontSize = 13.sp,
-                                        color = AppTheme.TextSecondary,
-                                        lineHeight = 18.sp
-                                    )
+                if (criticalPlanets.isNotEmpty()) {
+                    item {
+                        Text(
+                            stringResource(StringKeyFinder.LABEL_PLANET_SPEC_REM),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = AppTheme.TextPrimary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+        
+                    items(criticalPlanets) { result ->
+                        if (result.remedies.isNotEmpty()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = AppTheme.CardBackground),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(AppTheme.getPlanetColor(result.planet).copy(alpha = 0.2f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                result.planet.displayName.take(2),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = AppTheme.getPlanetColor(result.planet)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            StringResources.get(StringKeyFinder.LABEL_PLANET_REM, language, result.planet.getLocalizedName(language)),
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = AppTheme.TextPrimary
+                                        )
+                                    }
+        
+                                    Spacer(modifier = Modifier.height(12.dp))
+        
+                                    result.remedies.forEach { remedy ->
+                                        Row(
+                                            modifier = Modifier.padding(vertical = 3.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Text("•", color = AppTheme.AccentPrimary, fontSize = 14.sp)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                remedy,
+                                                fontSize = 13.sp,
+                                                color = AppTheme.TextSecondary,
+                                                lineHeight = 18.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        // Gandanta remedies
-        val gandantaPlanets = analysis.gandantaAnalysis.filter { it.isInGandanta }
-
-        if (gandantaPlanets.isNotEmpty()) {
-            item {
-                Text(
-                    "Gandanta Remedies",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = AppTheme.TextPrimary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(gandantaPlanets) { result ->
-                if (result.remedies.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = AppTheme.CardBackground),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Filled.Waves,
-                                    contentDescription = null,
-                                    tint = AppTheme.AccentTeal,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    "${result.planet.getLocalizedName(language)} - ${result.gandantaType.name.replace("_", " ")}",
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = AppTheme.TextPrimary
-                                )
-                            }
-
+        
+                // Gandanta remedies
+                val gandantaPlanets = analysis.gandantaAnalysis.filter { it.isInGandanta }
+        
+                if (gandantaPlanets.isNotEmpty()) {
+                    item {
+                        Text(
+                            stringResource(StringKeyFinder.LABEL_GAND_REM),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = AppTheme.TextPrimary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+        
+                    items(gandantaPlanets) { result ->
+                        if (result.remedies.isNotEmpty()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = AppTheme.CardBackground),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Filled.Waves,
+                                            contentDescription = null,
+                                            tint = AppTheme.AccentTeal,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            "${result.planet.getLocalizedName(language)} - ${result.gandantaType.name.replace("_", " ")}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = AppTheme.TextPrimary
+                                        )
+                                    }
                             Spacer(modifier = Modifier.height(12.dp))
 
                             result.remedies.forEach { remedy ->
@@ -1187,10 +1186,10 @@ private fun RemediesTab(analysis: SensitiveDegreesAnalysis, language: Language) 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     val precautions = listOf(
-                        "Be extra cautious during Dasha/Antardasha periods of planets in Mrityu Bhaga",
-                        "Avoid major decisions during critical transit periods",
-                        "Regular spiritual practices provide natural protection",
-                        "Maintain awareness without excessive worry - these are tendencies, not certainties"
+                        stringResource(StringKeyFinder.PREC_DASHA),
+                        stringResource(StringKeyFinder.PREC_TRANSIT),
+                        stringResource(StringKeyFinder.PREC_SPIRITUAL),
+                        stringResource(StringKeyFinder.PREC_AWARENESS)
                     )
 
                     precautions.forEach { precaution ->

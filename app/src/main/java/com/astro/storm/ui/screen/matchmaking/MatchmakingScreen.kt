@@ -715,7 +715,7 @@ private fun EnhancedCompatibilityScoreCard(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            result.rating.displayName,
+                            result.rating.getLocalizedName(LocalLanguage.current),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = getRatingColor(result.rating)
@@ -742,7 +742,7 @@ private fun EnhancedCompatibilityScoreCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = result.rating.description,
+                    text = result.rating.getLocalizedDescription(LocalLanguage.current),
                     style = MaterialTheme.typography.bodyMedium,
                     color = AppTheme.TextMuted,
                     textAlign = TextAlign.Center,
@@ -761,13 +761,14 @@ private fun QuickInsightsRow(result: MatchmakingResult) {
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        val language = LocalLanguage.current
         val hasNadiDosha = result.gunaAnalyses.find { it.gunaType == GunaType.NADI }?.hasDosha == true
         val hasBhakootDosha = result.gunaAnalyses.find { it.gunaType == GunaType.BHAKOOT }?.hasDosha == true
 
         item {
             QuickInsightChip(
                 label = stringResource(StringKeyMatch.MATCH_MANGLIK),
-                value = result.getManglikQuickStatus(),
+                value = result.getManglikQuickStatus(language),
                 color = getManglikStatusColor(result.manglikCompatibility)
             )
         }
@@ -1032,9 +1033,10 @@ private fun ProfileComparisonCard(
             HorizontalDivider(color = AppTheme.DividerColor)
             Spacer(modifier = Modifier.height(12.dp))
 
-            ComparisonRow(stringResource(StringKeyMatch.MATCH_MOON_SIGN), getRashiName(brideChart), getRashiName(groomChart))
-            ComparisonRow(stringResource(StringKeyMatch.MATCH_NAKSHATRA), getNakshatraName(brideChart), getNakshatraName(groomChart))
-            ComparisonRow(stringResource(StringKeyMatch.MATCH_PADA), getPada(brideChart), getPada(groomChart))
+            val language = LocalLanguage.current
+            ComparisonRow(stringResource(StringKeyMatch.MATCH_MOON_SIGN), MatchmakingReportUtils.getRashiName(brideChart, language), MatchmakingReportUtils.getRashiName(groomChart, language))
+            ComparisonRow(stringResource(StringKeyMatch.MATCH_NAKSHATRA), MatchmakingReportUtils.getNakshatraName(brideChart, language), MatchmakingReportUtils.getNakshatraName(groomChart, language))
+            ComparisonRow(stringResource(StringKeyMatch.MATCH_PADA), MatchmakingReportUtils.getPada(brideChart, language), MatchmakingReportUtils.getPada(groomChart, language))
         }
     }
 }
@@ -2469,14 +2471,16 @@ private fun getMoonPosition(chart: VedicChart) = chart.planetPositions.find {
 
 @Composable
 private fun getNakshatraName(chart: VedicChart): String {
-    return getMoonPosition(chart)?.nakshatra?.displayName ?: stringResource(StringKeyMatch.MISC_UNKNOWN)
+    val language = LocalLanguage.current
+    return getMoonPosition(chart)?.nakshatra?.getLocalizedName(language) ?: stringResource(StringKeyMatch.MISC_UNKNOWN)
 }
 
 @Composable
 private fun getRashiName(chart: VedicChart): String {
     val unknownText = stringResource(StringKeyMatch.MISC_UNKNOWN)
+    val language = LocalLanguage.current
     val moonPosition = getMoonPosition(chart) ?: return unknownText
-    return moonPosition.sign.displayName
+    return moonPosition.sign.getLocalizedName(language)
 }
 
 @Composable
@@ -2489,24 +2493,27 @@ private fun getPada(chart: VedicChart): String {
 @Composable
 private fun getNakshatraLord(chart: VedicChart): String {
     val unknownText = stringResource(StringKeyMatch.MISC_UNKNOWN)
+    val language = LocalLanguage.current
     val moonPosition = getMoonPosition(chart) ?: return unknownText
-    return moonPosition.nakshatra.ruler.displayName
+    return moonPosition.nakshatra.ruler.getLocalizedName(language)
 }
 
 @Composable
 private fun getGana(chart: VedicChart): String {
     val unknownText = stringResource(StringKeyMatch.MISC_UNKNOWN)
+    val language = LocalLanguage.current
     val moonPosition = getMoonPosition(chart) ?: return unknownText
     // Use centralized VedicAstrologyUtils for consistent Gana lookup
-    return VedicAstrologyUtils.getGanaDisplayName(moonPosition.nakshatra)
+    return VedicAstrologyUtils.getGanaDisplayName(moonPosition.nakshatra, language)
 }
 
 @Composable
 private fun getYoni(chart: VedicChart): String {
     val unknownText = stringResource(StringKeyMatch.MISC_UNKNOWN)
+    val language = LocalLanguage.current
     val moonPosition = getMoonPosition(chart) ?: return unknownText
     // Use centralized VedicAstrologyUtils for consistent Yoni lookup
-    return VedicAstrologyUtils.getYoniDisplayName(moonPosition.nakshatra)
+    return VedicAstrologyUtils.getYoniDisplayName(moonPosition.nakshatra, language)
 }
 
 /**
@@ -2629,7 +2636,8 @@ private fun MatchmakingAiInsightCard(
                                                 model = model,
                                                 currentProfile = null,
                                                 allProfiles = emptyList(),
-                                                currentChart = brideChart
+                                                currentChart = brideChart,
+                                                language = LocalLanguage.current
                                             ).collect { response ->
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {

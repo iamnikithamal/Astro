@@ -99,6 +99,8 @@ fun ChartTabContent(
     onPlanetClick: (PlanetPosition) -> Unit,
     onHouseClick: (Int) -> Unit
 ) {
+    val language = LocalLanguage.current
+    
     // Performance Optimization: Convert the list of divisional charts to a map for
     // efficient O(1) lookups. This avoids repeated, slow O(n) searches when the
     // user selects different chart types.
@@ -380,7 +382,8 @@ private fun MainChartCard(
                             drawScope = this,
                             chart = chart,
                             size = size.minDimension,
-                            chartTitle = "Lagna"
+                            chartTitle = "Lagna",
+                            language = language
                         )
                     } else {
                         currentChartData?.let {
@@ -390,7 +393,8 @@ private fun MainChartCard(
                                 ascendantLongitude = it.ascendantLongitude,
                                 size = size.minDimension,
                                 chartTitle = chartInfo.third,
-                                originalChart = chart
+                                originalChart = chart,
+                                language = language
                             )
                         }
                     }
@@ -947,7 +951,7 @@ private fun HouseCuspsCard(
                 }
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = ChartDetailColors.TextMuted,
                     modifier = Modifier.rotate(rotation)
                 )
@@ -1071,7 +1075,7 @@ private fun AstronomicalDataCard(
                 }
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = ChartDetailColors.TextMuted,
                     modifier = Modifier.rotate(rotation)
                 )

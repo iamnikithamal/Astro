@@ -240,8 +240,8 @@ object GunaMilanCalculator {
             maxPoints = MatchmakingConstants.MAX_YONI,
             obtainedPoints = points,
             description = StringResources.get(StringKeyMatch.YONI_DESC, language),
-            brideValue = "${brideYoni.animal} (${brideYoni.gender})",
-            groomValue = "${groomYoni.animal} (${groomYoni.gender})",
+            brideValue = "${brideYoni.getLocalizedAnimal(language)} (${brideYoni.getLocalizedGender(language)})",
+            groomValue = "${groomYoni.getLocalizedAnimal(language)} (${groomYoni.getLocalizedGender(language)})",
             analysis = StringResources.get(analysisKey, language),
             isPositive = points >= 2.0
         )

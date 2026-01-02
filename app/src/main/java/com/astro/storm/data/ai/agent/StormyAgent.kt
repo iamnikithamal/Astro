@@ -14,6 +14,7 @@ import com.astro.storm.data.ai.agent.tools.ToolExecutionResult
 import com.astro.storm.data.local.ChartDatabase
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.repository.SavedChart
+import com.astro.storm.data.localization.Language
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.json.JSONArray
@@ -76,13 +77,26 @@ class StormyAgent private constructor(
     fun generateSystemPrompt(
         currentProfile: SavedChart?,
         allProfiles: List<SavedChart>,
-        currentChart: VedicChart?
+        currentChart: VedicChart?,
+        language: Language = Language.ENGLISH
     ): String {
         val profileContext = buildProfileContext(currentProfile, allProfiles, currentChart)
         val toolsDescription = toolRegistry.getToolsDescription()
 
+        val languageInstruction = if (language == Language.NEPALI) {
+            """
+## Language Instruction
+**IMPORTANT:** The user's preferred language is **Nepali**. You MUST provide your response in Nepali language.
+However, you can use English for technical astrological terms in parentheses if needed for clarity, e.g., "सूर्य (Sun)".
+            """.trimIndent()
+        } else {
+            ""
+        }
+
         return """
 You are Stormy, an expert Vedic astrologer and autonomous AI assistant in the AstroStorm app. You are a master of Jyotish Shastra who works autonomously to provide accurate, insightful, and comprehensive astrological guidance.
+
+$languageInstruction
 
 ## Your Expertise
 - Deep mastery of Vedic astrology including Parashari, Jaimini, and Nadi systems
@@ -249,12 +263,13 @@ Remember: You are Stormy, a masterful Vedic astrologer and caring assistant. Hel
         allProfiles: List<SavedChart>,
         currentChart: VedicChart?,
         temperature: Float? = null,
-        maxTokens: Int? = null
+        maxTokens: Int? = null,
+        language: Language = Language.ENGLISH
     ): Flow<AgentResponse> = flow {
         val provider = providerRegistry.getProvider(model.providerId)
             ?: throw IllegalStateException("Provider not found: ${model.providerId}")
 
-        val systemPrompt = generateSystemPrompt(currentProfile, allProfiles, currentChart)
+        val systemPrompt = generateSystemPrompt(currentProfile, allProfiles, currentChart, language)
 
         // Build messages with system prompt
         val fullMessages = mutableListOf<ChatMessage>()

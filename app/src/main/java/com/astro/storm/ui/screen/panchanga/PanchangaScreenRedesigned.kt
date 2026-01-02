@@ -1021,8 +1021,7 @@ private fun BirthDayInterpretationCard(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = getBirthDayInterpretation(panchanga),
-                fontSize = 13.sp,
+                                        text = getBirthDayInterpretation(panchanga, language),                fontSize = 13.sp,
                 color = AppTheme.TextSecondary,
                 lineHeight = 20.sp
             )
@@ -1390,19 +1389,35 @@ private fun PanchangaInfoDialog(onDismiss: () -> Unit) {
     )
 }
 
-private fun getBirthDayInterpretation(panchanga: PanchangaData): String {
+private fun getBirthDayInterpretation(panchanga: PanchangaData, language: Language): String {
     return buildString {
-        append("Born on ${panchanga.vara.displayName}, under the ${panchanga.nakshatra.nakshatra.displayName} nakshatra ")
-        append("during ${panchanga.tithi.tithi.displayName} tithi. ")
-        append("\n\nThe ${panchanga.yoga.yoga.displayName} yoga was active, indicating ")
+        append(StringResources.get(
+            StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_MAIN,
+            language,
+            panchanga.vara.getLocalizedName(language),
+            panchanga.nakshatra.nakshatra.getLocalizedName(language),
+            panchanga.tithi.tithi.getLocalizedName(language)
+        ))
+        append(" ")
+        append(StringResources.get(
+            StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_YOGA,
+            language,
+            panchanga.yoga.yoga.getLocalizedName(language)
+        ))
+        
         when (panchanga.yoga.yoga.displayName.lowercase()) {
             "vishkumbh", "atiganda", "shool", "vyaghata", "vajra", "paridh" ->
-                append("challenges to overcome but also strength building opportunities. ")
+                append(StringResources.get(StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_YOGA_CHALLENGE, language))
             "siddha", "shubha", "amrita", "sukarma" ->
-                append("highly auspicious conditions at birth, suggesting favorable karma. ")
+                append(StringResources.get(StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_YOGA_AUSPICIOUS, language))
             else ->
-                append("moderate influences that support balanced development. ")
+                append(StringResources.get(StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_YOGA_MODERATE, language))
         }
-        append("The ${panchanga.karana.karana.displayName} karana further refines these birth energies.")
+        
+        append(StringResources.get(
+            StringKeyAnalysis.PANCHANGA_BIRTH_INTERP_KARANA,
+            language,
+            panchanga.karana.karana.getLocalizedName(language)
+        ))
     }
 }

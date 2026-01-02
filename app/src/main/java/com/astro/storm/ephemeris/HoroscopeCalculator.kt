@@ -16,6 +16,13 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         SwissEphemerisEngine.getInstance(context)
     }
 
+    private val localizationManager: LocalizationManager by lazy {
+        LocalizationManager.getInstance(context)
+    }
+
+    private fun getString(key: StringKeyInterface): String = localizationManager.getString(key)
+    private fun getString(key: StringKeyInterface, vararg args: Any): String = localizationManager.getString(key, *args)
+
     private val transitCache = LRUCache<TransitCacheKey, VedicChart>(MAX_TRANSIT_CACHE_SIZE)
     private val dailyHoroscopeCache = LRUCache<DailyHoroscopeCacheKey, DailyHoroscope>(MAX_HOROSCOPE_CACHE_SIZE)
     private val natalDataCache = LRUCache<String, NatalChartCachedData>(MAX_NATAL_CACHE_SIZE)
@@ -277,8 +284,8 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
                     date = date,
                     dayOfWeek = date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() },
                     energy = 5,
-                    focus = "Balance",
-                    brief = "Steady energy expected"
+                    focus = getString(StringKeyHoroscope.THEME_BALANCE_EQUILIBRIUM),
+                    brief = getString(StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM)
                 )
             }
         }
@@ -331,14 +338,14 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         } catch (e: Exception) {
             Log.e(TAG, "Transit calculation failed for $date", e)
             throw HoroscopeCalculationException(
-                "Unable to calculate planetary positions for $date. This may be due to ephemeris data limitations.",
+                getString(StringKey.ERROR_EPHEMERIS_DATA),
                 e
             )
         }
     }
 
     private fun formatActiveDasha(timeline: DashaCalculator.DashaTimeline): String {
-        val md = timeline.currentMahadasha ?: return "Calculating..."
+        val md = timeline.currentMahadasha ?: return getString(StringKey.HOROSCOPE_CALCULATING)
         val ad = timeline.currentAntardasha
         return if (ad != null) {
             "${md.planet.displayName}-${ad.planet.displayName}"
@@ -347,241 +354,28 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         }
     }
 
+    private val transitAnalyzer: TransitAnalyzer by lazy {
+        TransitAnalyzer(context)
+    }
+
     private fun analyzePlanetaryInfluences(
         natalData: NatalChartCachedData,
         transitPlanetMap: Map<Planet, PlanetPosition>,
         transitChart: VedicChart
     ): List<PlanetaryInfluence> {
-        return Planet.MAIN_PLANETS.mapNotNull { planet ->
-            val transitPos = transitPlanetMap[planet] ?: return@mapNotNull null
-            val natalPos = natalData.planetMap[planet]
-            val houseFromMoon = calculateHouseFromMoon(transitPos.sign, natalData.moonSign)
-
-            val vedhaInfo = checkGocharaVedha(planet, houseFromMoon, transitPlanetMap, natalData.moonSign)
-            val ashtakavargaScore = getAshtakavargaTransitScore(planet, transitPos.sign, natalData.ashtakavarga)
-
-            val (influence, strength, isPositive) = analyzeGocharaEffect(
-                planet = planet,
-                houseFromMoon = houseFromMoon,
-                isRetrograde = transitPos.isRetrograde,
-                natalPosition = natalPos,
-                vedhaInfo = vedhaInfo,
-                ashtakavargaScore = ashtakavargaScore,
-                transitSign = transitPos.sign
-            )
-
-            PlanetaryInfluence(
-                planet = planet,
-                influence = influence,
-                strength = strength,
-                isPositive = isPositive
-            )
-        }.sortedByDescending { it.strength }
-    }
-
-    private fun checkGocharaVedha(
-        planet: Planet,
-        houseFromMoon: Int,
-        transitPlanetMap: Map<Planet, PlanetPosition>,
-        natalMoonSign: ZodiacSign
-    ): VedhaInfo {
-        val vedhaPairs = GOCHARA_VEDHA_PAIRS[planet] ?: return VedhaInfo(false)
-        val vedhaHouse = vedhaPairs[houseFromMoon] ?: return VedhaInfo(false)
-
-        for ((otherPlanet, otherPos) in transitPlanetMap) {
-            if (otherPlanet == planet || otherPlanet !in Planet.MAIN_PLANETS) continue
-            
-            val otherHouseFromMoon = calculateHouseFromMoon(otherPos.sign, natalMoonSign)
-            if (otherHouseFromMoon == vedhaHouse) {
-                return VedhaInfo(
-                    hasVedha = true,
-                    obstructingPlanet = otherPlanet,
-                    obstructingHouse = vedhaHouse
-                )
-            }
-        }
-
-        return VedhaInfo(false)
-    }
-
-    private fun getAshtakavargaTransitScore(
-        planet: Planet,
-        transitSign: ZodiacSign,
-        ashtakavarga: AshtakavargaCalculator.AshtakavargaAnalysis?
-    ): Int? {
-        if (ashtakavarga == null) return null
-        val bav = ashtakavarga.bhinnashtakavarga[planet] ?: return null
-        return bav.getBindusForSign(transitSign)
-    }
-
-    private fun calculateHouseFromMoon(transitSign: ZodiacSign, natalMoonSign: ZodiacSign): Int {
-        return ((transitSign.ordinal - natalMoonSign.ordinal + 12) % 12) + 1
-    }
-
-    private fun analyzeGocharaEffect(
-        planet: Planet,
-        houseFromMoon: Int,
-        isRetrograde: Boolean,
-        natalPosition: PlanetPosition?,
-        vedhaInfo: VedhaInfo,
-        ashtakavargaScore: Int?,
-        transitSign: ZodiacSign
-    ): Triple<String, Int, Boolean> {
-        val favorableHouses = GOCHARA_FAVORABLE_HOUSES[planet] ?: emptyList()
-        var isFavorable = houseFromMoon in favorableHouses
-
-        val influenceBuilder = StringBuilder()
-        var (baseInfluence, baseStrength) = getGocharaInfluence(planet, houseFromMoon, isFavorable)
-        influenceBuilder.append(baseInfluence)
-
-        if (vedhaInfo.hasVedha && isFavorable) {
-            influenceBuilder.append(" However, ${vedhaInfo.obstructingPlanet?.displayName} creates Vedha obstruction, reducing benefits.")
-            baseStrength = (baseStrength * 0.5).toInt().coerceAtLeast(2)
-            if (baseStrength <= 3) isFavorable = false
-        }
-
-        ashtakavargaScore?.let { score ->
-            when {
-                score >= 5 -> {
-                    influenceBuilder.append(" Ashtakavarga ($score/8) strengthens results.")
-                    baseStrength = (baseStrength * 1.3).toInt()
-                }
-                score in 2..3 -> {
-                    influenceBuilder.append(" Ashtakavarga ($score/8) moderates results.")
-                    baseStrength = (baseStrength * 0.85).toInt()
-                }
-                score < 2 -> {
-                    influenceBuilder.append(" Low Ashtakavarga ($score/8) weakens results.")
-                    if (isFavorable) isFavorable = false
-                    baseStrength = (baseStrength * 0.6).toInt()
-                }
-            }
-        }
-
-        val retrogradeAdjustment = when {
-            isRetrograde && isFavorable -> {
-                influenceBuilder.append(" ${planet.displayName}'s retrograde motion delays manifestation.")
-                -1
-            }
-            isRetrograde && !isFavorable -> {
-                influenceBuilder.append(" ${planet.displayName}'s retrograde provides some relief from challenges.")
-                1
-            }
-            else -> 0
-        }
-
-        val dignityModifier = when {
-            isInOwnSign(planet, transitSign) -> {
-                influenceBuilder.append(" Strong in own sign.")
-                if (isFavorable) 2 else 0
-            }
-            isExalted(planet, transitSign) -> {
-                influenceBuilder.append(" Exalted - excellent results.")
-                if (isFavorable) 3 else 1
-            }
-            isDebilitated(planet, transitSign) -> {
-                influenceBuilder.append(" Debilitated - results weakened.")
-                if (isFavorable) -2 else -1
-            }
-            else -> 0
-        }
-
-        val adjustedStrength = (baseStrength + retrogradeAdjustment + dignityModifier).coerceIn(1, 10)
-
-        return Triple(influenceBuilder.toString(), adjustedStrength, isFavorable)
-    }
-
-    private fun getGocharaInfluence(planet: Planet, house: Int, isFavorable: Boolean): Pair<String, Int> {
-        return if (isFavorable) {
-            FAVORABLE_GOCHARA_EFFECTS_DETAILED[planet]?.get(house)
-                ?: ("Favorable ${planet.displayName} transit in house $house." to 7)
-        } else {
-            UNFAVORABLE_GOCHARA_EFFECTS_DETAILED[planet]?.get(house)
-                ?: ("Challenging ${planet.displayName} transit in house $house." to 4)
-        }
-    }
-
-    private fun isInOwnSign(planet: Planet, sign: ZodiacSign): Boolean {
-        return PLANET_OWN_SIGNS[planet]?.contains(sign) == true
-    }
-
-    private fun isExalted(planet: Planet, sign: ZodiacSign): Boolean {
-        return PLANET_EXALTATION[planet] == sign
-    }
-
-    private fun isDebilitated(planet: Planet, sign: ZodiacSign): Boolean {
-        return PLANET_DEBILITATION[planet] == sign
-    }
-
-    private fun calculateLifeAreaPredictions(
-        chart: VedicChart,
-        natalData: NatalChartCachedData,
-        transitChart: VedicChart,
-        transitPlanetMap: Map<Planet, PlanetPosition>,
-        date: LocalDate
-    ): List<LifeAreaPrediction> {
-        val dashaLordName = natalData.dashaTimeline.currentMahadasha?.planet?.displayName ?: "current"
+        val analysis = transitAnalyzer.analyzeTransits(
+            natalChart = transitChart, // Analyzer expects natal chart but we use transit chart for positions
+            language = localizationManager.language.value
+        )
         
-        return LifeArea.entries.map { area ->
-            val dashaInfluence = calculateDashaInfluenceOnArea(natalData.dashaTimeline, area, natalData.planetMap)
-            val transitInfluence = calculateTransitInfluenceOnArea(natalData.moonSign, transitPlanetMap, area)
-            val rating = ((dashaInfluence + transitInfluence) / 2).coerceIn(1, 5)
-
-            val prediction = LIFE_AREA_PREDICTIONS[area]?.get(rating)
-                ?.replace("{dashaLord}", dashaLordName)
-                ?: "Balanced energy in this area."
-            
-            val advice = LIFE_AREA_ADVICES[area]?.get(getRatingCategory(rating))
-                ?: "Stay mindful and balanced."
-
-            LifeAreaPrediction(area = area, rating = rating, prediction = prediction, advice = advice)
+        return analysis.gocharaResults.map { result ->
+            PlanetaryInfluence(
+                planet = result.planet,
+                influence = result.interpretation,
+                strength = result.effect.score * 2, // Map 1-5 to 2-10 for compatibility
+                isPositive = result.effect in listOf(TransitAnalyzer.TransitEffect.EXCELLENT, TransitAnalyzer.TransitEffect.GOOD)
+            )
         }
-    }
-
-    private fun calculateDashaInfluenceOnArea(
-        timeline: DashaCalculator.DashaTimeline,
-        area: LifeArea,
-        planetMap: Map<Planet, PlanetPosition>
-    ): Int {
-        val currentMahadasha = timeline.currentMahadasha ?: return 3
-        val mahadashaPlanet = currentMahadasha.planet
-        val planetPosition = planetMap[mahadashaPlanet]
-        val planetHouse = planetPosition?.house ?: return 3
-        val isInAreaHouse = planetHouse in area.houses
-        val isBenefic = mahadashaPlanet in NATURAL_BENEFICS
-
-        return when {
-            isInAreaHouse && isBenefic -> 5
-            isInAreaHouse -> 4
-            isBenefic -> 4
-            mahadashaPlanet in NATURAL_MALEFICS -> 3
-            else -> 3
-        }
-    }
-
-    private fun calculateTransitInfluenceOnArea(
-        natalMoonSign: ZodiacSign,
-        transitPlanetMap: Map<Planet, PlanetPosition>,
-        area: LifeArea
-    ): Int {
-        var score = 3
-        for ((planet, position) in transitPlanetMap) {
-            val houseFromMoon = calculateHouseFromMoon(position.sign, natalMoonSign)
-            if (houseFromMoon in area.houses) {
-                score += when (planet) {
-                    in NATURAL_BENEFICS -> 1
-                    in NATURAL_MALEFICS -> -1
-                    else -> 0
-                }
-            }
-        }
-        return score.coerceIn(1, 5)
-    }
-
-    private fun getRatingCategory(rating: Int): String = when {
-        rating >= 4 -> "high"
-        rating >= 3 -> "medium"
-        else -> "low"
     }
 
     private fun calculateOverallEnergy(
@@ -610,21 +404,23 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         val moonSign = transitPlanetMap[Planet.MOON]?.sign ?: ZodiacSign.ARIES
         val currentDashaLord = dashaTimeline.currentMahadasha?.planet ?: Planet.SUN
 
-        val theme = determineTheme(moonSign, currentDashaLord)
-        val description = THEME_DESCRIPTIONS[theme] ?: DEFAULT_THEME_DESCRIPTION
-
-        return Pair(theme, description)
+        val (themeKey, descKey) = determineTheme(moonSign, currentDashaLord)
+        return Pair(getString(themeKey), getString(descKey))
     }
 
-    private fun determineTheme(moonSign: ZodiacSign, dashaLord: Planet): String {
+    private fun determineTheme(moonSign: ZodiacSign, dashaLord: Planet): Pair<StringKeyHoroscope, StringKeyHoroscope> {
         val moonElement = moonSign.element
 
         return when {
-            moonElement == "Fire" && dashaLord in FIRE_PLANETS -> "Dynamic Action"
-            moonElement == "Earth" && dashaLord in EARTH_PLANETS -> "Practical Progress"
-            moonElement == "Air" && dashaLord in AIR_PLANETS -> "Social Connections"
-            moonElement == "Water" && dashaLord in WATER_PLANETS -> "Emotional Insight"
-            else -> DASHA_LORD_THEMES[dashaLord] ?: "Balance & Equilibrium"
+            moonElement == "Fire" && dashaLord in FIRE_PLANETS -> StringKeyHoroscope.THEME_DYNAMIC_ACTION to StringKeyHoroscope.THEME_DESC_DYNAMIC_ACTION
+            moonElement == "Earth" && dashaLord in EARTH_PLANETS -> StringKeyHoroscope.THEME_PRACTICAL_PROGRESS to StringKeyHoroscope.THEME_DESC_PRACTICAL_PROGRESS
+            moonElement == "Air" && dashaLord in AIR_PLANETS -> StringKeyHoroscope.THEME_SOCIAL_CONNECTIONS to StringKeyHoroscope.THEME_DESC_SOCIAL_CONNECTIONS
+            moonElement == "Water" && dashaLord in WATER_PLANETS -> StringKeyHoroscope.THEME_EMOTIONAL_INSIGHT to StringKeyHoroscope.THEME_DESC_EMOTIONAL_INSIGHT
+            else -> {
+                val theme = DASHA_LORD_THEME_KEYS[dashaLord] ?: StringKeyHoroscope.THEME_BALANCE_EQUILIBRIUM
+                val desc = THEME_DESC_KEYS[theme] ?: StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM
+                theme to desc
+            }
         }
     }
 
@@ -638,10 +434,10 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         val ascRuler = natalData.ascendantSign.ruler
 
         val luckyNumber = ((dayOfWeek + moonSign.ordinal) % 9) + 1
-        val luckyColor = ELEMENT_COLORS[moonSign.element] ?: "White"
-        val luckyDirection = PLANET_DIRECTIONS[ascRuler] ?: "East"
-        val luckyTime = DAY_HORA_TIMES[dayOfWeek] ?: "Morning hours"
-        val gemstone = PLANET_GEMSTONES[ascRuler] ?: "Clear Quartz"
+        val luckyColor = getString(ELEMENT_COLOR_KEYS[moonSign.element] ?: StringKeyHoroscope.LUCKY_COLOR_EARTH)
+        val luckyDirection = getString(PLANET_DIRECTION_KEYS[ascRuler] ?: StringKeyHoroscope.LUCKY_DIR_EAST)
+        val luckyTime = getString(DAY_HORA_KEYS[dayOfWeek] ?: StringKeyHoroscope.LUCKY_TIME_MORNING)
+        val gemstone = getString(PLANET_GEMSTONE_KEYS[ascRuler] ?: StringKeyMatch.GEMSTONE_RUBY)
 
         return LuckyElements(
             number = luckyNumber,
@@ -660,15 +456,15 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         val recommendations = ArrayList<String>(3)
 
         dashaTimeline.currentMahadasha?.planet?.let { dashaLord ->
-            DASHA_RECOMMENDATIONS[dashaLord]?.let { recommendations.add(it) }
+            DASHA_RECOMMENDATION_KEYS[dashaLord]?.let { recommendations.add(getString(it)) }
         }
 
         lifeAreas.maxByOrNull { it.rating }?.let { bestArea ->
-            BEST_AREA_RECOMMENDATIONS[bestArea.area]?.let { recommendations.add(it) }
+            BEST_AREA_RECOMMENDATION_KEYS[bestArea.area]?.let { recommendations.add(getString(it)) }
         }
 
         transitPlanetMap[Planet.MOON]?.let { moon ->
-            ELEMENT_RECOMMENDATIONS[moon.sign.element]?.let { recommendations.add(it) }
+            ELEMENT_RECOMMENDATION_KEYS[moon.sign.element]?.let { recommendations.add(getString(it)) }
         }
 
         return recommendations.take(3)
@@ -684,40 +480,40 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
             .filter { !it.isPositive && it.strength <= 4 }
             .take(2)
             .forEach { influence ->
-                PLANET_CAUTIONS[influence.planet]?.let { cautions.add(it) }
+                PLANET_CAUTION_KEYS[influence.planet]?.let { cautions.add(getString(it)) }
             }
 
         transitPlanetMap.values.asSequence()
             .filter { it.isRetrograde && it.planet in Planet.MAIN_PLANETS }
             .take(1)
             .forEach {
-                cautions.add("${it.planet.displayName} is retrograde - review and reconsider rather than initiate.")
+                cautions.add(getString(StringKeyHoroscope.CAUTION_RETROGRADE, it.planet.displayName))
             }
 
         return cautions.take(2)
     }
 
     private fun generateAffirmation(dashaLord: Planet?): String {
-        return DASHA_AFFIRMATIONS[dashaLord] ?: "I am aligned with cosmic energies and flow with life's rhythm."
+        return getString(DASHA_AFFIRMATION_KEYS[dashaLord] ?: StringKeyHoroscope.AFF_DEFAULT)
     }
 
     private fun calculateKeyDates(startDate: LocalDate, endDate: LocalDate): List<KeyDate> {
         val keyDates = ArrayList<KeyDate>(6)
 
-        LUNAR_PHASES.forEach { (dayOffset, event, significance) ->
+        LUNAR_PHASE_CONFIG.forEach { (dayOffset, eventKey, sigKey) ->
             val date = startDate.plusDays(dayOffset.toLong())
             if (!date.isBefore(startDate) && !date.isAfter(endDate)) {
-                keyDates.add(KeyDate(date, event, significance, true))
+                keyDates.add(KeyDate(date, getString(eventKey), getString(sigKey), true))
             }
         }
 
         for (offset in 0 until 7) {
             val date = startDate.plusDays(offset.toLong())
-            FAVORABLE_DAYS[date.dayOfWeek]?.let { desc ->
+            FAVORABLE_DAY_KEYS[date.dayOfWeek]?.let { descKey ->
                 keyDates.add(KeyDate(
                     date = date,
                     event = date.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() },
-                    significance = desc,
+                    significance = getString(descKey),
                     isPositive = true
                 ))
             }
@@ -730,7 +526,7 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         dailyHoroscopes: List<DailyHoroscope>,
         dashaTimeline: DashaCalculator.DashaTimeline
     ): Map<LifeArea, String> {
-        val currentDashaLord = dashaTimeline.currentMahadasha?.planet?.displayName ?: "current"
+        val currentDashaLord = dashaTimeline.currentMahadasha?.planet?.displayName ?: getString(StringKeyMatch.MISC_UNKNOWN)
 
         return LifeArea.entries.associateWith { area ->
             val weeklyRatings = dailyHoroscopes.mapNotNull { horoscope ->
@@ -746,8 +542,8 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
                 else -> "challenging"
             }
 
-            WEEKLY_PREDICTIONS[area]?.get(ratingCategory)?.replace("{dashaLord}", currentDashaLord)
-                ?: "A balanced week for ${area.displayName.lowercase()}."
+            WEEKLY_PREDICTION_KEYS[area]?.get(ratingCategory)?.let { getString(it, currentDashaLord) }
+                ?: getString(StringKeyHoroscope.THEME_BALANCE_EQUILIBRIUM)
         }
     }
 
@@ -761,14 +557,14 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
 
         val currentDashaLord = dashaTimeline.currentMahadasha?.planet ?: Planet.SUN
 
-        val theme = when {
-            avgEnergy >= 7 -> "Week of Opportunities"
-            avgEnergy >= 5 -> "Steady Progress"
-            else -> "Mindful Navigation"
+        val themeKey = when {
+            avgEnergy >= 7 -> StringKeyHoroscope.WEEKLY_THEME_OPPORTUNITY
+            avgEnergy >= 5 -> StringKeyHoroscope.WEEKLY_THEME_PROGRESS
+            else -> StringKeyHoroscope.WEEKLY_THEME_NAVIGATION
         }
 
         val overview = buildWeeklyOverview(currentDashaLord, avgEnergy, dailyHighlights)
-        return Pair(theme, overview)
+        return Pair(getString(themeKey), overview)
     }
 
     private fun buildWeeklyOverview(
@@ -777,25 +573,25 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         dailyHighlights: List<DailyHighlight>
     ): String {
         val builder = StringBuilder()
-        builder.append("This week under your ${dashaLord.displayName} Mahadasha brings ")
+        builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_PREFIX, dashaLord.displayName))
 
         when {
-            avgEnergy >= 7 -> builder.append("excellent opportunities for growth and success. ")
-            avgEnergy >= 5 -> builder.append("steady progress and balanced energy. ")
-            else -> builder.append("challenges that, when navigated wisely, lead to growth. ")
+            avgEnergy >= 7 -> builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_HIGH))
+            avgEnergy >= 5 -> builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_MED))
+            else -> builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_LOW))
         }
 
         dailyHighlights.maxByOrNull { it.energy }?.let {
-            builder.append("${it.dayOfWeek} appears most favorable for important activities. ")
+            builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_FAVORABLE, it.dayOfWeek))
         }
 
         dailyHighlights.minByOrNull { it.energy }?.let {
             if (it.energy < 5) {
-                builder.append("${it.dayOfWeek} may require extra patience and care. ")
+                builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_CAUTION, it.dayOfWeek))
             }
         }
 
-        builder.append("Trust in your cosmic guidance and make the most of each day's unique energy.")
+        builder.append(getString(StringKeyHoroscope.WEEKLY_OVERVIEW_SUFFIX))
 
         return builder.toString()
     }
@@ -805,14 +601,14 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
         keyDates: List<KeyDate>
     ): String {
         val currentDashaLord = dashaTimeline.currentMahadasha?.planet ?: Planet.SUN
-        val baseAdvice = DASHA_WEEKLY_ADVICE[currentDashaLord] ?: "maintain balance and trust in divine timing."
-
+        val adviceKey = DASHA_WEEKLY_ADVICE_KEYS[currentDashaLord] ?: StringKeyHoroscope.THEME_BALANCE_EQUILIBRIUM
+        
         val builder = StringBuilder()
-        builder.append("During this ${currentDashaLord.displayName} period, ")
-        builder.append(baseAdvice)
+        builder.append(getString(StringKeyHoroscope.WEEKLY_ADVICE_PREFIX, currentDashaLord.displayName))
+        builder.append(getString(adviceKey))
 
         keyDates.firstOrNull { it.isPositive }?.let {
-            builder.append(" Mark ${it.date.format(DATE_FORMATTER)} for important initiatives.")
+            builder.append(getString(StringKeyHoroscope.WEEKLY_ADVICE_DATE, it.date.format(DATE_FORMATTER)))
         }
 
         return builder.toString()
@@ -926,149 +722,50 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
             Planet.KETU to mapOf(3 to 12, 6 to 9, 9 to 10, 11 to 5)
         )
 
+        private val GOCHARA_FAVORABLE_KEYS = mapOf(
+            Planet.SUN to mapOf(3 to StringKeyHoroscope.GOCHARA_SUN_3, 6 to StringKeyHoroscope.GOCHARA_SUN_6, 10 to StringKeyHoroscope.GOCHARA_SUN_10, 11 to StringKeyHoroscope.GOCHARA_SUN_11),
+            Planet.MOON to mapOf(1 to StringKeyHoroscope.GOCHARA_MOON_1, 3 to StringKeyHoroscope.GOCHARA_MOON_3, 6 to StringKeyHoroscope.GOCHARA_MOON_6, 7 to StringKeyHoroscope.GOCHARA_MOON_7, 10 to StringKeyHoroscope.GOCHARA_MOON_10, 11 to StringKeyHoroscope.GOCHARA_MOON_11),
+            Planet.MARS to mapOf(3 to StringKeyHoroscope.GOCHARA_MARS_3, 6 to StringKeyHoroscope.GOCHARA_MARS_6, 11 to StringKeyHoroscope.GOCHARA_MARS_11),
+            Planet.MERCURY to mapOf(2 to StringKeyHoroscope.GOCHARA_MERCURY_2, 4 to StringKeyHoroscope.GOCHARA_MERCURY_4, 6 to StringKeyHoroscope.GOCHARA_MERCURY_6, 8 to StringKeyHoroscope.GOCHARA_MERCURY_8, 10 to StringKeyHoroscope.GOCHARA_MERCURY_10, 11 to StringKeyHoroscope.GOCHARA_MERCURY_11),
+            Planet.JUPITER to mapOf(2 to StringKeyHoroscope.GOCHARA_JUPITER_2, 5 to StringKeyHoroscope.GOCHARA_JUPITER_5, 7 to StringKeyHoroscope.GOCHARA_JUPITER_7, 9 to StringKeyHoroscope.GOCHARA_JUPITER_9, 11 to StringKeyHoroscope.GOCHARA_JUPITER_11),
+            Planet.VENUS to mapOf(1 to StringKeyHoroscope.GOCHARA_VENUS_1, 2 to StringKeyHoroscope.GOCHARA_VENUS_2, 3 to StringKeyHoroscope.GOCHARA_VENUS_3, 4 to StringKeyHoroscope.GOCHARA_VENUS_4, 5 to StringKeyHoroscope.GOCHARA_VENUS_5, 8 to StringKeyHoroscope.GOCHARA_VENUS_8, 9 to StringKeyHoroscope.GOCHARA_VENUS_9, 11 to StringKeyHoroscope.GOCHARA_VENUS_11, 12 to StringKeyHoroscope.GOCHARA_VENUS_12),
+            Planet.SATURN to mapOf(3 to StringKeyHoroscope.GOCHARA_SATURN_3, 6 to StringKeyHoroscope.GOCHARA_SATURN_6, 11 to StringKeyHoroscope.GOCHARA_SATURN_11),
+            Planet.RAHU to mapOf(3 to StringKeyHoroscope.GOCHARA_RAHU_3, 6 to StringKeyHoroscope.GOCHARA_RAHU_6, 10 to StringKeyHoroscope.GOCHARA_RAHU_10, 11 to StringKeyHoroscope.GOCHARA_RAHU_11),
+            Planet.KETU to mapOf(3 to StringKeyHoroscope.GOCHARA_KETU_3, 6 to StringKeyHoroscope.GOCHARA_KETU_6, 9 to StringKeyHoroscope.GOCHARA_KETU_9, 11 to StringKeyHoroscope.GOCHARA_KETU_11)
+        )
+
+        private val GOCHARA_UNFAVORABLE_KEYS = mapOf(
+            Planet.SUN to mapOf(1 to StringKeyHoroscope.GOCHARA_SUN_1, 2 to StringKeyHoroscope.GOCHARA_SUN_2, 4 to StringKeyHoroscope.GOCHARA_SUN_4, 5 to StringKeyHoroscope.GOCHARA_SUN_5, 7 to StringKeyHoroscope.GOCHARA_SUN_7, 8 to StringKeyHoroscope.GOCHARA_SUN_8, 9 to StringKeyHoroscope.GOCHARA_SUN_9, 12 to StringKeyHoroscope.GOCHARA_SUN_12),
+            Planet.MOON to mapOf(2 to StringKeyHoroscope.GOCHARA_MOON_2, 4 to StringKeyHoroscope.GOCHARA_MOON_4, 5 to StringKeyHoroscope.GOCHARA_MOON_5, 8 to StringKeyHoroscope.GOCHARA_MOON_8, 9 to StringKeyHoroscope.GOCHARA_MOON_9, 12 to StringKeyHoroscope.GOCHARA_MOON_12),
+            Planet.MARS to mapOf(1 to StringKeyHoroscope.GOCHARA_MARS_1, 2 to StringKeyHoroscope.GOCHARA_MARS_2, 4 to StringKeyHoroscope.GOCHARA_MARS_4, 5 to StringKeyHoroscope.GOCHARA_MARS_5, 7 to StringKeyHoroscope.GOCHARA_MARS_7, 8 to StringKeyHoroscope.GOCHARA_MARS_8, 9 to StringKeyHoroscope.GOCHARA_MARS_9, 10 to StringKeyHoroscope.GOCHARA_MARS_10, 12 to StringKeyHoroscope.GOCHARA_MARS_12),
+            Planet.MERCURY to mapOf(1 to StringKeyHoroscope.GOCHARA_MERCURY_1, 3 to StringKeyHoroscope.GOCHARA_MERCURY_3, 5 to StringKeyHoroscope.GOCHARA_MERCURY_5, 7 to StringKeyHoroscope.GOCHARA_MERCURY_7, 9 to StringKeyHoroscope.GOCHARA_MERCURY_9, 12 to StringKeyHoroscope.GOCHARA_MERCURY_12),
+            Planet.JUPITER to mapOf(1 to StringKeyHoroscope.GOCHARA_JUPITER_1, 3 to StringKeyHoroscope.GOCHARA_JUPITER_3, 4 to StringKeyHoroscope.GOCHARA_JUPITER_4, 6 to StringKeyHoroscope.GOCHARA_JUPITER_6, 8 to StringKeyHoroscope.GOCHARA_JUPITER_8, 10 to StringKeyHoroscope.GOCHARA_JUPITER_10, 12 to StringKeyHoroscope.GOCHARA_JUPITER_12),
+            Planet.SATURN to mapOf(1 to StringKeyHoroscope.GOCHARA_SATURN_1, 2 to StringKeyHoroscope.GOCHARA_SATURN_2, 4 to StringKeyHoroscope.GOCHARA_SATURN_4, 5 to StringKeyHoroscope.GOCHARA_SATURN_5, 7 to StringKeyHoroscope.GOCHARA_SATURN_7, 8 to StringKeyHoroscope.GOCHARA_SATURN_8, 9 to StringKeyHoroscope.GOCHARA_SATURN_9, 10 to StringKeyHoroscope.GOCHARA_SATURN_10, 12 to StringKeyHoroscope.GOCHARA_SATURN_12),
+            Planet.RAHU to mapOf(1 to StringKeyHoroscope.GOCHARA_RAHU_1, 2 to StringKeyHoroscope.GOCHARA_RAHU_2, 4 to StringKeyHoroscope.GOCHARA_RAHU_4, 5 to StringKeyHoroscope.GOCHARA_RAHU_5, 7 to StringKeyHoroscope.GOCHARA_RAHU_7, 8 to StringKeyHoroscope.GOCHARA_RAHU_8, 9 to StringKeyHoroscope.GOCHARA_RAHU_9, 12 to StringKeyHoroscope.GOCHARA_RAHU_12),
+            Planet.KETU to mapOf(1 to StringKeyHoroscope.GOCHARA_KETU_1, 2 to StringKeyHoroscope.GOCHARA_KETU_2, 4 to StringKeyHoroscope.GOCHARA_KETU_4, 5 to StringKeyHoroscope.GOCHARA_KETU_5, 7 to StringKeyHoroscope.GOCHARA_KETU_7, 8 to StringKeyHoroscope.GOCHARA_KETU_8, 10 to StringKeyHoroscope.GOCHARA_KETU_10, 12 to StringKeyHoroscope.GOCHARA_KETU_12)
+        )
+
         private val FAVORABLE_GOCHARA_EFFECTS_DETAILED = mapOf(
-            Planet.SUN to mapOf(
-                3 to ("Courage and valor increase. Victory over rivals." to 8),
-                6 to ("Destruction of enemies. Health improves. Debts decrease." to 8),
-                10 to ("Professional success and recognition. Authority increases." to 9),
-                11 to ("Gains of wealth. Fulfillment of desires. Success in endeavors." to 9)
-            ),
-            Planet.MOON to mapOf(
-                1 to ("Mental peace and satisfaction. Good health and comforts." to 8),
-                3 to ("Courage increases. Success in short journeys. Good relations with siblings." to 7),
-                6 to ("Victory over enemies. Relief from debts and diseases." to 8),
-                7 to ("Pleasure through spouse. Partnership gains. Social happiness." to 8),
-                10 to ("Success in profession. Recognition from superiors." to 8),
-                11 to ("Financial gains. Fulfillment of desires. Social success." to 9)
-            ),
-            Planet.MARS to mapOf(
-                3 to ("Courage and determination. Victory in competitions. Energy for initiatives." to 8),
-                6 to ("Defeat of enemies. Success through effort. Good for legal matters." to 8),
-                11 to ("Financial gains through effort. Achievement of goals. Success in ventures." to 8)
-            ),
-            Planet.MERCURY to mapOf(
-                2 to ("Gains through speech and intellect. Family harmony. Financial gains." to 8),
-                4 to ("Domestic happiness. Property matters favorable. Mental peace." to 7),
-                6 to ("Victory over competitors. Success in studies. Sharp intellect." to 8),
-                8 to ("Gains through research. Understanding occult matters." to 7),
-                10 to ("Professional success. Recognition for intelligence. Business growth." to 8),
-                11 to ("Financial gains through communication. Network expansion." to 8)
-            ),
-            Planet.JUPITER to mapOf(
-                2 to ("Wealth increases. Family harmony. Sweet speech. Good food." to 9),
-                5 to ("Intelligence flourishes. Good for children. Romance. Creativity." to 9),
-                7 to ("Partnership success. Marriage prospects. Business partnerships." to 8),
-                9 to ("Spiritual growth. Luck and fortune. Father's blessings. Pilgrimage." to 10),
-                11 to ("Major gains. Fulfillment of desires. Eldest sibling's success." to 9)
-            ),
-            Planet.VENUS to mapOf(
-                1 to ("Personal charm increases. Attraction and luxury. Good health." to 8),
-                2 to ("Wealth and family happiness. Good food and comforts." to 8),
-                3 to ("Artistic talents shine. Harmonious relations with siblings." to 7),
-                4 to ("Domestic bliss. Vehicle and property gains. Mother's blessings." to 8),
-                5 to ("Romance and creativity. Pleasure through children. Entertainment." to 9),
-                8 to ("Unexpected gains. Inheritance matters favorable." to 7),
-                9 to ("Fortune through relationships. Spiritual partnerships." to 8),
-                11 to ("Major gains through arts/finance. Social success." to 9),
-                12 to ("Pleasures of bed. Foreign connections favorable." to 7)
-            ),
-            Planet.SATURN to mapOf(
-                3 to ("Perseverance pays off. Courage through discipline. Victory through patience." to 7),
-                6 to ("Victory over enemies through persistence. Health through discipline." to 8),
-                11 to ("Long-term gains materialize. Slow but steady prosperity." to 8)
-            ),
-            Planet.RAHU to mapOf(
-                3 to ("Courage for unconventional paths. Success through innovation." to 7),
-                6 to ("Victory over hidden enemies. Overcoming obstacles." to 7),
-                10 to ("Sudden rise in career. Foreign opportunities." to 8),
-                11 to ("Unexpected gains. Fulfillment of unusual desires." to 8)
-            ),
-            Planet.KETU to mapOf(
-                3 to ("Spiritual courage. Success in research." to 7),
-                6 to ("Healing abilities increase. Victory through spiritual means." to 7),
-                9 to ("Spiritual insights. Pilgrimage. Blessings from teachers." to 8),
-                11 to ("Gains through spiritual pursuits. Liberation from desires." to 7)
-            )
+            Planet.SUN to mapOf(3 to ("" to 8), 6 to ("" to 8), 10 to ("" to 9), 11 to ("" to 9)),
+            Planet.MOON to mapOf(1 to ("" to 8), 3 to ("" to 7), 6 to ("" to 8), 7 to ("" to 8), 10 to ("" to 8), 11 to ("" to 9)),
+            Planet.MARS to mapOf(3 to ("" to 8), 6 to ("" to 8), 11 to ("" to 8)),
+            Planet.MERCURY to mapOf(2 to ("" to 8), 4 to ("" to 7), 6 to ("" to 8), 8 to ("" to 7), 10 to ("" to 8), 11 to ("" to 8)),
+            Planet.JUPITER to mapOf(2 to ("" to 9), 5 to ("" to 9), 7 to ("" to 8), 9 to ("" to 10), 11 to ("" to 9)),
+            Planet.VENUS to mapOf(1 to ("" to 8), 2 to ("" to 8), 3 to ("" to 7), 4 to ("" to 8), 5 to ("" to 9), 8 to ("" to 7), 9 to ("" to 8), 11 to ("" to 9), 12 to ("" to 7)),
+            Planet.SATURN to mapOf(3 to ("" to 7), 6 to ("" to 8), 11 to ("" to 8)),
+            Planet.RAHU to mapOf(3 to ("" to 7), 6 to ("" to 7), 10 to ("" to 8), 11 to ("" to 8)),
+            Planet.KETU to mapOf(3 to ("" to 7), 6 to ("" to 7), 9 to ("" to 8), 11 to ("" to 7))
         )
 
         private val UNFAVORABLE_GOCHARA_EFFECTS_DETAILED = mapOf(
-            Planet.SUN to mapOf(
-                1 to ("Health issues. Ego challenges. Conflicts with authority." to 4),
-                2 to ("Financial difficulties. Family disputes. Speech issues." to 4),
-                4 to ("Domestic unrest. Mental worry. Vehicle problems." to 4),
-                5 to ("Obstacles to children. Poor decisions. Speculation loss." to 4),
-                7 to ("Relationship strain. Partnership challenges." to 4),
-                8 to ("Health concerns. Unexpected problems. Hidden enemies." to 3),
-                9 to ("Obstacles in luck. Difficulties with father/teacher." to 4),
-                12 to ("Expenses increase. Sleep disturbances. Hidden losses." to 4)
-            ),
-            Planet.MOON to mapOf(
-                2 to ("Financial fluctuations. Emotional eating issues." to 4),
-                4 to ("Mental restlessness. Domestic worries." to 4),
-                5 to ("Emotional challenges with children. Poor speculation." to 4),
-                8 to ("Emotional turmoil. Hidden anxieties. Health vulnerabilities." to 3),
-                9 to ("Spiritual doubts. Emotional distance from teachers." to 4),
-                12 to ("Sleep issues. Expenses. Emotional withdrawal." to 4)
-            ),
-            Planet.MARS to mapOf(
-                1 to ("Impulsive actions. Accidents. Health issues. Anger." to 4),
-                2 to ("Financial losses through haste. Family arguments." to 4),
-                4 to ("Domestic conflicts. Property disputes. Mother's health." to 4),
-                5 to ("Children's issues. Poor decisions. Speculation loss." to 4),
-                7 to ("Relationship conflicts. Partnership disputes." to 3),
-                8 to ("Accidents. Surgeries. Hidden enemies active." to 3),
-                9 to ("Conflicts with teachers. Father's health." to 4),
-                10 to ("Professional conflicts. Authority issues." to 4),
-                12 to ("Hidden enemies. Expenses. Hospitalization risk." to 3)
-            ),
-            Planet.MERCURY to mapOf(
-                1 to ("Nervous tension. Skin issues. Restless mind." to 4),
-                3 to ("Communication problems. Sibling issues. Short trips troubled." to 4),
-                5 to ("Poor decisions. Learning difficulties." to 4),
-                7 to ("Partnership misunderstandings. Contract issues." to 4),
-                9 to ("Educational obstacles. Communication with father strained." to 4),
-                12 to ("Mental anxieties. Hidden worries. Poor sleep." to 4)
-            ),
-            Planet.JUPITER to mapOf(
-                1 to ("Weight gain. Overconfidence. Health issues." to 4),
-                3 to ("Reduced courage. Sibling issues." to 5),
-                4 to ("Domestic expansion issues. Property disputes." to 4),
-                6 to ("Debts may increase. Enemy problems." to 4),
-                8 to ("Unexpected expenses. Health vulnerabilities." to 4),
-                10 to ("Professional setbacks. Reputation challenges." to 4),
-                12 to ("Expenses. Foreign troubles. Spiritual doubts." to 4)
-            ),
-            Planet.SATURN to mapOf(
-                1 to ("Health issues. Depression. Physical weakness." to 3),
-                2 to ("Financial constraints. Family separation. Speech issues." to 4),
-                4 to ("Domestic stress. Mother's health. Property issues." to 3),
-                5 to ("Children's problems. Poor decisions. Mental worry." to 4),
-                7 to ("Relationship strain. Partnership challenges. Delays in marriage." to 3),
-                8 to ("Chronic health issues. Hidden problems. Accidents." to 2),
-                9 to ("Father's troubles. Spiritual obstacles. Bad luck phase." to 3),
-                10 to ("Career setbacks. Authority conflicts. Reputation damage." to 4),
-                12 to ("Isolation. Expenses. Sleep issues. Foreign troubles." to 3)
-            ),
-            Planet.RAHU to mapOf(
-                1 to ("Confusion. Wrong decisions. Health anxieties." to 4),
-                2 to ("Financial deception. Family disharmony." to 4),
-                4 to ("Mental confusion. Domestic issues." to 4),
-                5 to ("Children's concerns. Poor speculation." to 4),
-                7 to ("Relationship deceptions. Partnership frauds." to 3),
-                8 to ("Sudden problems. Hidden enemies. Health scares." to 3),
-                9 to ("Spiritual confusion. Issues with teachers." to 4),
-                12 to ("Hidden enemies. Expenses. Foreign troubles." to 3)
-            ),
-            Planet.KETU to mapOf(
-                1 to ("Health vulnerabilities. Lack of direction." to 4),
-                2 to ("Financial losses. Family separation." to 4),
-                4 to ("Domestic detachment. Property losses." to 4),
-                5 to ("Children's issues. Poor decisions." to 4),
-                7 to ("Relationship detachment. Partnership dissolution." to 3),
-                8 to ("Sudden health issues. Accidents. Hidden problems." to 3),
-                10 to ("Career confusion. Direction loss." to 4),
-                12 to ("Expenses. Spiritual confusion. Isolation." to 4)
-            )
+            Planet.SUN to mapOf(1 to ("" to 4), 2 to ("" to 4), 4 to ("" to 4), 5 to ("" to 4), 7 to ("" to 4), 8 to ("" to 3), 9 to ("" to 4), 12 to ("" to 4)),
+            Planet.MOON to mapOf(2 to ("" to 4), 4 to ("" to 4), 5 to ("" to 4), 8 to ("" to 3), 9 to ("" to 4), 12 to ("" to 4)),
+            Planet.MARS to mapOf(1 to ("" to 4), 2 to ("" to 4), 4 to ("" to 4), 5 to ("" to 4), 7 to ("" to 3), 8 to ("" to 3), 9 to ("" to 4), 10 to ("" to 4), 12 to ("" to 3)),
+            Planet.MERCURY to mapOf(1 to ("" to 4), 3 to ("" to 4), 5 to ("" to 4), 7 to ("" to 4), 9 to ("" to 4), 12 to ("" to 4)),
+            Planet.JUPITER to mapOf(1 to ("" to 4), 3 to ("" to 5), 4 to ("" to 4), 6 to ("" to 4), 8 to ("" to 4), 10 to ("" to 4), 12 to ("" to 4)),
+            Planet.SATURN to mapOf(1 to ("" to 3), 2 to ("" to 4), 4 to ("" to 3), 5 to ("" to 4), 7 to ("" to 3), 8 to ("" to 2), 9 to ("" to 3), 10 to ("" to 4), 12 to ("" to 3)),
+            Planet.RAHU to mapOf(1 to ("" to 4), 2 to ("" to 4), 4 to ("" to 4), 5 to ("" to 4), 7 to ("" to 3), 8 to ("" to 3), 9 to ("" to 4), 12 to ("" to 3)),
+            Planet.KETU to mapOf(1 to ("" to 4), 2 to ("" to 4), 4 to ("" to 4), 5 to ("" to 4), 7 to ("" to 3), 8 to ("" to 3), 10 to ("" to 4), 12 to ("" to 4))
         )
 
         private val DASHA_ENERGY_MODIFIERS = mapOf(
@@ -1083,256 +780,256 @@ class HoroscopeCalculator(private val context: Context) : AutoCloseable {
             Planet.KETU to -1.0
         )
 
-        private val DASHA_LORD_THEMES = mapOf(
-            Planet.JUPITER to "Expansion & Wisdom",
-            Planet.VENUS to "Harmony & Beauty",
-            Planet.SATURN to "Discipline & Growth",
-            Planet.MERCURY to "Communication & Learning",
-            Planet.MARS to "Energy & Initiative",
-            Planet.SUN to "Self-Expression",
-            Planet.MOON to "Intuition & Nurturing",
-            Planet.RAHU to "Transformation",
-            Planet.KETU to "Spiritual Liberation"
+        private val DASHA_LORD_THEME_KEYS = mapOf(
+            Planet.JUPITER to StringKeyHoroscope.THEME_EXPANSION_WISDOM,
+            Planet.VENUS to StringKeyHoroscope.THEME_HARMONY_BEAUTY,
+            Planet.SATURN to StringKeyHoroscope.THEME_DISCIPLINE_GROWTH,
+            Planet.MERCURY to StringKeyHoroscope.THEME_COMMUNICATION_LEARNING,
+            Planet.MARS to StringKeyHoroscope.THEME_ENERGY_INITIATIVE,
+            Planet.SUN to StringKeyHoroscope.THEME_SELF_EXPRESSION,
+            Planet.MOON to StringKeyHoroscope.THEME_INTUITION_NURTURING,
+            Planet.RAHU to StringKeyHoroscope.THEME_TRANSFORMATION,
+            Planet.KETU to StringKeyHoroscope.THEME_SPIRITUAL_LIBERATION
         )
 
-        private val THEME_DESCRIPTIONS = mapOf(
-            "Dynamic Action" to "Your energy is high and aligned with fire elements. This is an excellent day for taking initiative, starting new projects, and asserting yourself confidently. Channel this vibrant energy into productive pursuits.",
-            "Practical Progress" to "Grounded earth energy supports methodical progress today. Focus on practical tasks, financial planning, and building stable foundations. Your efforts will yield tangible results.",
-            "Social Connections" to "Air element energy enhances communication and social interactions. Networking, negotiations, and intellectual pursuits are favored. Express your ideas and connect with like-minded people.",
-            "Emotional Insight" to "Water element energy deepens your intuition and emotional awareness. Trust your feelings and pay attention to subtle cues. This is a powerful day for healing and self-reflection.",
-            "Expansion & Wisdom" to "Jupiter's benevolent influence brings opportunities for growth, learning, and good fortune. Be open to new possibilities and share your wisdom generously.",
-            "Harmony & Beauty" to "Venus graces you with appreciation for beauty, art, and relationships. Indulge in pleasurable activities and nurture your connections with loved ones.",
-            "Discipline & Growth" to "Saturn's influence calls for patience, hard work, and responsibility. Embrace challenges as opportunities for growth and stay committed to your long-term goals.",
-            "Communication & Learning" to "Mercury enhances your mental agility and communication skills. This is ideal for learning, teaching, writing, and all forms of information exchange.",
-            "Energy & Initiative" to "Mars provides courage and drive. Take bold action, compete with integrity, and channel aggressive energy into constructive activities.",
-            "Self-Expression" to "The Sun illuminates your path to self-expression and leadership. Shine your light confidently and pursue activities that bring you recognition.",
-            "Intuition & Nurturing" to "The Moon heightens your sensitivity and caring nature. Nurture yourself and others, and trust your instincts in important decisions.",
-            "Transformation" to "Rahu's influence brings unconventional opportunities and desires for change. Embrace innovation but stay grounded in your values.",
-            "Spiritual Liberation" to "Ketu's energy supports detachment and spiritual insight. Let go of what no longer serves you and focus on inner growth.",
-            "Balance & Equilibrium" to "A day of balance where all energies are in equilibrium. Maintain steadiness and make measured progress in all areas of life."
+        private val THEME_DESC_KEYS = mapOf(
+            StringKeyHoroscope.THEME_DYNAMIC_ACTION to StringKeyHoroscope.THEME_DESC_DYNAMIC_ACTION,
+            StringKeyHoroscope.THEME_PRACTICAL_PROGRESS to StringKeyHoroscope.THEME_DESC_PRACTICAL_PROGRESS,
+            StringKeyHoroscope.THEME_SOCIAL_CONNECTIONS to StringKeyHoroscope.THEME_DESC_SOCIAL_CONNECTIONS,
+            StringKeyHoroscope.THEME_EMOTIONAL_INSIGHT to StringKeyHoroscope.THEME_DESC_EMOTIONAL_INSIGHT,
+            StringKeyHoroscope.THEME_EXPANSION_WISDOM to StringKeyHoroscope.THEME_DESC_EXPANSION_WISDOM,
+            StringKeyHoroscope.THEME_HARMONY_BEAUTY to StringKeyHoroscope.THEME_DESC_HARMONY_BEAUTY,
+            StringKeyHoroscope.THEME_DISCIPLINE_GROWTH to StringKeyHoroscope.THEME_DESC_DISCIPLINE_GROWTH,
+            StringKeyHoroscope.THEME_COMMUNICATION_LEARNING to StringKeyHoroscope.THEME_DESC_COMMUNICATION_LEARNING,
+            StringKeyHoroscope.THEME_ENERGY_INITIATIVE to StringKeyHoroscope.THEME_DESC_ENERGY_INITIATIVE,
+            StringKeyHoroscope.THEME_SELF_EXPRESSION to StringKeyHoroscope.THEME_DESC_SELF_EXPRESSION,
+            StringKeyHoroscope.THEME_INTUITION_NURTURING to StringKeyHoroscope.THEME_DESC_INTUITION_NURTURING,
+            StringKeyHoroscope.THEME_TRANSFORMATION to StringKeyHoroscope.THEME_DESC_TRANSFORMATION,
+            StringKeyHoroscope.THEME_SPIRITUAL_LIBERATION to StringKeyHoroscope.THEME_DESC_SPIRITUAL_LIBERATION,
+            StringKeyHoroscope.THEME_BALANCE_EQUILIBRIUM to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM
         )
 
-        private const val DEFAULT_THEME_DESCRIPTION = "A day of balance where all energies are in equilibrium. Maintain steadiness and make measured progress in all areas of life."
-
-        private val ELEMENT_COLORS = mapOf(
-            "Fire" to "Red, Orange, or Gold",
-            "Earth" to "Green, Brown, or White",
-            "Air" to "Blue, Light Blue, or Silver",
-            "Water" to "White, Cream, or Sea Green"
+        private val ELEMENT_COLOR_KEYS = mapOf(
+            "Fire" to StringKeyHoroscope.LUCKY_COLOR_FIRE,
+            "Earth" to StringKeyHoroscope.LUCKY_COLOR_EARTH,
+            "Air" to StringKeyHoroscope.LUCKY_COLOR_AIR,
+            "Water" to StringKeyHoroscope.LUCKY_COLOR_WATER
         )
 
-        private val PLANET_DIRECTIONS = mapOf(
-            Planet.SUN to "East",
-            Planet.MARS to "East",
-            Planet.MOON to "North-West",
-            Planet.VENUS to "South-East",
-            Planet.MERCURY to "North",
-            Planet.JUPITER to "North-East",
-            Planet.SATURN to "West",
-            Planet.RAHU to "South-West",
-            Planet.KETU to "North-West"
+        private val PLANET_DIRECTION_KEYS = mapOf(
+            Planet.SUN to StringKeyHoroscope.LUCKY_DIR_EAST,
+            Planet.MARS to StringKeyHoroscope.LUCKY_DIR_EAST,
+            Planet.MOON to StringKeyHoroscope.LUCKY_DIR_NORTHWEST,
+            Planet.VENUS to StringKeyHoroscope.LUCKY_DIR_SOUTHEAST,
+            Planet.MERCURY to StringKeyHoroscope.LUCKY_DIR_NORTH,
+            Planet.JUPITER to StringKeyHoroscope.LUCKY_DIR_NORTHEAST,
+            Planet.SATURN to StringKeyHoroscope.LUCKY_DIR_WEST,
+            Planet.RAHU to StringKeyHoroscope.LUCKY_DIR_SOUTHWEST,
+            Planet.KETU to StringKeyHoroscope.LUCKY_DIR_NORTHWEST
         )
 
-        private val DAY_HORA_TIMES = mapOf(
-            1 to "6:00 AM - 7:00 AM (Sun Hora)",
-            2 to "7:00 AM - 8:00 AM (Moon Hora)",
-            3 to "8:00 AM - 9:00 AM (Mars Hora)",
-            4 to "9:00 AM - 10:00 AM (Mercury Hora)",
-            5 to "10:00 AM - 11:00 AM (Jupiter Hora)",
-            6 to "11:00 AM - 12:00 PM (Venus Hora)",
-            7 to "5:00 PM - 6:00 PM (Saturn Hora)"
+        private val DAY_HORA_KEYS = mapOf(
+            1 to StringKeyHoroscope.HORA_SUN,
+            2 to StringKeyHoroscope.HORA_MOON,
+            3 to StringKeyHoroscope.HORA_MARS,
+            4 to StringKeyHoroscope.HORA_MERCURY,
+            5 to StringKeyHoroscope.HORA_JUPITER,
+            6 to StringKeyHoroscope.HORA_VENUS,
+            7 to StringKeyHoroscope.HORA_SATURN
         )
 
-        private val PLANET_GEMSTONES = mapOf(
-            Planet.SUN to "Ruby",
-            Planet.MOON to "Pearl",
-            Planet.MARS to "Red Coral",
-            Planet.MERCURY to "Emerald",
-            Planet.JUPITER to "Yellow Sapphire",
-            Planet.VENUS to "Diamond or White Sapphire",
-            Planet.SATURN to "Blue Sapphire",
-            Planet.RAHU to "Hessonite",
-            Planet.KETU to "Cat's Eye"
+        private val PLANET_GEMSTONE_KEYS = mapOf(
+            Planet.SUN to StringKeyMatch.GEMSTONE_RUBY,
+            Planet.MOON to StringKeyMatch.GEMSTONE_PEARL,
+            Planet.MARS to StringKeyMatch.GEMSTONE_RED_CORAL,
+            Planet.MERCURY to StringKeyMatch.GEMSTONE_EMERALD,
+            Planet.JUPITER to StringKeyMatch.GEMSTONE_YELLOW_SAPPHIRE,
+            Planet.VENUS to StringKeyMatch.GEMSTONE_DIAMOND,
+            Planet.SATURN to StringKeyMatch.GEMSTONE_BLUE_SAPPHIRE,
+            Planet.RAHU to StringKeyMatch.GEMSTONE_HESSONITE,
+            Planet.KETU to StringKeyMatch.GEMSTONE_CATS_EYE
         )
 
-        private val DASHA_RECOMMENDATIONS = mapOf(
-            Planet.SUN to "Engage in activities that build confidence and leadership skills.",
-            Planet.MOON to "Prioritize emotional well-being and nurturing relationships.",
-            Planet.MARS to "Channel your energy into physical activities and competitive pursuits.",
-            Planet.MERCURY to "Focus on learning, communication, and intellectual growth.",
-            Planet.JUPITER to "Expand your horizons through education, travel, or spiritual practices.",
-            Planet.VENUS to "Cultivate beauty, art, and harmonious relationships.",
-            Planet.SATURN to "Embrace discipline, hard work, and long-term planning.",
-            Planet.RAHU to "Explore unconventional paths while staying grounded.",
-            Planet.KETU to "Practice detachment and focus on spiritual development."
+        private val DASHA_RECOMMENDATION_KEYS = mapOf(
+            Planet.SUN to StringKeyHoroscope.REC_SUN,
+            Planet.MOON to StringKeyHoroscope.REC_MOON,
+            Planet.MARS to StringKeyHoroscope.REC_MARS,
+            Planet.MERCURY to StringKeyHoroscope.REC_MERCURY,
+            Planet.JUPITER to StringKeyHoroscope.REC_JUPITER,
+            Planet.VENUS to StringKeyHoroscope.REC_VENUS,
+            Planet.SATURN to StringKeyHoroscope.REC_SATURN,
+            Planet.RAHU to StringKeyHoroscope.REC_RAHU,
+            Planet.KETU to StringKeyHoroscope.REC_KETU
         )
 
-        private val BEST_AREA_RECOMMENDATIONS = mapOf(
-            LifeArea.CAREER to "Capitalize on favorable career energy today.",
-            LifeArea.LOVE to "Nurture your relationships with extra attention.",
-            LifeArea.HEALTH to "Make the most of your vibrant health energy.",
-            LifeArea.FINANCE to "Take advantage of positive financial influences.",
-            LifeArea.FAMILY to "Spend quality time with family members.",
-            LifeArea.SPIRITUALITY to "Deepen your spiritual practices."
+        private val BEST_AREA_RECOMMENDATION_KEYS = mapOf(
+            LifeArea.CAREER to StringKeyHoroscope.REC_AREA_CAREER,
+            LifeArea.LOVE to StringKeyHoroscope.REC_AREA_LOVE,
+            LifeArea.HEALTH to StringKeyHoroscope.REC_AREA_HEALTH,
+            LifeArea.FINANCE to StringKeyHoroscope.REC_AREA_FINANCE,
+            LifeArea.FAMILY to StringKeyHoroscope.REC_AREA_FAMILY,
+            LifeArea.SPIRITUALITY to StringKeyHoroscope.REC_AREA_SPIRITUALITY
         )
 
-        private val ELEMENT_RECOMMENDATIONS = mapOf(
-            "Fire" to "Take bold action and express yourself confidently.",
-            "Earth" to "Focus on practical matters and material progress.",
-            "Air" to "Engage in social activities and intellectual pursuits.",
-            "Water" to "Trust your intuition and honor your emotions."
+        private val ELEMENT_RECOMMENDATION_KEYS = mapOf(
+            "Fire" to StringKeyHoroscope.REC_ELEMENT_FIRE,
+            "Earth" to StringKeyHoroscope.REC_ELEMENT_EARTH,
+            "Air" to StringKeyHoroscope.REC_ELEMENT_AIR,
+            "Water" to StringKeyHoroscope.REC_ELEMENT_WATER
         )
 
-        private val PLANET_CAUTIONS = mapOf(
-            Planet.SATURN to "Avoid rushing into decisions. Patience is key.",
-            Planet.MARS to "Control impulsive reactions and avoid conflicts.",
-            Planet.RAHU to "Be wary of deception and unrealistic expectations.",
-            Planet.KETU to "Don't neglect practical responsibilities for escapism."
+        private val PLANET_CAUTION_KEYS = mapOf(
+            Planet.SATURN to StringKeyHoroscope.CAUTION_SATURN,
+            Planet.MARS to StringKeyHoroscope.CAUTION_MARS,
+            Planet.RAHU to StringKeyHoroscope.CAUTION_RAHU,
+            Planet.KETU to StringKeyHoroscope.CAUTION_KETU
         )
 
-        private val DASHA_AFFIRMATIONS = mapOf(
-            Planet.SUN to "I shine my light confidently and inspire those around me.",
-            Planet.MOON to "I trust my intuition and nurture myself with compassion.",
-            Planet.MARS to "I channel my energy constructively and act with courage.",
-            Planet.MERCURY to "I communicate clearly and embrace continuous learning.",
-            Planet.JUPITER to "I am open to abundance and share my wisdom generously.",
-            Planet.VENUS to "I attract beauty and harmony into my life.",
-            Planet.SATURN to "I embrace discipline and trust in the timing of my journey.",
-            Planet.RAHU to "I embrace change and transform challenges into opportunities.",
-            Planet.KETU to "I release what no longer serves me and embrace spiritual growth."
+        private val DASHA_AFFIRMATION_KEYS = mapOf(
+            Planet.SUN to StringKeyHoroscope.AFF_SUN,
+            Planet.MOON to StringKeyHoroscope.AFF_MOON,
+            Planet.MARS to StringKeyHoroscope.AFF_MARS,
+            Planet.MERCURY to StringKeyHoroscope.AFF_MERCURY,
+            Planet.JUPITER to StringKeyHoroscope.AFF_JUPITER,
+            Planet.VENUS to StringKeyHoroscope.AFF_VENUS,
+            Planet.SATURN to StringKeyHoroscope.AFF_SATURN,
+            Planet.RAHU to StringKeyHoroscope.AFF_RAHU,
+            Planet.KETU to StringKeyHoroscope.AFF_KETU
         )
 
-        private val LUNAR_PHASES = listOf(
-            Triple(7, "First Quarter Moon", "Good for taking action"),
-            Triple(14, "Full Moon", "Emotional peak - completion energy")
+        private val LUNAR_PHASE_CONFIG = listOf(
+            Triple(7, StringKeyHoroscope.LUNAR_FIRST_QUARTER, StringKeyHoroscope.LUNAR_ACTION),
+            Triple(14, StringKeyHoroscope.LUNAR_FULL_MOON, StringKeyHoroscope.LUNAR_COMPLETION)
         )
 
-        private val FAVORABLE_DAYS = mapOf(
-            java.time.DayOfWeek.THURSDAY to "Jupiter's day - auspicious for growth",
-            java.time.DayOfWeek.FRIDAY to "Venus's day - favorable for relationships"
+        private val FAVORABLE_DAY_KEYS = mapOf(
+            java.time.DayOfWeek.THURSDAY to StringKeyHoroscope.DAY_JUPITER,
+            java.time.DayOfWeek.FRIDAY to StringKeyHoroscope.DAY_VENUS
         )
 
-        private val DASHA_WEEKLY_ADVICE = mapOf(
-            Planet.JUPITER to "embrace opportunities for learning and expansion. Your wisdom and optimism attract positive outcomes.",
-            Planet.VENUS to "focus on cultivating beauty, harmony, and meaningful relationships. Artistic pursuits are favored.",
-            Planet.SATURN to "embrace discipline and patience. Hard work now builds lasting foundations for the future.",
-            Planet.MERCURY to "prioritize communication, learning, and intellectual activities. Your mind is sharp.",
-            Planet.MARS to "channel your energy into productive activities. Exercise and competition are favored.",
-            Planet.SUN to "let your light shine. Leadership roles and self-expression bring recognition.",
-            Planet.MOON to "honor your emotions and intuition. Nurturing activities bring fulfillment.",
-            Planet.RAHU to "embrace transformation while staying grounded. Unconventional approaches may succeed.",
-            Planet.KETU to "focus on spiritual growth and letting go. Detachment brings peace."
+        private val DASHA_WEEKLY_ADVICE_KEYS = mapOf(
+            Planet.JUPITER to StringKeyHoroscope.WEEKLY_ADVICE_JUPITER,
+            Planet.VENUS to StringKeyHoroscope.WEEKLY_ADVICE_VENUS,
+            Planet.SATURN to StringKeyHoroscope.WEEKLY_ADVICE_SATURN,
+            Planet.MERCURY to StringKeyHoroscope.WEEKLY_ADVICE_MERCURY,
+            Planet.MARS to StringKeyHoroscope.WEEKLY_ADVICE_MARS,
+            Planet.SUN to StringKeyHoroscope.WEEKLY_ADVICE_SUN,
+            Planet.MOON to StringKeyHoroscope.WEEKLY_ADVICE_MOON,
+            Planet.RAHU to StringKeyHoroscope.WEEKLY_ADVICE_RAHU,
+            Planet.KETU to StringKeyHoroscope.WEEKLY_ADVICE_KETU
         )
 
-        private val LIFE_AREA_PREDICTIONS = mapOf(
+        private val LIFE_AREA_PREDICTION_KEYS = mapOf(
             LifeArea.CAREER to mapOf(
-                5 to "Excellent day for professional advancement. Your {dashaLord} period brings recognition and success in work matters.",
-                4 to "Good energy for career activities. Focus on important projects and networking.",
-                3 to "Steady progress in professional matters. Maintain consistency in your efforts.",
-                2 to "Some workplace challenges may arise. Stay patient and diplomatic.",
-                1 to "Career matters require extra attention. Avoid major decisions today."
+                5 to StringKeyHoroscope.PRED_CAREER_5,
+                4 to StringKeyHoroscope.PRED_CAREER_4,
+                3 to StringKeyHoroscope.PRED_CAREER_3,
+                2 to StringKeyHoroscope.PRED_CAREER_2,
+                1 to StringKeyHoroscope.PRED_CAREER_1
             ),
             LifeArea.LOVE to mapOf(
-                5 to "Romantic energy is at its peak. Deep connections and meaningful conversations await.",
-                4 to "Favorable time for relationships. Express your feelings openly.",
-                3 to "Balanced energy in partnerships. Focus on understanding and compromise.",
-                2 to "Minor misunderstandings possible. Practice patience with loved ones.",
-                1 to "Relationships need nurturing. Avoid conflicts and be extra considerate."
+                5 to StringKeyHoroscope.PRED_LOVE_5,
+                4 to StringKeyHoroscope.PRED_LOVE_4,
+                3 to StringKeyHoroscope.PRED_LOVE_3,
+                2 to StringKeyHoroscope.PRED_LOVE_2,
+                1 to StringKeyHoroscope.PRED_LOVE_1
             ),
             LifeArea.HEALTH to mapOf(
-                5 to "Vitality is strong. Great day for physical activities and wellness routines.",
-                4 to "Good health energy. Maintain your wellness practices.",
-                3 to "Steady health. Focus on rest and balanced nutrition.",
-                2 to "Energy may fluctuate. Prioritize adequate rest.",
-                1 to "Health needs attention. Take it easy and avoid overexertion."
+                5 to StringKeyHoroscope.PRED_HEALTH_5,
+                4 to StringKeyHoroscope.PRED_HEALTH_4,
+                3 to StringKeyHoroscope.PRED_HEALTH_3,
+                2 to StringKeyHoroscope.PRED_HEALTH_2,
+                1 to StringKeyHoroscope.PRED_HEALTH_1
             ),
             LifeArea.FINANCE to mapOf(
-                5 to "Excellent day for financial matters. Opportunities for gains are strong.",
-                4 to "Positive financial energy. Good for planned investments.",
-                3 to "Stable financial period. Stick to your budget.",
-                2 to "Be cautious with expenditures. Avoid impulsive purchases.",
-                1 to "Financial caution advised. Postpone major financial decisions."
+                5 to StringKeyHoroscope.PRED_FINANCE_5,
+                4 to StringKeyHoroscope.PRED_FINANCE_4,
+                3 to StringKeyHoroscope.PRED_FINANCE_3,
+                2 to StringKeyHoroscope.PRED_FINANCE_2,
+                1 to StringKeyHoroscope.PRED_FINANCE_1
             ),
             LifeArea.FAMILY to mapOf(
-                5 to "Harmonious family energy. Celebrations and joyful gatherings are favored.",
-                4 to "Good time for family bonding. Support flows both ways.",
-                3 to "Steady domestic atmosphere. Focus on routine family matters.",
-                2 to "Minor family tensions possible. Practice understanding.",
-                1 to "Family dynamics need attention. Prioritize peace and harmony."
+                5 to StringKeyHoroscope.PRED_FAMILY_5,
+                4 to StringKeyHoroscope.PRED_FAMILY_4,
+                3 to StringKeyHoroscope.PRED_FAMILY_3,
+                2 to StringKeyHoroscope.PRED_FAMILY_2,
+                1 to StringKeyHoroscope.PRED_FAMILY_1
             ),
             LifeArea.SPIRITUALITY to mapOf(
-                5 to "Profound spiritual insights available. Meditation and reflection are highly beneficial.",
-                4 to "Good day for spiritual practices. Inner guidance is strong.",
-                3 to "Steady spiritual energy. Maintain your regular practices.",
-                2 to "Spiritual connection may feel distant. Keep faith.",
-                1 to "Inner turbulence possible. Ground yourself through simple practices."
+                5 to StringKeyHoroscope.PRED_SPIRIT_5,
+                4 to StringKeyHoroscope.PRED_SPIRIT_4,
+                3 to StringKeyHoroscope.PRED_SPIRIT_3,
+                2 to StringKeyHoroscope.PRED_SPIRIT_2,
+                1 to StringKeyHoroscope.PRED_SPIRIT_1
             )
         )
 
-        private val LIFE_AREA_ADVICES = mapOf(
+        private val LIFE_AREA_ADVICE_KEYS = mapOf(
             LifeArea.CAREER to mapOf(
-                "high" to "Take initiative on important projects.",
-                "medium" to "Stay focused on your regular responsibilities.",
-                "low" to "Plan ahead and prepare for opportunities."
+                "high" to StringKeyPrediction.PRED_CAREER_ADVICE, // Reusing existing keys where possible
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_DYNAMIC_ACTION
             ),
             LifeArea.LOVE to mapOf(
-                "high" to "Express your feelings authentically.",
-                "medium" to "Listen more than you speak.",
-                "low" to "Give space and practice patience."
+                "high" to StringKeyPrediction.PRED_REL_ADVICE,
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_EMOTIONAL_INSIGHT
             ),
             LifeArea.HEALTH to mapOf(
-                "high" to "Engage in physical activity you enjoy.",
-                "medium" to "Maintain balanced meals and hydration.",
-                "low" to "Rest is your best medicine today."
+                "high" to StringKeyPrediction.PRED_HEALTH_ADVICE,
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_PRACTICAL_PROGRESS
             ),
             LifeArea.FINANCE to mapOf(
-                "high" to "Review investment opportunities.",
-                "medium" to "Stick to planned expenses.",
-                "low" to "Save rather than spend today."
+                "high" to StringKeyPrediction.PRED_FINANCE_ADVICE,
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_SOCIAL_CONNECTIONS
             ),
             LifeArea.FAMILY to mapOf(
-                "high" to "Plan a family activity together.",
-                "medium" to "Be present for family members.",
-                "low" to "Choose harmony over being right."
+                "high" to StringKeyPrediction.PRED_FAMILY_ADVICE,
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_INTUITION_NURTURING
             ),
             LifeArea.SPIRITUALITY to mapOf(
-                "high" to "Dedicate extra time to meditation.",
-                "medium" to "Find moments of stillness.",
-                "low" to "Simple prayers bring comfort."
+                "high" to StringKeyPrediction.PRED_SPIRIT_ADVICE,
+                "medium" to StringKeyHoroscope.THEME_DESC_BALANCE_EQUILIBRIUM,
+                "low" to StringKeyHoroscope.THEME_DESC_SPIRITUAL_LIBERATION
             )
         )
 
-        private val WEEKLY_PREDICTIONS = mapOf(
+        private val WEEKLY_PREDICTION_KEYS = mapOf(
             LifeArea.CAREER to mapOf(
-                "excellent" to "An exceptional week for career advancement. Your {dashaLord} period supports professional recognition. Key meetings and projects will progress smoothly.",
-                "steady" to "Steady professional progress this week. Focus on completing pending tasks and building relationships with colleagues.",
-                "challenging" to "Career matters may require extra effort this week. Stay patient and avoid major changes."
+                "excellent" to StringKeyHoroscope.WEEKLY_CAREER_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_CAREER_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_CAREER_CHALLENGING
             ),
             LifeArea.LOVE to mapOf(
-                "excellent" to "Romantic energy flows abundantly this week. Single or committed, relationships deepen. Express your feelings openly.",
-                "steady" to "Balanced relationship energy. Good for maintaining harmony and working through minor issues together.",
-                "challenging" to "Relationships need nurturing this week. Practice patience and understanding with your partner."
+                "excellent" to StringKeyHoroscope.WEEKLY_LOVE_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_LOVE_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_LOVE_CHALLENGING
             ),
             LifeArea.HEALTH to mapOf(
-                "excellent" to "Excellent vitality this week! Great time to start new fitness routines or health practices. Energy levels are high.",
-                "steady" to "Stable health week. Maintain your regular wellness routines and stay consistent with rest.",
-                "challenging" to "Health vigilance needed this week. Prioritize rest, nutrition, and stress management."
+                "excellent" to StringKeyHoroscope.WEEKLY_HEALTH_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_HEALTH_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_HEALTH_CHALLENGING
             ),
             LifeArea.FINANCE to mapOf(
-                "excellent" to "Prosperous week for finances. Opportunities for gains through investments or new income sources. Review financial plans.",
-                "steady" to "Stable financial week. Good for routine money management and planned purchases.",
-                "challenging" to "Financial caution advised this week. Avoid impulsive spending and postpone major investments."
+                "excellent" to StringKeyHoroscope.WEEKLY_FINANCE_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_FINANCE_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_FINANCE_CHALLENGING
             ),
             LifeArea.FAMILY to mapOf(
-                "excellent" to "Harmonious family week ahead. Celebrations, gatherings, and quality time strengthen bonds. Support flows both ways.",
-                "steady" to "Good week for family matters. Focus on communication and shared activities.",
-                "challenging" to "Family dynamics may be challenging this week. Choose understanding over confrontation."
+                "excellent" to StringKeyHoroscope.WEEKLY_FAMILY_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_FAMILY_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_FAMILY_CHALLENGING
             ),
             LifeArea.SPIRITUALITY to mapOf(
-                "excellent" to "Profound spiritual week. Meditation, reflection, and inner guidance are heightened. Seek meaningful experiences.",
-                "steady" to "Steady spiritual energy. Maintain your practices and stay connected to your inner self.",
-                "challenging" to "Spiritual connection may feel elusive. Simple practices and patience will help restore balance."
+                "excellent" to StringKeyHoroscope.WEEKLY_SPIRITUALITY_EXCELLENT,
+                "steady" to StringKeyHoroscope.WEEKLY_SPIRITUALITY_STEADY,
+                "challenging" to StringKeyHoroscope.WEEKLY_SPIRITUALITY_CHALLENGING
             )
         )
+    }
+}
     }
 }

@@ -92,13 +92,23 @@ fun LalKitabRemediesScreen(
     )
 
     // Calculate analysis
-    LaunchedEffect(chart) {
-        isCalculating = true
-        delay(300)
-        withContext(Dispatchers.Default) {
-            analysisResult = LalKitabRemediesCalculator.analyzeLalKitab(chart)
+    LaunchedEffect(chart, language) {
+        if (chart != null) {
+            isCalculating = true
+            errorMessage = null
+            scope.launch {
+                delay(300)
+                try {
+                    analysis = withContext(Dispatchers.Default) {
+                        LalKitabRemediesCalculator.analyzeLalKitab(chart, language)
+                    }
+                } catch (e: Exception) {
+                    errorMessage = e.message
+                } finally {
+                    isCalculating = false
+                }
+            }
         }
-        isCalculating = false
     }
 
     Scaffold(

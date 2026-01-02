@@ -81,13 +81,13 @@ class YoginiDashaViewModel : ViewModel() {
             } catch (e: Exception) {
                 val errorMessage = when {
                     e.message?.contains("Moon", ignoreCase = true) == true ->
-                        "Unable to determine Moon's Nakshatra position. Please verify birth data."
+                        StringResources.get(StringKeyDosha.YOGINI_ERROR_MOON, language)
                     e.message?.contains("birth", ignoreCase = true) == true ->
-                        "Invalid birth data provided. Please check date, time, and location."
+                        StringResources.get(StringKeyDosha.YOGINI_ERROR_BIRTH, language)
                     e.message?.contains("nakshatra", ignoreCase = true) == true ->
-                        "Unable to calculate Yogini Dasha. Nakshatra calculation error."
+                        StringResources.get(StringKeyDosha.YOGINI_ERROR_NAKSHATRA, language)
                     else ->
-                        e.message ?: "Failed to calculate Yogini Dasha. Please try again."
+                        e.message ?: StringResources.get(StringKeyDosha.YOGINI_ERROR_GENERIC, language)
                 }
                 _uiState.value = YoginiDashaUiState.Error(errorMessage)
             }

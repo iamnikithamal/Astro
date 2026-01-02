@@ -1957,7 +1957,8 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                                                 model = model,
                                                 currentProfile = null,
                                                 allProfiles = emptyList(),
-                                                currentChart = result.chart
+                                                currentChart = result.chart,
+                                                language = LocalLanguage.current
                                             ).collect { response ->
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {
