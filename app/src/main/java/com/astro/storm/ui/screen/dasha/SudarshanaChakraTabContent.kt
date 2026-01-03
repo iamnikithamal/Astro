@@ -584,7 +584,7 @@ private fun SudarshanaInfoCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT_TITLE),
+                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary

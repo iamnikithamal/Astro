@@ -1034,7 +1034,7 @@ object DivisionalChartAnalyzer {
                 industries = listOf(
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_ENGINEERING, language),
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_MILITARY, language),
-                    StringResources.get(StringKeyMatch.ACTIVITY_BUSINESS_NAME, language), // Police proxy
+                    StringResources.get(com.astro.storm.data.localization.StringKeyMatch.ACTIVITY_BUSINESS_NAME, language), // Police proxy
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_MEDICINE, language), // Surgery proxy
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_SPORTS, language)
                 ),
@@ -1044,7 +1044,7 @@ object DivisionalChartAnalyzer {
                 name = StringResources.get(StringKeyDivisional.DASHAMSA_TYPE_COMM, language),
                 industries = listOf(
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_BUSINESS, language),
-                    StringResources.get(StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Accounting proxy
+                    StringResources.get(com.astro.storm.data.localization.StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Accounting proxy
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_WRITING, language),
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_TECH, language),
                     StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_TRADE, language)
@@ -1139,14 +1139,14 @@ object DivisionalChartAnalyzer {
             )
             Planet.MARS -> listOf(
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_MILITARY, language),
-                StringResources.get(StringKeyMatch.ACTIVITY_BUSINESS_NAME, language), // Police proxy
+                StringResources.get(com.astro.storm.data.localization.StringKeyMatch.ACTIVITY_BUSINESS_NAME, language), // Police proxy
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_MEDICINE, language), // Surgery proxy
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_ENGINEERING, language),
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_REAL_ESTATE, language)
             )
             Planet.MERCURY -> listOf(
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_BUSINESS, language),
-                StringResources.get(StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Accounting proxy
+                StringResources.get(com.astro.storm.data.localization.StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Accounting proxy
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_WRITING, language),
                 StringResources.get(StringKeyDivisional.NAVAMSA_PROF_TECH, language),
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_COMMUNICATION, language)
@@ -1175,13 +1175,13 @@ object DivisionalChartAnalyzer {
             Planet.RAHU -> listOf(
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_TECHNOLOGY, language),
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_TRADE, language), // Foreign trade proxy
-                StringResources.get(StringKeyMatch.ACTIVITY_TRAVEL_NAME, language), // Airlines proxy
+                StringResources.get(com.astro.storm.data.localization.StringKeyMatch.ACTIVITY_TRAVEL_NAME, language), // Airlines proxy
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_LIQUIDS, language) // Chemicals proxy
             )
             Planet.KETU -> listOf(
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_SPIRITUAL, language),
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_OCCULT, language),
-                StringResources.get(StringKeyMatch.ACTIVITY_MEDICAL_NAME, language), // Alternative med proxy
+                StringResources.get(com.astro.storm.data.localization.StringKeyMatch.ACTIVITY_MEDICAL_NAME, language), // Alternative med proxy
                 StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_RESEARCH, language)
             )
             else -> emptyList()
@@ -1223,7 +1223,7 @@ object DivisionalChartAnalyzer {
             recommendedDepartments = if (potential > 60) {
                 listOf(
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_ADMIN, language),
-                    StringResources.get(StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Revenue proxy
+                    StringResources.get(com.astro.storm.data.localization.StringKeyMatch.PRASHNA_CAT_FINANCE, language), // Revenue proxy
                     StringResources.get(StringKeyDivisional.HORA_SUN_SOURCE_FOREIGN, language), // Foreign affairs proxy
                     StringResources.get(StringKeyDivisional.NAVAMSA_PROF_MILITARY, language) // Defense proxy
                 )

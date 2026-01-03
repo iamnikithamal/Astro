@@ -1730,6 +1730,7 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     SUDARSHANA_TITLE("Sudarshana Chakra Dasha", "सुदर्शन चक्र दशा"),
     SUDARSHANA_SUBTITLE("Triple-Reference Timing System", "त्रि-सन्दर्भ समय प्रणाली"),
     SUDARSHANA_ABOUT("About Sudarshana Chakra", "सुदर्शन चक्रको बारेमा"),
+    SUDARSHANA_ABOUT_TITLE("About Sudarshana Chakra", "सुदर्शन चक्र दशा बारे"),
     SUDARSHANA_ABOUT_DESC("Sudarshana Chakra Dasha simultaneously considers the Lagna, Chandra, and Surya charts. Each year progresses through signs from these three reference points, giving a holistic view of life events.", "सुदर्शन चक्र दशाले लग्न, चन्द्र र सूर्य कुण्डली एकैसाथ विचार गर्दछ। प्रत्येक वर्ष यी तीन सन्दर्भ बिन्दुहरूबाट राशिहरू मार्फत अगाडि बढ्छ।"),
     SUDARSHANA_LAGNA_CHAKRA("Lagna Chakra", "लग्न चक्र"),
     SUDARSHANA_CHANDRA_CHAKRA("Chandra Chakra", "चन्द्र चक्र"),

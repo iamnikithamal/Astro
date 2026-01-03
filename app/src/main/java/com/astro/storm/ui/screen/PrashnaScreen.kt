@@ -1862,6 +1862,7 @@ private fun RecommendationsCard(recommendations: List<String>) {
 private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val languageForAi = LocalLanguage.current
 
     // AI state management
     var aiState by remember { mutableStateOf<AiInsightState>(AiInsightState.Initial) }
@@ -1932,7 +1933,6 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                 when (state) {
                     is AiInsightState.Initial -> {
                         // Show generate button
-                        val languageForAi = LocalLanguage.current
                         Button(
                             onClick = {
                                 scope.launch {

@@ -263,6 +263,7 @@ private fun AshtakavargaTopBar(
                 }
             },
             actions = {
+                val language = LocalLanguage.current
                 IconButton(onClick = onInfoClick) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
@@ -371,6 +372,7 @@ private fun AshtakavargaSummaryCard(
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
+                    val language = LocalLanguage.current
                     Text(
                         text = stringResource(StringKeyDosha.ASHTAKAVARGA_DISTRIBUTION_DESC),
                         fontSize = 12.sp,

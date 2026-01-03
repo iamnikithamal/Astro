@@ -2538,6 +2538,7 @@ private fun MatchmakingAiInsightCard(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val languageForAi = LocalLanguage.current
 
     // AI state management
     var aiState by remember { mutableStateOf<MatchmakingAiInsightState>(MatchmakingAiInsightState.Initial) }
@@ -2610,7 +2611,6 @@ private fun MatchmakingAiInsightCard(
                 when (state) {
                     is MatchmakingAiInsightState.Initial -> {
                         // Show generate button
-                        val languageForAi = LocalLanguage.current
                         Button(
                             onClick = {
                                 scope.launch {
