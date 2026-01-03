@@ -1,6 +1,9 @@
 package com.astro.storm.ephemeris
 
 import com.astro.storm.data.localization.Language
+import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyDivisional
+import com.astro.storm.data.localization.StringKeyPrediction
 import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.model.Planet

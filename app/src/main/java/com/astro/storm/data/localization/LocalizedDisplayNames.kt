@@ -477,23 +477,7 @@ fun RemediesCalculator.RemedyPriority.getLocalizedName(language: Language): Stri
  * This is a utility function since Yoni doesn't have a member function for localized animal names.
  */
 fun getYoniLocalizedAnimalName(yoni: Yoni, language: Language): String {
-    return when (yoni.animal) {
-        "Horse" -> StringResources.get(StringKeyMatch.YONI_HORSE, language)
-        "Elephant" -> StringResources.get(StringKeyMatch.YONI_ELEPHANT, language)
-        "Sheep" -> StringResources.get(StringKeyMatch.YONI_SHEEP, language)
-        "Serpent" -> StringResources.get(StringKeyMatch.YONI_SERPENT, language)
-        "Dog" -> StringResources.get(StringKeyMatch.YONI_DOG, language)
-        "Cat" -> StringResources.get(StringKeyMatch.YONI_CAT, language)
-        "Rat" -> StringResources.get(StringKeyMatch.YONI_RAT, language)
-        "Cow" -> StringResources.get(StringKeyMatch.YONI_COW, language)
-        "Buffalo" -> StringResources.get(StringKeyMatch.YONI_BUFFALO, language)
-        "Tiger" -> StringResources.get(StringKeyMatch.YONI_TIGER, language)
-        "Deer" -> StringResources.get(StringKeyMatch.YONI_DEER, language)
-        "Monkey" -> StringResources.get(StringKeyMatch.YONI_MONKEY, language)
-        "Mongoose" -> StringResources.get(StringKeyMatch.YONI_MONGOOSE, language)
-        "Lion" -> StringResources.get(StringKeyMatch.YONI_LION, language)
-        else -> yoni.animal
-    }
+    return yoni.getLocalizedAnimal(language)
 }
 
 /**

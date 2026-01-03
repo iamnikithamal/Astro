@@ -75,7 +75,7 @@ enum class StringKeyDivisional(override val en: String, override val ne: String)
     HORA_REC_WORSHIP_LAKSHMI("Worship Goddess Lakshmi for wealth blessings", "धनको आशीर्वादको लागि देवी लक्ष्मीको पूजा गर्नुहोस्"),
     HORA_REC_STRENGTHEN_JUP_VEN("Strengthen Jupiter and Venus through gemstones or mantras", "बृहस्पति र शुक्रलाई रत्न वा मन्त्र मार्फत बलियो बनाउनुहोस्"),
     HORA_REC_AVOID_SPECULATION("Avoid speculation; focus on steady income sources", "सट्टा/जुवाबाट बच्नुहोस्; स्थिर आय स्रोतहरूमा ध्यान दिनुहोस्"),
-    HORA_REC_CAPITALIZE_STRENGTH("Capitalize on %1$s's strength in %2$s", "%2$s मा %1$s को शक्तिको सदुपयोग गर्नुहोस्"),
+    HORA_REC_CAPITALIZE_STRENGTH("Capitalize on %1\$s's strength in %2\$s", "%2\$s मा %1\$s को शक्तिको सदुपयोग गर्नुहोस्"),
 
     // ============================================
     // D-3 DREKKANA (Siblings & Courage)
@@ -194,11 +194,11 @@ enum class StringKeyDivisional(override val en: String, override val ne: String)
     NAVAMSA_RISK_7TH_LORD_DUSTHANA("7th lord in dusthana", "७औं स्वामी दुःस्थानमा"),
     NAVAMSA_MITIGATE_NONE("No strong multiple marriage indicators", "बहु विवाहको कुनै बलियो संकेत छैन"),
 
-    NAVAMSA_MUHURTA_JUPITER("Best muhurta when Jupiter transits %1$s or its trikona", "जब बृहस्पति %1$s वा यसको त्रिकोणमा गोचर गर्छ, त्यो उत्तम मुहूर्त हो"),
+    NAVAMSA_MUHURTA_JUPITER("Best muhurta when Jupiter transits %1\$s or its trikona", "जब बृहस्पति %1\$s वा यसको त्रिकोणमा गोचर गर्छ, त्यो उत्तम मुहूर्त हो"),
 
     NAVAMSA_REC_VENUS_STRONG("Venus is strong - romantic approach to marriage is favorable", "शुक्र बलियो छ - विवाहप्रति रोमान्टिक दृष्टिकोण अनुकूल छ"),
     NAVAMSA_REC_VENUS_WEAK("Strengthen Venus through white colors, Fridays worship, and diamond/white sapphire", "सेतो रंग, शुक्रबारको पूजा, र हीरा/सेतो नीलम मार्फत शुक्रलाई बलियो बनाउनुहोस्"),
-    NAVAMSA_REC_TIMING("Best marriage timing: During %1$s Dasha/Antardasha", "उत्तम विवाह समय: %1$s दशा/अन्तर्दशाको समयमा"),
+    NAVAMSA_REC_TIMING("Best marriage timing: During %1\$s Dasha/Antardasha", "उत्तम विवाह समय: %1\$s दशा/अन्तर्दशाको समयमा"),
 
     // ============================================
     // D-10 DASHAMSA (Career)
@@ -239,8 +239,8 @@ enum class StringKeyDivisional(override val en: String, override val ne: String)
 
     DASHAMSA_PEAK_10TH_LORD("10th lord Dasha - Primary career growth period", "१०औं स्वामीको दशा - प्राथमिक करियर विकास अवधि"),
     DASHAMSA_PEAK_10TH_SIG("Major career advancements and recognition", "प्रमुख करियर प्रगति र मान्यता"),
-    DASHAMSA_PEAK_PLANET_FMT("%1$s Dasha/Antardasha", "%1$s दशा/अन्तर्दशा"),
-    DASHAMSA_PEAK_PLANET_SIG("Career opportunities in %1$s", "%1$s मा करियरको अवसर"),
+    DASHAMSA_PEAK_PLANET_FMT("%1\$s Dasha/Antardasha", "%1\$s दशा/अन्तर्दशा"),
+    DASHAMSA_PEAK_PLANET_SIG("Career opportunities in %1\$s", "%1\$s मा करियरको अवसर"),
 
     DASHAMSA_MULTIPLE_10TH("Multiple planets in 10th house indicate potential for multiple careers", "१०औं भावमा धेरै ग्रहहरूले बहु करियरको सम्भावना संकेत गर्दछ"),
     DASHAMSA_MERC_VERSATILE("Strong Mercury suggests versatility in career", "बलियो बुधले करियरमा बहुमुखी प्रतिभा सुझाव दिन्छ"),
@@ -256,9 +256,9 @@ enum class StringKeyDivisional(override val en: String, override val ne: String)
     DASHAMSA_STRENGTH_CREATIVITY("Creativity and relationship skills", "सिर्जनशीलता र सम्बन्ध सीप"),
     DASHAMSA_STRENGTH_PERSISTENCE("Persistence and organizational ability", "दृढता र संगठनात्मक क्षमता"),
 
-    DASHAMSA_REC_PRIMARY_FOCUS("Primary career focus: %1$s", "प्राथमिक करियर फोकस: %1$s"),
-    DASHAMSA_REC_TOP_INDUSTRIES("Top industries: %1$s", "प्रमुख उद्योगहरू: %1$s"),
-    DASHAMSA_REC_PERIOD_FAVORS("%1$s period favors: %2$s", "%1$s को अवधि अनुकूल छ: %2$s"),
+    DASHAMSA_REC_PRIMARY_FOCUS("Primary career focus: %1\$s", "प्राथमिक करियर फोकस: %1\$s"),
+    DASHAMSA_REC_TOP_INDUSTRIES("Top industries: %1\$s", "प्रमुख उद्योगहरू: %1\$s"),
+    DASHAMSA_REC_PERIOD_FAVORS("%1\$s period favors: %2\$s", "%1\$s को अवधि अनुकूल छ: %2\$s"),
 
     // ============================================
     // D-12 DWADASAMSA (Parents)

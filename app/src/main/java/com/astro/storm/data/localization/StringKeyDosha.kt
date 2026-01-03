@@ -1,4 +1,4 @@
-﻿package com.astro.storm.data.localization
+package com.astro.storm.data.localization
 
 
 
@@ -2011,20 +2011,6 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     ASHTAKAVARGA_LEGEND_STRONG(">30 Strong", ">३० बलियो"),
     ASHTAKAVARGA_LEGEND_GOOD("25-30 Good", "२५-३० राम्रो"),
     ASHTAKAVARGA_LEGEND_WEAK("<25 Weak", "<२५ कमजोर"),
-    ASHTAKAVARGA_BINDUS_SUFFIX("bindus", "विन्दु"),
-    ASHTAKAVARGA_DESC_FMT("Bindu strength analysis - %s", "विन्दु बल विश्लेषण - %s"),
-    ASHTAKAVARGA_DISTRIBUTION_DESC("Bindu distribution analysis", "विन्दु वितरण विश्लेषण"),
-    ASHTAKAVARGA_INFO_A11Y("Ashtakavarga info", "अष्टकवर्ग जानकारी"),
-    ASHTAKAVARGA_PLANET_TOTALS("Planet Totals", "कुल ग्रह विन्दु"),
-    ASHTAKAVARGA_SARVA_DESC("Sarvashtakavarga represents the collective strength of all planets in each house.", "सर्वाष्टकवर्गले प्रत्येक भावमा सबै ग्रहहरूको सामूहिक बल प्रतिनिधित्व गर्दछ।"),
-    UI_NO_ASHTAKAVARGA_DATA("No Ashtakavarga Data", "कुनै अष्टकवर्ग डाटा छैन"),
-    UI_SELECT_CHART("Please select a chart to view Ashtakavarga analysis", "अष्टकवर्ग विश्लेषण हेर्न कृपया कुण्डली चयन गर्नुहोस्"),
-    ASHTAKAVARGA_INTERPRETATION("Interpretation Guide", "व्याख्या मार्गदर्शन"),
-    ASHTAKAVARGA_GUIDE_TEXT("30+ bindus: Excellent results for the house matters.\n25-30 bindus: Good results and steady progress.\nBelow 25: Challenges and delays in house significations.", "३०+ विन्दु: भाव सम्बन्धी मामिलामा उत्कृष्ट परिणाम।\n२५-३० विन्दु: राम्रो परिणाम र स्थिर प्रगति।\n२५ मुनि: भावको कारकत्वमा चुनौती र ढिलाइ।"),
-    BTN_GOT_IT("Got it", "बुझें"),
-    ASHTAKAVARGA_KEY_INSIGHTS("Key Insights", "मुख्य अन्तर्दृष्टि"),
-    ASHTAKAVARGA_STRONGEST("Strongest Houses", "सबैभन्दा बलियो भाव"),
-    ASHTAKAVARGA_WEAKEST("Weakest Houses", "सबैभन्दा कमजोर भाव"),
 
     // ============================================
     // ASHTOTTARI DASHA (Additional)
@@ -2058,7 +2044,6 @@ enum class StringKeyDosha(override val en: String, override val ne: String) : St
     SUDARSHANA_MOON_CHAKRA_DESC("Mind, emotions, mother, public image", "मन, भावना, आमा, सार्वजनिक छवि"),
     SUDARSHANA_SUN_CHAKRA_DESC("Soul, authority, father, career recognition", "आत्मा, अधिकार, बुबा, करियर मान्यता"),
     SUDARSHANA_COMBINED_NOTE("The combined analysis of all three chakras gives the most accurate prediction of annual themes and events.", "सबै तीन चक्रहरूको संयुक्त विश्लेषणले वार्षिक विषय र घटनाहरूको सबैभन्दा सटीक भविष्यवाणी दिन्छ।"),
-    SUDARSHANA_YEARLY_PROGRESSION("Yearly Progression", "वार्षिक प्रगति"),
     SUDARSHANA_YEARS_COUNT_FMT("%d years", "%d वर्ष"),
     SUDARSHANA_AGE_FMT("Age %d", "उमेर %d"),
     SUDARSHANA_UNABLE_CALC("Current year analysis not available", "वर्तमान वर्षको विश्लेषण उपलब्ध छैन"),

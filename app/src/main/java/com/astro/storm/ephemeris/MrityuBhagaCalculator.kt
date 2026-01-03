@@ -309,7 +309,8 @@ object MrityuBhagaCalculator {
         chart: VedicChart,
         transitingPlanet: Planet,
         transitSign: ZodiacSign,
-        transitDegree: Double
+        transitDegree: Double,
+        language: Language
     ): TransitVulnerabilityResult {
         val mrityuDegree = MRITYU_BHAGA_DEGREES[transitingPlanet]?.get(transitSign)
         val distance = mrityuDegree?.let { abs(transitDegree - it) } ?: Double.MAX_VALUE
@@ -336,7 +337,7 @@ object MrityuBhagaCalculator {
                 else -> CautionLevel.NONE
             },
             recommendations = if (isVulnerable) {
-                getTransitRecommendations(transitingPlanet)
+                getTransitRecommendations(transitingPlanet, language)
             } else emptyList()
         )
     }

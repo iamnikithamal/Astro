@@ -281,8 +281,8 @@ object DashaSandhiAnalyzer {
         val daysUntil = ChronoUnit.DAYS.between(analysisDate, sandhi.transitionDate)
 
         // Determine if currently in Sandhi
-        val isInSandhi = analysisDate.isAfter(sandhi.sandhiStartDate.minusDays(1)) &&
-                         analysisDate.isBefore(sandhi.sandhiEndDate.plusDays(1))
+        val isInSandhi = analysisDate.isAfter(sandhi.sandhiStartDate.toLocalDate().minusDays(1)) &&
+                         analysisDate.isBefore(sandhi.sandhiEndDate.toLocalDate().plusDays(1))
 
         // Calculate progress if in Sandhi
         val sandhiProgress = if (isInSandhi) {
@@ -646,7 +646,7 @@ object DashaSandhiAnalyzer {
 
         // Sandhi start
         dates.add(KeyDatePrediction(
-            date = sandhi.sandhiStartDate,
+            date = sandhi.sandhiStartDate.toLocalDate(),
             event = "Sandhi Period Begins",
             significance = "Transition effects start becoming noticeable"
         ))
@@ -656,21 +656,21 @@ object DashaSandhiAnalyzer {
             ChronoUnit.DAYS.between(sandhi.sandhiStartDate, sandhi.sandhiEndDate) / 2
         )
         dates.add(KeyDatePrediction(
-            date = midpoint,
+            date = midpoint.toLocalDate(),
             event = "Sandhi Peak",
             significance = "Maximum transition intensity - key decisions or events likely"
         ))
 
         // Exact transition
         dates.add(KeyDatePrediction(
-            date = sandhi.transitionDate,
+            date = sandhi.transitionDate.toLocalDate(),
             event = "Exact Dasha Change",
             significance = "Shift from ${sandhi.fromPlanet.displayName} to ${sandhi.toPlanet.displayName} complete"
         ))
 
         // Sandhi end
         dates.add(KeyDatePrediction(
-            date = sandhi.sandhiEndDate,
+            date = sandhi.sandhiEndDate.toLocalDate(),
             event = "Sandhi Period Ends",
             significance = "New Dasha energy stabilizes"
         ))
@@ -894,7 +894,7 @@ object DashaSandhiAnalyzer {
     ): List<DashaCalculator.DashaSandhi> {
         val startDate = fromDate.minusDays(lookBackDays.toLong())
         return timeline.upcomingSandhis.filter {
-            it.transitionDate.isAfter(startDate) && it.transitionDate.isBefore(fromDate)
+            it.transitionDate.toLocalDate().isAfter(startDate) && it.transitionDate.toLocalDate().isBefore(fromDate)
         }
     }
 
@@ -905,7 +905,7 @@ object DashaSandhiAnalyzer {
     ): List<SandhiCalendarEntry> {
         return sandhis.map { analysis ->
             SandhiCalendarEntry(
-                date = analysis.sandhi.transitionDate,
+                date = analysis.sandhi.transitionDate.toLocalDate(),
                 sandhiType = analysis.sandhi.level.displayName,
                 fromPlanet = analysis.sandhi.fromPlanet,
                 toPlanet = analysis.sandhi.toPlanet,
