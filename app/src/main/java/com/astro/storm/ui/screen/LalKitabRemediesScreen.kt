@@ -83,6 +83,7 @@ fun LalKitabRemediesScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var isCalculating by remember { mutableStateOf(true) }
     var analysisResult by remember { mutableStateOf<LalKitabAnalysis?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val tabs = listOf(
         stringResource(StringKeyDosha.SCREEN_OVERVIEW),
@@ -96,17 +97,16 @@ fun LalKitabRemediesScreen(
         if (chart != null) {
             isCalculating = true
             errorMessage = null
-            scope.launch {
-                delay(300)
-                try {
-                    analysis = withContext(Dispatchers.Default) {
-                        LalKitabRemediesCalculator.analyzeLalKitab(chart, language)
-                    }
-                } catch (e: Exception) {
-                    errorMessage = e.message
-                } finally {
-                    isCalculating = false
+            delay(300)
+            try {
+                val result = withContext(Dispatchers.Default) {
+                    LalKitabRemediesCalculator.analyzeLalKitab(chart, language)
                 }
+                analysisResult = result
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isCalculating = false
             }
         }
     }

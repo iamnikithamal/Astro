@@ -756,12 +756,12 @@ private fun EnhancedCompatibilityScoreCard(
 
 @Composable
 private fun QuickInsightsRow(result: MatchmakingResult) {
+    val language = LocalLanguage.current
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        val language = LocalLanguage.current
         val hasNadiDosha = result.gunaAnalyses.find { it.gunaType == GunaType.NADI }?.hasDosha == true
         val hasBhakootDosha = result.gunaAnalyses.find { it.gunaType == GunaType.BHAKOOT }?.hasDosha == true
 
@@ -2610,6 +2610,7 @@ private fun MatchmakingAiInsightCard(
                 when (state) {
                     is MatchmakingAiInsightState.Initial -> {
                         // Show generate button
+                        val languageForAi = LocalLanguage.current
                         Button(
                             onClick = {
                                 scope.launch {
@@ -2637,7 +2638,7 @@ private fun MatchmakingAiInsightCard(
                                                 currentProfile = null,
                                                 allProfiles = emptyList(),
                                                 currentChart = brideChart,
-                                                language = LocalLanguage.current
+                                                language = languageForAi
                                             ).collect { response ->
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {

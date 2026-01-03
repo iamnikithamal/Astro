@@ -7,6 +7,7 @@ import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKeyLalKitab
 import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyRemedy
 import com.astro.storm.data.localization.StringResources
 
 /**
@@ -709,13 +710,13 @@ object LalKitabRemediesCalculator {
      */
     private fun generateAnnualRemedyCalendar(language: Language): List<AnnualRemedyEntry> {
         val weekDays = listOf(
-            Planet.SUN to StringResources.get(StringKeyLalKitab.WEEKDAY_SUNDAY, language),
-            Planet.MOON to StringResources.get(StringKeyLalKitab.WEEKDAY_MONDAY, language),
-            Planet.MARS to StringResources.get(StringKeyLalKitab.WEEKDAY_TUESDAY, language),
-            Planet.MERCURY to StringResources.get(StringKeyLalKitab.WEEKDAY_WEDNESDAY, language),
-            Planet.JUPITER to StringResources.get(StringKeyLalKitab.WEEKDAY_THURSDAY, language),
-            Planet.VENUS to StringResources.get(StringKeyLalKitab.WEEKDAY_FRIDAY, language),
-            Planet.SATURN to StringResources.get(StringKeyLalKitab.WEEKDAY_SATURDAY, language)
+            Planet.SUN to StringResources.get(StringKeyRemedy.WEEKDAY_SUNDAY, language),
+            Planet.MOON to StringResources.get(StringKeyRemedy.WEEKDAY_MONDAY, language),
+            Planet.MARS to StringResources.get(StringKeyRemedy.WEEKDAY_TUESDAY, language),
+            Planet.MERCURY to StringResources.get(StringKeyRemedy.WEEKDAY_WEDNESDAY, language),
+            Planet.JUPITER to StringResources.get(StringKeyRemedy.WEEKDAY_THURSDAY, language),
+            Planet.VENUS to StringResources.get(StringKeyRemedy.WEEKDAY_FRIDAY, language),
+            Planet.SATURN to StringResources.get(StringKeyRemedy.WEEKDAY_SATURDAY, language)
         )
 
         return weekDays.map { (planet, day) ->

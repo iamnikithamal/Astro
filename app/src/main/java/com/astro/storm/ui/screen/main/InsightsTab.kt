@@ -1619,7 +1619,7 @@ private fun CurrentDashaCard(timeline: DashaCalculator.DashaTimeline) {
     val currentAntardasha = timeline.currentAntardasha
 
     val mahadashaProgress = remember(currentMahadasha) {
-        calculateProgress(currentMahadasha.startDate, currentMahadasha.endDate)
+        calculateProgress(currentMahadasha.startDate.toLocalDate(), currentMahadasha.endDate.toLocalDate())
     }
 
     Card(
@@ -1661,8 +1661,8 @@ private fun CurrentDashaCard(timeline: DashaCalculator.DashaTimeline) {
             DashaPeriodRow(
                 labelKey = StringKey.DASHA_MAHADASHA,
                 planet = currentMahadasha.planet,
-                startDate = currentMahadasha.startDate,
-                endDate = currentMahadasha.endDate,
+                startDate = currentMahadasha.startDate.toLocalDate(),
+                endDate = currentMahadasha.endDate.toLocalDate(),
                 isPrimary = true
             )
 
@@ -1675,7 +1675,7 @@ private fun CurrentDashaCard(timeline: DashaCalculator.DashaTimeline) {
 
             currentAntardasha?.let { antardasha ->
                 val antardashaProgress = remember(antardasha) {
-                    calculateProgress(antardasha.startDate, antardasha.endDate)
+                    calculateProgress(antardasha.startDate.toLocalDate(), antardasha.endDate.toLocalDate())
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -1685,8 +1685,8 @@ private fun CurrentDashaCard(timeline: DashaCalculator.DashaTimeline) {
                 DashaPeriodRow(
                     labelKey = StringKey.DASHA_ANTARDASHA,
                     planet = antardasha.planet,
-                    startDate = antardasha.startDate,
-                    endDate = antardasha.endDate,
+                    startDate = antardasha.startDate.toLocalDate(),
+                    endDate = antardasha.endDate.toLocalDate(),
                     isPrimary = false
                 )
 
@@ -1911,7 +1911,7 @@ private fun DashaTimelinePreview(timeline: DashaCalculator.DashaTimeline) {
                         UpcomingPeriodItem(
                             planet = antardasha.planet,
                             mahadashaPlanet = currentMahadasha.planet,
-                            startDate = antardasha.startDate,
+                            startDate = antardasha.startDate.toLocalDate(),
                             isFirst = index == 0
                         )
                         if (index < upcomingAntardashas.lastIndex) {

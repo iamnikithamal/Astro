@@ -355,6 +355,7 @@ private fun HoraTab(analysis: HoraAnalysis, language: Language) {
 
 @Composable
 private fun WealthPotentialCard(analysis: HoraAnalysis) {
+    val language = LocalLanguage.current
     val (color, icon, label) = when (analysis.overallWealthPotential) {
         WealthPotential.EXCEPTIONAL -> Triple(AppTheme.SuccessColor, Icons.Filled.Star, analysis.overallWealthPotential.getLocalizedName(language))
         WealthPotential.HIGH -> Triple(AppTheme.SuccessColor.copy(alpha = 0.8f), Icons.Filled.TrendingUp, analysis.overallWealthPotential.getLocalizedName(language))

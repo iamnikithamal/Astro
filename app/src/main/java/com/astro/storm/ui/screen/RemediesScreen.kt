@@ -1908,4 +1908,16 @@ private fun getEnergyColor(energy: Int): Color = when {
 
 @Composable
 private fun getWeekdayForPlanet(planet: Planet): String {
+    return when (planet) {
+        Planet.SUN -> stringResource(StringKeyRemedy.WEEKDAY_SUNDAY)
+        Planet.MOON -> stringResource(StringKeyRemedy.WEEKDAY_MONDAY)
+        Planet.MARS -> stringResource(StringKeyRemedy.WEEKDAY_TUESDAY)
+        Planet.MERCURY -> stringResource(StringKeyRemedy.WEEKDAY_WEDNESDAY)
+        Planet.JUPITER -> stringResource(StringKeyRemedy.WEEKDAY_THURSDAY)
+        Planet.VENUS -> stringResource(StringKeyRemedy.WEEKDAY_FRIDAY)
+        Planet.SATURN -> stringResource(StringKeyRemedy.WEEKDAY_SATURDAY)
+        Planet.RAHU -> stringResource(StringKeyRemedy.WEEKDAY_SATURDAY)
+        Planet.KETU -> stringResource(StringKeyRemedy.WEEKDAY_TUESDAY)
+        else -> ""
+    }
 }
