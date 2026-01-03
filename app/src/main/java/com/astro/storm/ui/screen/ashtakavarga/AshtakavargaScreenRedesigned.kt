@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyDosha
@@ -262,6 +263,7 @@ private fun AshtakavargaTopBar(
                 }
             },
             actions = {
+                val language = LocalLanguage.current
                 IconButton(onClick = onInfoClick) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
@@ -370,6 +372,7 @@ private fun AshtakavargaSummaryCard(
                         color = AppTheme.TextPrimary,
                         letterSpacing = (-0.3).sp
                     )
+                    val language = LocalLanguage.current
                     Text(
                         text = stringResource(StringKeyDosha.ASHTAKAVARGA_DISTRIBUTION_DESC),
                         fontSize = 12.sp,

@@ -118,6 +118,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.currentLanguage
+import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
@@ -1861,6 +1862,7 @@ private fun RecommendationsCard(recommendations: List<String>) {
 private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val languageForAi = LocalLanguage.current
 
     // AI state management
     var aiState by remember { mutableStateOf<AiInsightState>(AiInsightState.Initial) }
@@ -1958,7 +1960,7 @@ private fun AiInsightCard(result: PrashnaCalculator.PrashnaResult) {
                                                 currentProfile = null,
                                                 allProfiles = emptyList(),
                                                 currentChart = result.chart,
-                                                language = LocalLanguage.current
+                                                language = languageForAi
                                             ).collect { response ->
                                                 when (response) {
                                                     is AgentResponse.ContentChunk -> {

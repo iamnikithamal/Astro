@@ -579,6 +579,7 @@ private fun AvasthaRecommendationsCard(recommendations: List<AvasthaCalculator.A
             Spacer(modifier = Modifier.height(12.dp))
 
             recommendations.forEach { rec ->
+                val language = LocalLanguage.current
                 val priorityColor = when (rec.priority) {
                     AvasthaCalculator.RemedyPriority.HIGH -> AppTheme.ErrorColor
                     AvasthaCalculator.RemedyPriority.MEDIUM -> AppTheme.WarningColor
@@ -609,15 +610,15 @@ private fun AvasthaRecommendationsCard(recommendations: List<AvasthaCalculator.A
                                 color = AppTheme.TextPrimary
                             )
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = priorityColor.copy(alpha = 0.15f)
+                               shape = RoundedCornerShape(4.dp),
+                               color = priorityColor.copy(alpha = 0.15f)
                             ) {
-                                Text(
-                                    text = rec.priority.displayName,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = priorityColor,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                               Text(
+                                   text = rec.priority.getLocalizedName(language),
+                                   style = MaterialTheme.typography.labelSmall,
+                                   color = priorityColor,
+                                   modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                               )
                             }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
@@ -728,15 +729,16 @@ private fun PlanetAvasthaCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
 
             // Avastha badges
             Spacer(modifier = Modifier.height(12.dp))
+            val language = LocalLanguage.current
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AvasthaBadge(
-                    label = avastha.baladiAvastha.displayName.take(10),
+                    label = avastha.baladiAvastha.getLocalizedName(language).take(10),
                     color = getBaladiColor(avastha.baladiAvastha)
                 )
                 AvasthaBadge(
-                    label = avastha.jagradadiAvastha.displayName.take(10),
+                    label = avastha.jagradadiAvastha.getLocalizedName(language).take(10),
                     color = getJagradadiColor(avastha.jagradadiAvastha)
                 )
             }
@@ -753,26 +755,26 @@ private fun PlanetAvasthaCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
                     // All four avasthas with descriptions
                     AvasthaDetailRow(
                         title = stringResource(StringKeyAnalysis.AVASTHA_AGE_STATE),
-                        value = avastha.baladiAvastha.displayName,
-                        description = avastha.baladiAvastha.description,
+                        value = avastha.baladiAvastha.getLocalizedName(language),
+                        description = avastha.baladiAvastha.getLocalizedDescription(language),
                         color = getBaladiColor(avastha.baladiAvastha)
                     )
                     AvasthaDetailRow(
                         title = stringResource(StringKeyAnalysis.AVASTHA_ALERTNESS),
-                        value = avastha.jagradadiAvastha.displayName,
-                        description = avastha.jagradadiAvastha.description,
+                        value = avastha.jagradadiAvastha.getLocalizedName(language),
+                        description = avastha.jagradadiAvastha.getLocalizedDescription(language),
                         color = getJagradadiColor(avastha.jagradadiAvastha)
                     )
                     AvasthaDetailRow(
                         title = stringResource(StringKeyAnalysis.AVASTHA_DIGNITY),
-                        value = avastha.deeptadiAvastha.displayName,
-                        description = avastha.deeptadiAvastha.description,
+                        value = avastha.deeptadiAvastha.getLocalizedName(language),
+                        description = avastha.deeptadiAvastha.getLocalizedDescription(language),
                         color = getDeeptadiColor(avastha.deeptadiAvastha)
                     )
                     AvasthaDetailRow(
                         title = stringResource(StringKeyAnalysis.AVASTHA_EMOTIONAL),
-                        value = avastha.lajjitadiAvastha.displayName,
-                        description = avastha.lajjitadiAvastha.description,
+                        value = avastha.lajjitadiAvastha.getLocalizedName(language),
+                        description = avastha.lajjitadiAvastha.getLocalizedDescription(language),
                         color = getLajjitadiColor(avastha.lajjitadiAvastha)
                     )
                 }
@@ -926,8 +928,9 @@ private fun BaladiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
                 shape = RoundedCornerShape(8.dp),
                 color = color.copy(alpha = 0.15f)
             ) {
+                val language = LocalLanguage.current
                 Text(
-                    text = avastha.baladiAvastha.displayName,
+                    text = avastha.baladiAvastha.getLocalizedName(language),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = color,
@@ -1029,8 +1032,9 @@ private fun JagradadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
                 shape = RoundedCornerShape(8.dp),
                 color = color.copy(alpha = 0.15f)
             ) {
+                val language = LocalLanguage.current
                 Text(
-                    text = avastha.jagradadiAvastha.displayName,
+                    text = avastha.jagradadiAvastha.getLocalizedName(language),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = color,
@@ -1091,6 +1095,7 @@ private fun DeeptadiSection(analysis: AvasthaCalculator.AvasthaAnalysis) {
 
 @Composable
 private fun DeeptadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
+    val language = LocalLanguage.current
     val color = getDeeptadiColor(avastha.deeptadiAvastha)
 
     Card(
@@ -1128,8 +1133,9 @@ private fun DeeptadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
                     shape = RoundedCornerShape(8.dp),
                     color = color.copy(alpha = 0.15f)
                 ) {
+                    val language = LocalLanguage.current
                     Text(
-                        text = avastha.deeptadiAvastha.displayName,
+                        text = avastha.deeptadiAvastha.getLocalizedName(language),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = color,
@@ -1139,7 +1145,7 @@ private fun DeeptadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = avastha.deeptadiAvastha.description,
+                text = avastha.deeptadiAvastha.getLocalizedDescription(language),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.TextMuted,
                 lineHeight = 18.sp
@@ -1198,6 +1204,7 @@ private fun LajjitadiSection(analysis: AvasthaCalculator.AvasthaAnalysis) {
 
 @Composable
 private fun LajjitadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
+    val language = LocalLanguage.current
     val color = getLajjitadiColor(avastha.lajjitadiAvastha)
 
     Card(
@@ -1235,8 +1242,9 @@ private fun LajjitadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
                     shape = RoundedCornerShape(8.dp),
                     color = color.copy(alpha = 0.15f)
                 ) {
+                    val language = LocalLanguage.current
                     Text(
-                        text = avastha.lajjitadiAvastha.displayName,
+                        text = avastha.lajjitadiAvastha.getLocalizedName(language),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = color,
@@ -1246,7 +1254,7 @@ private fun LajjitadiPlanetCard(avastha: AvasthaCalculator.PlanetaryAvastha) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = avastha.lajjitadiAvastha.description,
+                text = avastha.lajjitadiAvastha.getLocalizedDescription(language),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppTheme.TextMuted,
                 lineHeight = 18.sp

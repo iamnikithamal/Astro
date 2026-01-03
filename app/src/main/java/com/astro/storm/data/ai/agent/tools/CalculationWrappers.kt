@@ -58,7 +58,7 @@ class VimshottariDashaCalculator {
                         planet = antar.planet,
                         startDate = java.sql.Date.valueOf(antar.startDate.toString()),
                         endDate = java.sql.Date.valueOf(antar.endDate.toString()),
-                        isCurrent = antar.isActiveOn(today)
+                        isCurrent = antar.isActiveOn(today.atStartOfDay())
                     )
                 }
 
@@ -66,7 +66,7 @@ class VimshottariDashaCalculator {
                     planet = mahadasha.planet,
                     startDate = java.sql.Date.valueOf(mahadasha.startDate.toString()),
                     endDate = java.sql.Date.valueOf(mahadasha.endDate.toString()),
-                    isCurrent = mahadasha.isActiveOn(today),
+                    isCurrent = mahadasha.isActiveOn(today.atStartOfDay()),
                     antarDashas = antarPeriods
                 ))
             }

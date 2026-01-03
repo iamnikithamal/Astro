@@ -5,6 +5,7 @@ import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.data.localization.Language
+import com.astro.storm.data.localization.StringKeyFinder
 import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.StringKeyDosha
 import kotlin.math.abs
@@ -309,7 +310,8 @@ object MrityuBhagaCalculator {
         chart: VedicChart,
         transitingPlanet: Planet,
         transitSign: ZodiacSign,
-        transitDegree: Double
+        transitDegree: Double,
+        language: Language
     ): TransitVulnerabilityResult {
         val mrityuDegree = MRITYU_BHAGA_DEGREES[transitingPlanet]?.get(transitSign)
         val distance = mrityuDegree?.let { abs(transitDegree - it) } ?: Double.MAX_VALUE
@@ -336,7 +338,7 @@ object MrityuBhagaCalculator {
                 else -> CautionLevel.NONE
             },
             recommendations = if (isVulnerable) {
-                getTransitRecommendations(transitingPlanet)
+                getTransitRecommendations(transitingPlanet, language)
             } else emptyList()
         )
     }

@@ -41,6 +41,9 @@ import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyMatch
+import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringKeyPrediction
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.*
@@ -409,6 +412,7 @@ fun PlanetDetailDialog(
     onDismiss: () -> Unit
 ) {
     val planet = planetPosition.planet
+    val language = LocalLanguage.current
     val shadbala = remember(chart) {
         ShadbalaCalculator.calculatePlanetShadbala(planetPosition, chart)
     }

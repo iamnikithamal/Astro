@@ -144,7 +144,7 @@ enum class StringKeyLalKitab(override val en: String, override val ne: String) :
     SIG_GEN("General house matters", "सामान्य भावका मामिलाहरू"),
 
     // House Recommendations
-    HOUSE_REC_STRENGTHEN("Strengthen %1$s for %2$s house matters", "%2$s भावका मामिलाका लागि %1$s लाई बलियो बनाउनुहोस्"),
+    HOUSE_REC_STRENGTHEN("Strengthen %1\$s for %2\$s house matters", "%2\$s भावका मामिलाका लागि %1\$s लाई बलियो बनाउनुहोस्"),
 
     // Remedy Frequency
     FREQ_SUN("Daily at sunrise", "दैनिक सूर्योदयमा"),

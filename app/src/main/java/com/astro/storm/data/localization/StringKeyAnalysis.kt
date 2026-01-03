@@ -1,4 +1,4 @@
-﻿package com.astro.storm.data.localization
+package com.astro.storm.data.localization
 
 
 /**
@@ -97,7 +97,7 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     PANCHANGA_KARANA_DESC("Each tithi has two karanas. There are 11 karanas (4 fixed, 7 repeating) cycling through the month.", "प्रत्येक तिथिमा दुई करण हुन्छन्। ११ करण (४ स्थिर, ७ दोहोरिने) महिनाभर चक्रित हुन्छन्।"),
     PANCHANGA_VARA_DESC("Each day is ruled by a planet, influencing the day's energy and suitable activities.", "प्रत्येक दिन एक ग्रहले शासन गर्दछ, दिनको ऊर्जा र उपयुक्त गतिविधिहरूलाई प्रभाव पार्दछ।"),
     PANCHANGA_BIRTH_INSIGHT("The Panchanga at birth reveals the cosmic influences active at the moment of incarnation, providing insights into one's inherent nature, tendencies, and life patterns.", "जन्मको समयको पञ्चाङ्गले अवतारको क्षणमा सक्रिय ब्रह्माण्डीय प्रभावहरू प्रकट गर्दछ, व्यक्तिको स्वभाविक प्रकृति, प्रवृत्ति र जीवन ढाँचामा अन्तर्दृष्टि प्रदान गर्दछ।"),
-    PANCHANGA_BIRTH_INTERP_MAIN("Born on %1$s, under the %2$s nakshatra during %3$s tithi.", "%1$sमा जन्म, %3$s तिथिमा %2$s नक्षत्र अन्तर्गत।"),
+    PANCHANGA_BIRTH_INTERP_MAIN("Born on %1\$s, under the %2\$s nakshatra during %3\$s tithi.", "%1\$sमा जन्म, %3\$s तिथिमा %2\$s नक्षत्र अन्तर्गत।"),
     PANCHANGA_BIRTH_INTERP_YOGA("The %s yoga was active, indicating ", "%s योग सक्रिय थियो, जसले "),
     PANCHANGA_BIRTH_INTERP_YOGA_CHALLENGE("challenges to overcome but also strength building opportunities. ", "पार गर्नुपर्ने चुनौतीहरू तर शक्ति निर्माणका अवसरहरू पनि संकेत गर्दछ।"),
     PANCHANGA_BIRTH_INTERP_YOGA_AUSPICIOUS("highly auspicious conditions at birth, suggesting favorable karma. ", "जन्मको समयमा अत्यधिक शुभ परिस्थितिहरू, अनुकूल कर्मको संकेत गर्दछ।"),
@@ -1832,11 +1832,6 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     AVASTHA_MODERATE_STRENGTH("Moderate overall planetary strength", "मध्यम समग्र ग्रह बल"),
     AVASTHA_NEEDS_MEASURES("Planets need strengthening measures", "ग्रहहरूलाई सवलीकरण उपायहरू आवश्यक छ"),
     
-    AVASTHA_AGE_STATE("Age State (Baladi)", "अवस्था (बालादि)"),
-    AVASTHA_ALERTNESS("Alertness (Jagradadi)", "सतर्कता (जाग्रदादि)"),
-    AVASTHA_DIGNITY("Dignity (Deeptadi)", "इज्जत (दीप्तादि)"),
-    AVASTHA_EMOTIONAL("Emotional (Lajjitadi)", "भावनात्मक (लज्जितादि)"),
-
     // ============================================
     // PRASHNA ANALYSIS
     // ============================================
@@ -2393,5 +2388,10 @@ enum class StringKeyAnalysis(override val en: String, override val ne: String) :
     AVASTHA_RESULT_CAPACITY("%d%% result capacity", "%d%% नतिजा क्षमता"),
     AVASTHA_NODE_POS("Node position in %s. %s", "%sमा नोडको स्थिति। %s"),
     AVASTHA_ANALYZING("Analyzing Planetary States...", "ग्रहको अवस्थाहरू विश्लेषण गर्दै..."),
+    
+    // Priorities
+    PRIORITY_HIGH("High Priority", "उच्च प्राथमिकता"),
+    PRIORITY_MEDIUM("Medium Priority", "मध्यम प्राथमिकता"),
+    PRIORITY_LOW("Low Priority", "न्यून प्राथमिकता"),
 ;
 }

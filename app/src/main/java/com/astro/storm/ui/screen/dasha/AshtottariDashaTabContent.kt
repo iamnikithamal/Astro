@@ -59,7 +59,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.LocalLanguage
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Nakshatra
 import com.astro.storm.data.model.Planet
 import com.astro.storm.ephemeris.AshtottariAntardasha
@@ -492,14 +497,14 @@ private fun AshtottariInfoCard(
                         color = AppTheme.TextPrimary
                     )
                 }
-                Icon(
-                    Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
-                    tint = AppTheme.TextMuted,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .rotate(rotation)
-                )
+                    Icon(
+                        imageVector = Icons.Default.ExpandMore,
+                        contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
+                        tint = AppTheme.TextMuted,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .rotate(rotation)
+                    )
             }
 
             AnimatedVisibility(
@@ -840,7 +845,7 @@ private fun AshtottariMahadashaCard(
                 }
 
                 Icon(
-                    Icons.Default.ExpandMore,
+                    imageVector = Icons.Default.ExpandMore,
                     contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier

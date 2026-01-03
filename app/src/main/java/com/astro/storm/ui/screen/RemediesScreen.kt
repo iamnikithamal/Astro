@@ -44,9 +44,11 @@ import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyMatch
 import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyRemedy
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.Planet
 import com.astro.storm.data.model.VedicChart
+import com.astro.storm.data.model.LifeArea
 import com.astro.storm.ephemeris.RemediesCalculator
 import com.astro.storm.ui.theme.AppTheme
 import com.astro.storm.data.localization.LocalLanguage
@@ -802,7 +804,7 @@ private fun WeekDayChip(
 }
 
 @Composable
-private fun LifeAreaFocusCard(lifeAreaFocus: Map<com.astro.storm.data.model.LifeArea, List<RemediesCalculator.Remedy>>) {
+private fun LifeAreaFocusCard(lifeAreaFocus: Map<LifeArea, List<RemediesCalculator.Remedy>>) {
     val language = LocalLanguage.current
     Card(
         modifier = Modifier
@@ -829,7 +831,7 @@ private fun LifeAreaFocusCard(lifeAreaFocus: Map<com.astro.storm.data.model.Life
 }
 
 @Composable
-private fun LifeAreaRow(area: com.astro.storm.data.model.LifeArea, remedyCount: Int, language: Language) {
+private fun LifeAreaRow(area: LifeArea, remedyCount: Int, language: Language) {
     val areaColor = area.color
 
     Row(
@@ -1908,4 +1910,16 @@ private fun getEnergyColor(energy: Int): Color = when {
 
 @Composable
 private fun getWeekdayForPlanet(planet: Planet): String {
+    return when (planet) {
+        Planet.SUN -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_SUNDAY)
+        Planet.MOON -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_MONDAY)
+        Planet.MARS -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_TUESDAY)
+        Planet.MERCURY -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_WEDNESDAY)
+        Planet.JUPITER -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_THURSDAY)
+        Planet.VENUS -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_FRIDAY)
+        Planet.SATURN -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_SATURDAY)
+        Planet.RAHU -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_SATURDAY)
+        Planet.KETU -> stringResource(com.astro.storm.data.localization.StringKeyRemedy.WEEKDAY_TUESDAY)
+        else -> ""
+    }
 }

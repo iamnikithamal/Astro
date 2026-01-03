@@ -91,6 +91,7 @@ import com.astro.storm.ui.screen.chartdetail.ChartDetailColors
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Immutable
@@ -188,10 +189,10 @@ fun DashasTabContent(
         itemsIndexed(
             items = timeline.mahadashas,
             key = { index, mahadasha ->
-                "mahadasha_${mahadasha.planet.symbol}_${mahadasha.startDate.toEpochDay()}_$index"
+                "mahadasha_${mahadasha.planet.symbol}_${mahadasha.startDate.toLocalDate().toEpochDay()}_$index"
             }
         ) { index, mahadasha ->
-            val mahadashaKey = "${mahadasha.planet.symbol}_${mahadasha.startDate.toEpochDay()}"
+            val mahadashaKey = "${mahadasha.planet.symbol}_${mahadasha.startDate.toLocalDate().toEpochDay()}"
             val isCurrentMahadasha = mahadasha == timeline.currentMahadasha
             val isExpanded = mahadashaKey in expandedMahadashaKeys
 
@@ -301,8 +302,8 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                     DashaPeriodRow(
                         label = stringResource(StringKeyMatch.DASHA_LEVEL_MAHADASHA),
                         planet = currentMahadasha.planet,
-                        startDate = currentMahadasha.startDate,
-                        endDate = currentMahadasha.endDate,
+                        startDate = currentMahadasha.startDate.toLocalDate(),
+                        endDate = currentMahadasha.endDate.toLocalDate(),
                         progress = currentMahadasha.getProgressPercent().toFloat() / 100f,
                         remainingText = formatRemainingYears(currentMahadasha.getRemainingYears()),
                         level = DashaLevel.MAHADASHA
@@ -312,10 +313,10 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         DashaPeriodRow(
                             label = stringResource(StringKeyMatch.DASHA_LEVEL_ANTARDASHA),
                             planet = ad.planet,
-                            startDate = ad.startDate,
-                            endDate = ad.endDate,
+                            startDate = ad.startDate.toLocalDate(),
+                            endDate = ad.endDate.toLocalDate(),
                             progress = ad.getProgressPercent().toFloat() / 100f,
-                            remainingText = formatRemainingDays(ad.getRemainingDays()),
+                            remainingText = formatRemainingDays(ChronoUnit.DAYS.between(LocalDateTime.now(), ad.endDate)),
                             level = DashaLevel.ANTARDASHA
                         )
                     }
@@ -324,10 +325,10 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         DashaPeriodRow(
                             label = stringResource(StringKeyMatch.DASHA_LEVEL_PRATYANTARDASHA),
                             planet = pd.planet,
-                            startDate = pd.startDate,
-                            endDate = pd.endDate,
-                            progress = calculateProgress(pd.startDate, pd.endDate),
-                            remainingText = formatRemainingTime(LocalDate.now(), pd.endDate),
+                            startDate = pd.startDate.toLocalDate(),
+                            endDate = pd.endDate.toLocalDate(),
+                            progress = calculateProgress(pd.startDate.toLocalDate(), pd.endDate.toLocalDate()),
+                            remainingText = formatRemainingTime(LocalDate.now(), pd.endDate.toLocalDate()),
                             level = DashaLevel.PRATYANTARDASHA
                         )
                     }
@@ -336,9 +337,9 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         DashaPeriodRow(
                             label = stringResource(StringKeyMatch.DASHA_LEVEL_SOOKSHMADASHA),
                             planet = sd.planet,
-                            startDate = sd.startDate,
-                            endDate = sd.endDate,
-                            progress = calculateProgress(sd.startDate, sd.endDate),
+                            startDate = sd.startDate.toLocalDate(),
+                            endDate = sd.endDate.toLocalDate(),
+                            progress = calculateProgress(sd.startDate.toLocalDate(), sd.endDate.toLocalDate()),
                             remainingText = "",
                             level = DashaLevel.SOOKSHMADASHA
                         )
@@ -348,10 +349,10 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         DashaPeriodRow(
                             label = stringResource(StringKeyMatch.DASHA_LEVEL_PRANADASHA),
                             planet = prd.planet,
-                            startDate = prd.startDate,
-                            endDate = prd.endDate,
-                            progress = calculateProgress(prd.startDate, prd.endDate),
-                            remainingText = formatPranadashaDuration(prd.durationMinutes),
+                            startDate = prd.startDate.toLocalDate(),
+                            endDate = prd.endDate.toLocalDate(),
+                            progress = calculateProgress(prd.startDate.toLocalDate(), prd.endDate.toLocalDate()),
+                            remainingText = formatPranadashaDuration(prd.durationSeconds / 60),
                             level = DashaLevel.PRANADASHA
                         )
                     }
@@ -360,10 +361,10 @@ private fun CurrentPeriodCard(timeline: DashaCalculator.DashaTimeline) {
                         DashaPeriodRow(
                             label = stringResource(StringKeyMatch.DASHA_LEVEL_DEHADASHA),
                             planet = dd.planet,
-                            startDate = dd.startDate,
-                            endDate = dd.endDate,
-                            progress = calculateProgress(dd.startDate, dd.endDate),
-                            remainingText = formatDehadashaDuration(dd.durationMinutes),
+                            startDate = dd.startDate.toLocalDate(),
+                            endDate = dd.endDate.toLocalDate(),
+                            progress = calculateProgress(dd.startDate.toLocalDate(), dd.endDate.toLocalDate()),
+                            remainingText = formatDehadashaDuration(dd.durationSeconds / 60),
                             level = DashaLevel.DEHADASHA
                         )
                     }
@@ -573,9 +574,9 @@ private fun SandhiAlertRow(
     val fromColor = ChartDetailColors.getPlanetColor(sandhi.fromPlanet)
     val toColor = ChartDetailColors.getPlanetColor(sandhi.toPlanet)
     val today = LocalDate.now()
-    val daysUntil = ChronoUnit.DAYS.between(today, sandhi.transitionDate)
+    val daysUntil = ChronoUnit.DAYS.between(today, sandhi.transitionDate.toLocalDate())
     val isImminent = daysUntil in 0..7
-    val isWithinSandhi = sandhi.isWithinSandhi(today)
+    val isWithinSandhi = sandhi.isWithinSandhi(today.atStartOfDay())
 
     val language = LocalLanguage.current
     val levelLabel = getDashaLevelName(sandhi.level, language)
@@ -654,7 +655,7 @@ private fun SandhiAlertRow(
                         daysUntil == 0L -> stringResource(StringKeyMatch.DASHA_TODAY)
                         daysUntil == 1L -> stringResource(StringKeyMatch.DASHA_TOMORROW)
                         isImminent -> stringResource(StringKeyMatch.DASHA_IN_DAYS, daysUntil.toInt())
-                        else -> formatDate(sandhi.transitionDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)
+                        else -> formatDate(sandhi.transitionDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)
                     },
                     fontSize = 12.sp,
                     fontWeight = if (isWithinSandhi || isImminent) FontWeight.Bold else FontWeight.Normal,
@@ -667,7 +668,7 @@ private fun SandhiAlertRow(
                 if (!isWithinSandhi && daysUntil > 0) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${formatDate(sandhi.sandhiStartDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(sandhi.sandhiEndDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
+                        text = "${formatDate(sandhi.sandhiStartDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(sandhi.sandhiEndDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
                         fontSize = 10.sp,
                         color = ChartDetailColors.TextMuted.copy(alpha = 0.8f)
                     )
@@ -1000,8 +1001,8 @@ private fun DashaTimelineCard(timeline: DashaCalculator.DashaTimeline) {
             }
 
             timeline.mahadashas.forEachIndexed { index, dasha ->
-                val isPast = dasha.endDate.isBefore(today)
-                val isCurrent = dasha.isActiveOn(today)
+                val isPast = dasha.endDate.toLocalDate().isBefore(today)
+                val isCurrent = dasha.isActiveOn(today.atStartOfDay())
                 val planetColor = ChartDetailColors.getPlanetColor(dasha.planet)
                 val isLast = index == timeline.mahadashas.lastIndex
 
@@ -1076,7 +1077,7 @@ private fun DashaTimelineCard(timeline: DashaCalculator.DashaTimeline) {
                         )
 
                         Text(
-                            text = "${formatDate(dasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)} – ${formatDate(dasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)}",
+                            text = "${formatDate(dasha.startDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)} – ${formatDate(dasha.endDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.YEAR_ONLY)}",
                             fontSize = 12.sp,
                             color = if (isCurrent) ChartDetailColors.TextPrimary else ChartDetailColors.TextMuted,
                             modifier = Modifier.weight(1f)
@@ -1198,7 +1199,7 @@ private fun MahadashaCard(
                         }
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = "${formatDurationYearsLocalized(mahadasha.durationYears, language)} • ${formatDate(mahadasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)} – ${formatDate(mahadasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)}",
+                            text = "${formatDurationYearsLocalized(mahadasha.durationYears, language)} • ${formatDate(mahadasha.startDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)} – ${formatDate(mahadasha.endDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.FULL)}",
                             fontSize = 11.sp,
                             color = ChartDetailColors.TextMuted,
                             maxLines = 1,
@@ -1289,7 +1290,7 @@ private fun AntardashaRow(
 ) {
     val planetColor = ChartDetailColors.getPlanetColor(antardasha.planet)
     val today = LocalDate.now()
-    val isPast = antardasha.endDate.isBefore(today)
+    val isPast = antardasha.endDate.toLocalDate().isBefore(today)
     val language = LocalLanguage.current
 
     Row(
@@ -1353,7 +1354,7 @@ private fun AntardashaRow(
                     }
                 }
                 if (isCurrent) {
-                    val remaining = formatRemainingDaysLocalized(antardasha.getRemainingDays(), language)
+                    val remaining = formatRemainingDaysLocalized(ChronoUnit.DAYS.between(java.time.LocalDateTime.now(), antardasha.endDate), language)
                     if (remaining.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -1369,7 +1370,7 @@ private fun AntardashaRow(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = "${formatDate(antardasha.startDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(antardasha.endDate, LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
+                text = "${formatDate(antardasha.startDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)} – ${formatDate(antardasha.endDate.toLocalDate(), LocalDateSystem.current, LocalLanguage.current, DateFormat.MONTH_YEAR)}",
                 fontSize = 11.sp,
                 color = ChartDetailColors.TextMuted
             )

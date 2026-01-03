@@ -68,6 +68,7 @@ import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyDosha
 import com.astro.storm.data.localization.StringKeyInterface
+import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.PlanetPosition
 import com.astro.storm.data.model.VedicChart
@@ -317,6 +318,7 @@ private fun MainChartCard(
     currentChartData: DivisionalChartData?,
     onChartClick: (String, DivisionalChartData?) -> Unit
 ) {
+    val language = LocalLanguage.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()

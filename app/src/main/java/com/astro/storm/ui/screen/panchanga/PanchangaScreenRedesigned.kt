@@ -69,9 +69,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.LocalLanguage
 import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyAnalysis
 import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.VedicChart
@@ -996,6 +999,7 @@ private fun BirthSummaryCard(
 private fun BirthDayInterpretationCard(
     panchanga: PanchangaData
 ) {
+    val language = LocalLanguage.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),

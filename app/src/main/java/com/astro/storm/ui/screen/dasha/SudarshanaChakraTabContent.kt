@@ -61,7 +61,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.LocalLanguage
+import com.astro.storm.data.localization.StringKey
+import com.astro.storm.data.localization.StringKeyAnalysis
+import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.getLocalizedName
+import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.ZodiacSign
 import com.astro.storm.ephemeris.SudarshanaTimeline
 import com.astro.storm.ephemeris.YearlyAnalysis
@@ -579,14 +584,14 @@ private fun SudarshanaInfoCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT_TITLE),
+                        text = stringResource(StringKeyDosha.SUDARSHANA_ABOUT),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppTheme.TextPrimary
                     )
                 }
                 Icon(
-                    Icons.Default.ExpandMore,
+                    imageVector = Icons.Default.ExpandMore,
                     contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                     tint = AppTheme.TextMuted,
                     modifier = Modifier
@@ -695,6 +700,7 @@ private fun SudarshanaYearCard(
     isExpanded: Boolean,
     onToggleExpand: (Boolean) -> Unit
 ) {
+    val language = LocalLanguage.current
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
         animationSpec = tween(250),
@@ -746,7 +752,6 @@ private fun SudarshanaYearCard(
 
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            val language = LocalLanguage.current
                             Text(
                                 text = StringResources.get(StringKeyDosha.SUDARSHANA_AGE_FMT, language, yearData.age),
                                 fontSize = 14.sp,
@@ -788,7 +793,7 @@ private fun SudarshanaYearCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
-                        Icons.Default.ExpandMore,
+                        imageVector = Icons.Default.ExpandMore,
                         contentDescription = if (isExpanded) stringResource(StringKey.ACC_COLLAPSE) else stringResource(StringKey.ACC_EXPAND),
                         tint = AppTheme.TextMuted,
                         modifier = Modifier

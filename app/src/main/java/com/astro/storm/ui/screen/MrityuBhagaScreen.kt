@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.Language
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringKeyFinder
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.getLocalizedName
 import com.astro.storm.data.localization.stringResource

@@ -220,7 +220,7 @@ enum class StringKeyFinder(override val en: String, override val ne: String) : S
     LABEL_GANDANTA("Gandanta", "गण्डान्त"),
     LABEL_MB_DEGREE("MB: %s°", "मृ.भा.: %s°"),
     LABEL_ACTUAL_DEGREE("Actual: %s°", "वास्तविक: %s°"),
-    LABEL_NOURISHING_DEGREE("Nourishing degree: %1$s° (Orb: %2$s°)", "पोषक डिग्री: %1$s° (अर्ब: %2$s°)"),
+    LABEL_NOURISHING_DEGREE("Nourishing degree: %1\$s° (Orb: %2\$s°)", "पोषक डिग्री: %1\$s° (अर्ब: %2\$s°)"),
     LABEL_MB_IN("in Mrityu Bhaga", "मृत्यु भागमा"),
     LABEL_PUSH_NAV_IN("in Pushkara Navamsa", "पुष्कर नवरांशमा"),
     LABEL_PUSH_BHAGA_IN("in Pushkara Bhaga", "पुष्कर भागमा"),

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.astro.storm.data.model.VedicChart
 import com.astro.storm.data.localization.Language
+import com.astro.storm.data.localization.StringKeyDosha
+import com.astro.storm.data.localization.StringResources
 import com.astro.storm.ephemeris.YoginiDashaCalculator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

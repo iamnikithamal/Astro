@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.astro.storm.data.localization.StringKey
 import com.astro.storm.data.localization.StringKeyMatch
+import com.astro.storm.data.localization.LocalLanguage
+import com.astro.storm.data.localization.currentLanguage
 import com.astro.storm.data.localization.stringResource
 import com.astro.storm.data.model.CompatibilityRating
 import com.astro.storm.data.model.GunaAnalysis
